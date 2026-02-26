@@ -9,17 +9,27 @@ import { PackageCard } from "@/components/packages/package-card";
 import { EmptyState } from "@/components/packages/empty-state";
 import { DashboardSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Package, Truck, Clock, CheckCircle2, AlertTriangle, ArrowRight, MessageSquare, TrendingUp } from "lucide-react";
+import { RefreshCw, Package, Truck, Clock, CheckCircle2, AlertTriangle, ArrowRight, MessageSquare, TrendingUp, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { AddPackageDialog } from "@/components/packages/add-package-dialog";
 import { ScanSmsDialog } from "@/components/packages/scan-sms-dialog";
 
+const TIME_PERIODS = [
+  { value: "7d", label: "7 days" },
+  { value: "30d", label: "30 days" },
+  { value: "90d", label: "3 months" },
+  { value: "180d", label: "6 months" },
+  { value: "365d", label: "1 year" },
+  { value: "all", label: "All time" },
+];
+
 export default function DashboardPage() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
+  const [period, setPeriod] = useState("30d");
   const { data, isLoading, error, refetch, isRefetching } = useQuery({
-    queryKey: ["dashboard"],
-    queryFn: () => api.getDashboard(),
+    queryKey: ["dashboard", period],
+    queryFn: () => api.getDashboard(period),
     retry: false,
   });
 
@@ -81,6 +91,26 @@ export default function DashboardPage() {
           </Button>
           <ScanSmsDialog open={scanOpen} onOpenChange={setScanOpen} />
         </div>
+      </div>
+
+      {/* Time filter */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <Calendar className="h-4 w-4 text-muted-foreground mr-1" />
+        {TIME_PERIODS
+          .filter((p) => p.value === "30d" || p.value === "all" || p.value === period || data?.hasOlderData)
+          .map((p) => (
+            <button
+              key={p.value}
+              onClick={() => setPeriod(p.value)}
+              className={`px-3 py-1 text-xs font-medium rounded-full transition-colors cursor-pointer ${
+                period === p.value
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
       </div>
 
       {!hasPackages ? (

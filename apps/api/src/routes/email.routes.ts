@@ -65,8 +65,8 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
         const parsed = parseEmail(email.html, email.from, email.subject);
         totalParsed++;
 
-        // Skip very low confidence — but keep anything plausible
-        if (parsed.confidence < 0.2) continue;
+        // No tracking number = no actionable data for the user. Skip.
+        if (!parsed.trackingNumber) continue;
 
         // --- Order resolution: find the right order to attach this email to ---
         const externalId = parsed.orderId ?? `gmail-${email.id}`;
@@ -462,6 +462,7 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
         data: { lastSyncAt: new Date() },
       });
       } catch (err: any) {
+        console.error("[email-sync] Failed:", err.message, err.stack?.split('\n')[1]);
         app.log.error({ err: err.message, emailId: connEmail.id }, "Failed to sync email account");
       }
     }

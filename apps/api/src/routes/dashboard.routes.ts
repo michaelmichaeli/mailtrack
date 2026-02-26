@@ -7,14 +7,35 @@ export const dashboardRoutes: FastifyPluginAsync = async (app) => {
     preHandler: [app.authenticate],
   }, async (request) => {
     const userId = request.user.userId;
+    const { period } = request.query as { period?: string };
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
-    const recentCutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    // Fetch all user orders with packages
-    const orders = await app.prisma.order.findMany({
+    // Time range filter
+    const periodDays: Record<string, number> = { "7d": 7, "30d": 30, "90d": 90, "180d": 180, "365d": 365 };
+    const days = periodDays[period ?? "30d"];
+    const cutoff = days ? new Date(now.getTime() - days * 24 * 60 * 60 * 1000) : undefined;
+
+    // Check if older data exists
+    const oldestOrder = await app.prisma.order.findFirst({
       where: { userId },
+      orderBy: { orderDate: "asc" },
+      select: { orderDate: true },
+    });
+    const hasOlderData = oldestOrder?.orderDate ? oldestOrder.orderDate < (cutoff ?? now) : false;
+
+    // Fetch orders within time range
+    const where: any = { userId };
+    if (cutoff) {
+      where.OR = [
+        { orderDate: { gte: cutoff } },
+        { updatedAt: { gte: cutoff } },
+      ];
+    }
+
+    const orders = await app.prisma.order.findMany({
+      where,
       include: {
         packages: {
           include: {
@@ -57,7 +78,7 @@ export const dashboardRoutes: FastifyPluginAsync = async (app) => {
         } else if (
           pkg.status === PackageStatus.DELIVERED
         ) {
-          if (pkg.updatedAt >= recentCutoff) delivered.push(order);
+          delivered.push(order);
         } else if (
           pkg.status === PackageStatus.EXCEPTION ||
           pkg.status === PackageStatus.RETURNED
@@ -67,14 +88,13 @@ export const dashboardRoutes: FastifyPluginAsync = async (app) => {
           processing.push(order);
         }
       } else {
-        // No package — use order-level status
         if (orderStatus === PackageStatus.DELIVERED) {
-          if (order.updatedAt >= recentCutoff) delivered.push(order);
+          delivered.push(order);
         } else if (orderStatus === PackageStatus.IN_TRANSIT || orderStatus === PackageStatus.SHIPPED) {
           inTransit.push(order);
         } else if (orderStatus === PackageStatus.OUT_FOR_DELIVERY) {
           arrivingToday.push(order);
-        } else if (order.createdAt >= recentCutoff) {
+        } else {
           processing.push(order);
         }
       }
@@ -119,6 +139,8 @@ export const dashboardRoutes: FastifyPluginAsync = async (app) => {
       processing: processing.map(formatOrder),
       delivered: delivered.map(formatOrder),
       exceptions: exceptions.map(formatOrder),
+      period: period ?? "30d",
+      hasOlderData,
       stats: {
         total: orders.length,
         arrivingToday: arrivingToday.length,

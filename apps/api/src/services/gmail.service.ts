@@ -59,46 +59,74 @@ export async function fetchGmailEmails(
 
   const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
-  // Build search query — broad match for shipping/order related emails
+  // Broad scan: search subject + body for shipping keywords, OR from known senders.
+  // The downstream filter (must have tracking number) discards irrelevant matches.
   let query =
-    'subject:(order OR shipping OR tracking OR delivered OR dispatched OR shipment OR "out for delivery" OR "order confirmed" OR "has shipped" OR pickup OR parcel OR package OR "ready for collection" OR "awaiting collection")';
+    'subject:(shipping OR tracking OR shipped OR delivered OR dispatched OR shipment OR parcel OR package OR delivery OR order OR courier OR "out for delivery" OR "has shipped" OR "order shipped" OR "ready for collection" OR "awaiting collection" OR חבילה OR משלוח OR נשלח OR הזמנה)' +
+    ' OR from:aliexpress OR from:cainiao OR from:amazon OR from:ebay OR from:etsy OR from:shein OR from:temu' +
+    ' OR from:walmart OR from:iherb OR from:shopify OR from:banggood OR from:parcelhome' +
+    ' OR from:fedex OR from:ups OR from:dhl OR from:usps OR from:aramex' +
+    ' OR from:yanwen OR from:postnl OR from:zara OR from:asos';
 
   if (since) {
     const afterDate = Math.floor(since.getTime() / 1000);
-    query += ` after:${afterDate}`;
+    query = `(${query}) after:${afterDate}`;
   }
 
-  // List messages
-  const listResponse = await gmail.users.messages.list({
-    userId: "me",
-    q: query,
-    maxResults: 100,
-  });
+  // Paginate through ALL matching messages
+  const allMessageIds: Array<{ id: string }> = [];
+  let pageToken: string | undefined;
+  do {
+    const listResponse = await gmail.users.messages.list({
+      userId: "me",
+      q: query,
+      maxResults: 500,
+      pageToken,
+    });
+    const messages = listResponse.data.messages ?? [];
+    for (const m of messages) {
+      if (m.id) allMessageIds.push({ id: m.id });
+    }
+    pageToken = listResponse.data.nextPageToken ?? undefined;
+  } while (pageToken);
 
-  const messages = listResponse.data.messages ?? [];
+  console.log(`[gmail] Query matched ${allMessageIds.length} emails`);
+
   const emails: Array<{ id: string; html: string; from: string; subject: string; date: string }> = [];
 
-  // Fetch each message
-  for (const msg of messages) {
-    if (!msg.id) continue;
-    const msgResponse = await gmail.users.messages.get({
-      userId: "me",
-      id: msg.id,
-      format: "full",
-    });
+  // Fetch each message (batch in groups of 20 to avoid rate limits)
+  const BATCH_SIZE = 20;
+  for (let i = 0; i < allMessageIds.length; i += BATCH_SIZE) {
+    const batch = allMessageIds.slice(i, i + BATCH_SIZE);
+    const results = await Promise.all(
+      batch.map(async (msg) => {
+        try {
+          const msgResponse = await gmail.users.messages.get({
+            userId: "me",
+            id: msg.id,
+            format: "full",
+          });
 
-    const headers = msgResponse.data.payload?.headers ?? [];
-    const from = headers.find((h) => h.name?.toLowerCase() === "from")?.value ?? "";
-    const subject = headers.find((h) => h.name?.toLowerCase() === "subject")?.value ?? "";
-    const date = headers.find((h) => h.name?.toLowerCase() === "date")?.value ?? "";
+          const headers = msgResponse.data.payload?.headers ?? [];
+          const from = headers.find((h) => h.name?.toLowerCase() === "from")?.value ?? "";
+          const subject = headers.find((h) => h.name?.toLowerCase() === "subject")?.value ?? "";
+          const date = headers.find((h) => h.name?.toLowerCase() === "date")?.value ?? "";
 
-    // Extract HTML body, fall back to plain text
-    const html = extractHtmlBody(msgResponse.data.payload);
-    const text = html ? null : extractTextBody(msgResponse.data.payload);
-    const body = html ?? (text ? `<pre>${text}</pre>` : null);
+          const html = extractHtmlBody(msgResponse.data.payload);
+          const text = html ? null : extractTextBody(msgResponse.data.payload);
+          const body = html ?? (text ? `<pre>${text}</pre>` : null);
 
-    if (body) {
-      emails.push({ id: msg.id, html: body, from, subject, date });
+          if (body) {
+            return { id: msg.id, html: body, from, subject, date };
+          }
+        } catch {
+          // Skip messages that fail to fetch
+        }
+        return null;
+      })
+    );
+    for (const r of results) {
+      if (r) emails.push(r);
     }
   }
 

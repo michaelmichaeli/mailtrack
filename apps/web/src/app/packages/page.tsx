@@ -8,7 +8,7 @@ import { PackageCard } from "@/components/packages/package-card";
 import { EmptyState } from "@/components/packages/empty-state";
 import { PackageCardSkeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, Calendar } from "lucide-react";
 
 const STATUS_OPTIONS = [
   { value: "", label: "All statuses" },
@@ -22,11 +22,21 @@ const STATUS_OPTIONS = [
   { value: "RETURNED", label: "Returned" },
 ];
 
+const TIME_PERIODS = [
+  { value: "7d", label: "7 days", days: 7 },
+  { value: "30d", label: "30 days", days: 30 },
+  { value: "90d", label: "3 months", days: 90 },
+  { value: "180d", label: "6 months", days: 180 },
+  { value: "365d", label: "1 year", days: 365 },
+  { value: "all", label: "All time", days: 0 },
+];
+
 function PackagesContent() {
   const searchParams = useSearchParams();
   const initialStatus = searchParams.get("status") ?? "";
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState(initialStatus);
+  const [period, setPeriod] = useState("30d");
   const observerRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -36,11 +46,16 @@ function PackagesContent() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["packages", query, status],
+    queryKey: ["packages", query, status, period],
     queryFn: ({ pageParam = 1 }) => {
       const params: Record<string, string> = { page: String(pageParam), limit: "12" };
       if (query) params.query = query;
       if (status) params.status = status;
+      if (period !== "all") {
+        const days = TIME_PERIODS.find((p) => p.value === period)?.days ?? 30;
+        const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+        params.dateFrom = since;
+      }
       return api.getPackages(params);
     },
     getNextPageParam: (lastPage: any) =>
@@ -95,6 +110,24 @@ function PackagesContent() {
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
+      </div>
+
+      {/* Time filter */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <Calendar className="h-4 w-4 text-muted-foreground mr-1" />
+        {TIME_PERIODS.map((p) => (
+          <button
+            key={p.value}
+            onClick={() => setPeriod(p.value)}
+            className={`px-3 py-1 text-xs font-medium rounded-full transition-colors cursor-pointer ${
+              period === p.value
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            {p.label}
+          </button>
+        ))}
       </div>
 
       {/* Results count */}

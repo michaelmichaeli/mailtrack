@@ -146,8 +146,9 @@ class ApiClient {
   }
 
   // Dashboard
-  async getDashboard() {
-    return this.request<any>("/dashboard");
+  async getDashboard(period?: string) {
+    const query = period ? `?period=${period}` : "";
+    return this.request<any>(`/dashboard${query}`);
   }
 
   // Packages
