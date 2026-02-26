@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +12,7 @@ import { RefreshCw, Package, Truck, Clock, CheckCircle, AlertTriangle } from "lu
 import { toast } from "sonner";
 
 export default function DashboardPage() {
+  const [isSyncing, setIsSyncing] = useState(false);
   const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["dashboard"],
     queryFn: () => api.getDashboard(),
@@ -18,6 +20,7 @@ export default function DashboardPage() {
   });
 
   const handleSync = async () => {
+    setIsSyncing(true);
     try {
       const result = await api.syncEmails();
       if (result.ordersCreated > 0) {
@@ -30,6 +33,8 @@ export default function DashboardPage() {
       refetch();
     } catch {
       toast.error("Failed to sync emails. Connect your email first.");
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -37,6 +42,7 @@ export default function DashboardPage() {
 
   const stats = data?.stats;
   const hasPackages = stats && stats.total > 0;
+  const busy = isSyncing || isRefetching;
 
   return (
     <div className="space-y-6">
@@ -46,9 +52,9 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground">Track all your orders and packages in one place</p>
         </div>
-        <Button onClick={handleSync} variant="outline" disabled={isRefetching}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${isRefetching ? "animate-spin" : ""}`} />
-          Sync emails
+        <Button onClick={handleSync} variant="outline" disabled={busy}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${busy ? "animate-spin" : ""}`} />
+          {isSyncing ? "Syncing…" : "Sync emails"}
         </Button>
       </div>
 

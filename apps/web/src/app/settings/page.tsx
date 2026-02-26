@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,8 @@ import { toast } from "sonner";
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002";
 
 function SettingsContent() {
+  const [isExporting, setIsExporting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const queryClient = useQueryClient();
   const { theme, setTheme } = useTheme();
   const searchParams = useSearchParams();
@@ -69,6 +71,7 @@ function SettingsContent() {
   });
 
   const handleExport = async () => {
+    setIsExporting(true);
     try {
       const data = await api.exportData();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -81,6 +84,8 @@ function SettingsContent() {
       toast.success("Data exported successfully");
     } catch {
       toast.error("Failed to export data");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -88,11 +93,13 @@ function SettingsContent() {
     if (!confirm("Are you sure? This will permanently delete your account and all data. This cannot be undone.")) {
       return;
     }
+    setIsDeleting(true);
     try {
       await api.deleteAccount();
       window.location.href = "/login";
     } catch {
       toast.error("Failed to delete account");
+      setIsDeleting(false);
     }
   };
 
@@ -150,8 +157,9 @@ function SettingsContent() {
                 variant="ghost"
                 size="sm"
                 onClick={() => disconnectEmail.mutate(email.id)}
+                disabled={disconnectEmail.isPending}
               >
-                <Unlink className="h-4 w-4" />
+                <Unlink className={`h-4 w-4 ${disconnectEmail.isPending ? "animate-spin" : ""}`} />
               </Button>
             </div>
           ))}
@@ -292,13 +300,13 @@ function SettingsContent() {
           <CardDescription>Export your data or delete your account</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <Button variant="outline" className="w-full" onClick={handleExport}>
-            <Download className="h-4 w-4 mr-2" />
-            Export all data (JSON)
+          <Button variant="outline" className="w-full" onClick={handleExport} disabled={isExporting}>
+            <Download className={`h-4 w-4 mr-2 ${isExporting ? "animate-spin" : ""}`} />
+            {isExporting ? "Exporting…" : "Export all data (JSON)"}
           </Button>
-          <Button variant="destructive" className="w-full" onClick={handleDeleteAccount}>
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete account
+          <Button variant="destructive" className="w-full" onClick={handleDeleteAccount} disabled={isDeleting}>
+            <Trash2 className={`h-4 w-4 mr-2 ${isDeleting ? "animate-spin" : ""}`} />
+            {isDeleting ? "Deleting…" : "Delete account"}
           </Button>
         </CardContent>
       </Card>
