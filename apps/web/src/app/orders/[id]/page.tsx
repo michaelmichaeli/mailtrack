@@ -167,18 +167,8 @@ export default function OrderDetailPage() {
         ) : null;
       })()}
 
-      {/* Order Status */}
-      <Card>
-        <CardContent className="py-6">
-          <div className="flex items-center justify-between mb-3">
-            <Badge variant="status" status={order.packages[0]?.status ?? order.status ?? "ORDERED"} />
-          </div>
-          <PackageProgressBar status={order.packages[0]?.status ?? order.status ?? "ORDERED"} />
-        </CardContent>
-      </Card>
-
-      {/* Packages */}
-      {order.packages.length > 0 && (
+      {/* Tracking & Shipment */}
+      {order.packages.length > 0 ? (
         order.packages.map((pkg: any) => {
           const isRefreshing = refreshingPkgId === pkg.id && refreshMutation.isPending;
           const carrierUrl = getCarrierTrackingUrl(pkg.carrier, pkg.trackingNumber);
@@ -189,18 +179,10 @@ export default function OrderDetailPage() {
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <CardTitle className="flex items-center gap-2">
                     <Package className="h-5 w-5" />
-                    {getCarrierDisplayName(pkg.carrier)} · {pkg.trackingNumber}
+                    Tracking & Shipment
                   </CardTitle>
                   <div className="flex items-center gap-2">
                     <Badge variant="status" status={pkg.status} />
-                    {carrierUrl && (
-                      <a href={carrierUrl} target="_blank" rel="noopener noreferrer">
-                        <Button variant="outline" size="sm">
-                          <ExternalLink className="h-4 w-4 mr-2" />
-                          Track on {getCarrierDisplayName(pkg.carrier)}
-                        </Button>
-                      </a>
-                    )}
                     {pkg.trackingNumber && (
                       <Button
                         variant="outline"
@@ -220,7 +202,19 @@ export default function OrderDetailPage() {
 
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                   <div>
-                    <p className="text-xs text-muted-foreground">Last location</p>
+                    <p className="text-xs text-muted-foreground">Tracking Number</p>
+                    <p className="text-sm font-medium font-mono">{pkg.trackingNumber}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Carrier</p>
+                    <p className="text-sm font-medium">{getCarrierDisplayName(pkg.carrier)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Status</p>
+                    <p className="text-sm font-medium capitalize">{pkg.status.toLowerCase().replace(/_/g, " ")}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Last Location</p>
                     <p className="text-sm font-medium flex items-center gap-1">
                       {pkg.lastLocation ? (
                         <>
@@ -233,7 +227,7 @@ export default function OrderDetailPage() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Estimated delivery</p>
+                    <p className="text-xs text-muted-foreground">Estimated Delivery</p>
                     <p className="text-sm font-medium flex items-center gap-1">
                       {pkg.estimatedDelivery ? (
                         <>
@@ -247,6 +241,16 @@ export default function OrderDetailPage() {
                   </div>
                 </div>
 
+                {/* External tracking link */}
+                {carrierUrl && (
+                  <a href={carrierUrl} target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" className="w-full">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Track on {getCarrierDisplayName(pkg.carrier)}
+                    </Button>
+                  </a>
+                )}
+
                 {/* Tracking timeline */}
                 {pkg.events.length > 0 && (
                   <div>
@@ -258,6 +262,53 @@ export default function OrderDetailPage() {
             </Card>
           );
         })
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Tracking & Shipment
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <PackageProgressBar status={order.status ?? "ORDERED"} />
+
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+              <div>
+                <p className="text-xs text-muted-foreground">Status</p>
+                <p className="text-sm font-medium capitalize">
+                  {(order.status ?? "ORDERED").toLowerCase().replace(/_/g, " ")}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Tracking Number</p>
+                <p className="text-sm text-muted-foreground">Not found in emails</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Carrier</p>
+                <p className="text-sm text-muted-foreground">Unknown</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Source</p>
+                <p className="text-sm text-muted-foreground">Email notifications</p>
+              </div>
+            </div>
+
+            {/* Link to check on AliExpress / 17track */}
+            {order.externalOrderId && !order.externalOrderId.startsWith("gmail-") && order.shopPlatform === "ALIEXPRESS" && (
+              <a
+                href={`https://www.aliexpress.com/p/order/detail.html?orderId=${order.externalOrderId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button variant="outline" className="w-full">
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  View order on AliExpress
+                </Button>
+              </a>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       {/* Related orders */}
