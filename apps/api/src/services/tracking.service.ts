@@ -34,11 +34,38 @@ function actionCodeToStatus(actionCode: string, fallback: PackageStatus): Packag
 }
 
 // Extract location from Cainiao event description, e.g. "[IL,תל אביב - יפו,מחוז תל אביב 5339001]"
-function extractLocation(desc: string, standerdDesc: string): string | null {
+// Also tries to extract from description text when no bracket pattern found
+function extractLocation(desc: string, standerdDesc: string, group?: any): string | null {
   const combined = `${standerdDesc} ${desc}`;
+  // Pattern 1: bracketed location [country, city, region]
   const match = combined.match(/\[([^\]]+)\]/);
-  if (match) return match[1].replace(/^IL,?\s*/, "").trim() || match[1].trim();
+  if (match) {
+    let inner = match[1]
+      .replace(/^IL,?\s*/, "")        // strip country code
+      .replace(/\d{5,7}/g, "")        // strip zip codes
+      .replace(/,\s*,/g, ",")         // clean up double commas
+      .replace(/^[,\s]+|[,\s]+$/g, "") // trim edges
+      .trim();
+    if (!inner || inner.length < 2) return null; // "IL" alone → no location
+    return inner;
+  }
+  // Pattern 2: location phrases in description
+  const locMatch = combined.match(/(?:at|in|from|arrived? (?:at|in))\s+([A-Z][a-zA-Z\s\-,]+?)(?:\.|$|,\s*[a-z])/i);
+  if (locMatch && locMatch[1].length > 3 && locMatch[1].length < 50) {
+    const loc = locMatch[1].trim().replace(/[.,]$/, "");
+    if (!/^(the|warehouse|customs|sorting|transit|destination|origin|departure)$/i.test(loc)) {
+      return loc;
+    }
+  }
   return null;
+}
+
+// Clean raw Cainiao description: remove bracketed location prefixes, clean up text
+function cleanDescription(desc: string): string {
+  return desc
+    .replace(/\[[^\]]*\]\s*/g, "")  // remove [IL, city, region] prefixes
+    .replace(/^\s*[-–—]\s*/, "")     // remove leading dashes
+    .trim() || desc.trim();
 }
 
 /**
@@ -101,7 +128,7 @@ export async function trackPackage(
           timestamp: new Date(e.time).toISOString(),
           location,
           status: eventStatus,
-          description: desc,
+          description: cleanDescription(desc),
         };
       });
 

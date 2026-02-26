@@ -31,6 +31,11 @@ export function Sidebar() {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -50,8 +55,8 @@ export function Sidebar() {
     else setTheme("light");
   };
 
-  const themeLabel = theme === "system" ? "System" : theme === "dark" ? "Dark" : "Light";
-  const ThemeIcon = theme === "dark" ? Moon : theme === "system" ? Monitor : Sun;
+  const themeLabel = !mounted ? "" : theme === "system" ? "System" : theme === "dark" ? "Dark" : "Light";
+  const ThemeIcon = !mounted ? Sun : theme === "dark" ? Moon : theme === "system" ? Monitor : Sun;
 
   const sidebarContent = (
     <>

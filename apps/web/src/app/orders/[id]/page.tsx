@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PackageProgressBar } from "@/components/packages/package-progress-bar";
 import { TrackingTimeline } from "@/components/packages/tracking-timeline";
-import { ArrowLeft, RefreshCw, MapPin, Clock, DollarSign, Store, Package, ShoppingBag, ExternalLink, ChevronRight, Navigation, KeyRound } from "lucide-react";
+import { ArrowLeft, RefreshCw, MapPin, Clock, DollarSign, Store, Package, ShoppingBag, ExternalLink, ChevronRight, Navigation, KeyRound, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { getCarrierTrackingUrl, getCarrierDisplayName } from "@/lib/carrier-urls";
@@ -48,6 +48,16 @@ export default function OrderDetailPage() {
       toast.error("Failed to refresh tracking");
       setRefreshingPkgId(null);
     },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => api.deleteOrder(id),
+    onSuccess: () => {
+      toast.success("Order deleted");
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      router.push("/dashboard");
+    },
+    onError: () => toast.error("Failed to delete order"),
   });
 
   if (isLoading) {
@@ -94,16 +104,29 @@ export default function OrderDetailPage() {
       if (!orderItems.includes(item) && !pkgItems.includes(item)) pkgItems.push(item);
     }
   }
-  // Merge broken line continuations: if an item starts lowercase or is very short, append to previous
-  const rawItems = [...orderItems, ...pkgItems];
+  // Merge broken line continuations from truncated email parsing
+  const rawItems = [...orderItems, ...pkgItems]
+    .map(s => s.trim())
+    .filter(s => s && !/^Scanned from/i.test(s));
   const allItems: string[] = [];
   for (const item of rawItems) {
-    const trimmed = item.trim();
-    if (!trimmed) continue;
-    if (allItems.length > 0 && (trimmed.length < 10 || /^[a-z]/.test(trimmed))) {
-      allItems[allItems.length - 1] += " " + trimmed;
+    if (!allItems.length) { allItems.push(item); continue; }
+    const prev = allItems[allItems.length - 1];
+    const isContinuation =
+      // starts lowercase → continuation
+      /^[a-z]/.test(item) ||
+      // pure size/dimension/qty spec (e.g. "900x400x2mm", "52cm, 50pcs", "EU39-45")
+      /^\d+(\.\d+)?\s*(x\d|cm|mm|m|pcs|pairs?|pieces?|inch)/i.test(item) ||
+      // color/size variant line (e.g. "Red Black, 5pcs", "6 pairs white, EU39-45")
+      /^\d+\s*pairs?\b/i.test(item) ||
+      // very short fragment
+      item.length < 8 ||
+      // previous line looks truncated (ends mid-word: last word ≤3 chars and not a normal ending)
+      /\s\S{1,3}$/.test(prev) && !/\d$/.test(prev) && !/[.!),]$/.test(prev);
+    if (isContinuation) {
+      allItems[allItems.length - 1] = prev + " " + item;
     } else {
-      allItems.push(trimmed);
+      allItems.push(item);
     }
   }
 
@@ -114,7 +137,7 @@ export default function OrderDetailPage() {
         <Button variant="ghost" size="icon" onClick={() => router.back()} className="shrink-0">
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h1 className="text-xl font-bold tracking-tight text-foreground truncate">{order.merchant}</h1>
           <div className="flex items-center gap-2 mt-0.5">
             <Badge variant="status" status={order.status ?? "ORDERED"} />
@@ -123,6 +146,19 @@ export default function OrderDetailPage() {
             )}
           </div>
         </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="shrink-0 text-muted-foreground hover:text-destructive cursor-pointer"
+          onClick={() => {
+            if (confirm("Delete this order and all its tracking data?")) {
+              deleteMutation.mutate();
+            }
+          }}
+          disabled={deleteMutation.isPending}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* Order info grid */}
@@ -168,10 +204,10 @@ export default function OrderDetailPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            <ul className="space-y-1.5">
+            <ul className="space-y-1">
               {allItems.map((item: string, i: number) => (
-                <li key={i} className="flex items-baseline gap-2 text-sm text-foreground">
-                  <span className="h-1.5 w-1.5 rounded-full bg-primary/50 shrink-0 translate-y-[-1px]" />
+                <li key={i} className="flex items-start gap-2.5 text-sm text-foreground">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary/50 shrink-0 mt-[7px]" />
                   <span className="leading-relaxed">{item}</span>
                 </li>
               ))}

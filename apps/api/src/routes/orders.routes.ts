@@ -42,6 +42,38 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
+    return formatOrder(order, relatedOrders);
+  });
+
+  // DELETE /api/orders/:id — Delete order and its packages/events
+  app.delete("/:id", {
+    preHandler: [app.authenticate],
+  }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const userId = request.user.userId;
+
+    const order = await app.prisma.order.findFirst({
+      where: { id, userId },
+      include: { packages: { select: { id: true } } },
+    });
+
+    if (!order) {
+      return reply.status(404).send({ error: "Order not found" });
+    }
+
+    // Delete events → packages → order (cascade)
+    const packageIds = order.packages.map((p: any) => p.id);
+    if (packageIds.length > 0) {
+      await app.prisma.trackingEvent.deleteMany({ where: { packageId: { in: packageIds } } });
+      await app.prisma.package.deleteMany({ where: { id: { in: packageIds } } });
+    }
+    await app.prisma.order.delete({ where: { id } });
+
+    return { success: true };
+  });
+};
+
+function formatOrder(order: any, relatedOrders: any[]) {
     return {
       id: order.id,
       externalOrderId: order.externalOrderId,
@@ -89,5 +121,4 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         })),
       })),
     };
-  });
-};
+}

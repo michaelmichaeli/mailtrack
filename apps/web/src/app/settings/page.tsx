@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -70,6 +70,8 @@ function SettingsContent() {
   const searchParams = useSearchParams();
   const errorParam = searchParams.get("error");
   const successParam = searchParams.get("success");
+  const autoSync = searchParams.get("autoSync");
+  const [didAutoSync, setDidAutoSync] = useState(false);
 
   const { data: accounts } = useQuery({
     queryKey: ["connected-accounts"],
@@ -89,6 +91,23 @@ function SettingsContent() {
     }
     window.location.href = `${API_URL}/api/email/connect/gmail?token=${encodeURIComponent(token)}`;
   };
+
+  // Auto-sync after Gmail is connected
+  useEffect(() => {
+    if (autoSync && !didAutoSync) {
+      setDidAutoSync(true);
+      toast.info("Syncing your emails…");
+      api.syncEmails().then((r) => {
+        toast.success(`Synced ${r.emailsParsed} emails`);
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+        return api.syncAllTracking().catch(() => null);
+      }).then((r) => {
+        if (r?.synced) toast.success(`Updated ${r.synced} packages`);
+      }).catch(() => {
+        toast.error("Sync failed — try again from dashboard");
+      });
+    }
+  }, [autoSync, didAutoSync, queryClient]);
 
   const disconnectEmail = useMutation({
     mutationFn: (id: string) => api.disconnectEmail(id),
@@ -379,47 +398,82 @@ function ScanMessagesSection() {
         {/* Step 3: Setup guides */}
         {ingestKey && (
           <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">3. Set up auto-forwarding on your phone</p>
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant={showGuide === "android" ? "default" : "outline"} className="w-full text-xs gap-1.5" onClick={() => setShowGuide(showGuide === "android" ? null : "android")}>
-                <Smartphone className="h-3.5 w-3.5" /> Android Setup
+            <p className="text-sm font-medium text-foreground">3. Install automation on your phone</p>
+
+            {/* Quick install buttons */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                className="w-full text-xs gap-1.5 h-12 flex-col cursor-pointer"
+                onClick={() => {
+                  const fullUrl = `${webhookUrl}?key=${ingestKey}`;
+                  navigator.clipboard.writeText(fullUrl).then(() => {
+                    toast.success("Webhook URL copied! Open iOS Shortcuts app → create new Automation → Message trigger → add 'Get Contents of URL' action and paste this URL.");
+                  });
+                }}
+              >
+                <Smartphone className="h-4 w-4" />
+                <span>Copy URL for iOS Shortcuts</span>
               </Button>
-              <Button variant={showGuide === "ios" ? "default" : "outline"} className="w-full text-xs gap-1.5" onClick={() => setShowGuide(showGuide === "ios" ? null : "ios")}>
-                <Smartphone className="h-3.5 w-3.5" /> iOS Setup
+              <Button
+                variant="outline"
+                className="w-full text-xs gap-1.5 h-12 flex-col"
+                onClick={() => {
+                  // Download Tasker XML profile
+                  const taskerXml = generateTaskerProfile(webhookUrl, ingestKey);
+                  const blob = new Blob([taskerXml], { type: "text/xml" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = "MailTrack_SMS_Forward.prf.xml";
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  toast.success("Tasker profile downloaded — import it in Tasker → Profiles → Import");
+                }}
+              >
+                <Download className="h-4 w-4" />
+                <span>Download Tasker Profile</span>
+              </Button>
+            </div>
+
+            {/* Expandable manual guides */}
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant={showGuide === "android" ? "secondary" : "ghost"} className="w-full text-xs gap-1.5" size="sm" onClick={() => setShowGuide(showGuide === "android" ? null : "android")}>
+                Manual Android Setup {showGuide === "android" ? "▲" : "▼"}
+              </Button>
+              <Button variant={showGuide === "ios" ? "secondary" : "ghost"} className="w-full text-xs gap-1.5" size="sm" onClick={() => setShowGuide(showGuide === "ios" ? null : "ios")}>
+                Manual iOS Setup {showGuide === "ios" ? "▲" : "▼"}
               </Button>
             </div>
 
             {showGuide === "android" && (
               <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2 text-xs text-muted-foreground">
-                <p className="font-medium text-foreground text-sm">Android — Using Tasker (recommended)</p>
+                <p className="font-medium text-foreground text-sm">Android — Using Tasker</p>
                 <ol className="list-decimal list-inside space-y-1.5">
                   <li>Install <strong>Tasker</strong> from the Play Store</li>
-                  <li>Create a new <strong>Profile</strong> → Event → Phone → Received Text</li>
-                  <li>In Content, add keywords: <code className="bg-muted px-1 rounded">shipped|tracking|delivery|parcel|חבילה|משלוח</code></li>
-                  <li>Add a <strong>Task</strong> → Net → HTTP Request</li>
-                  <li>Method: <strong>POST</strong></li>
-                  <li>URL: <code className="bg-muted px-1 rounded break-all">{webhookUrl}?key={ingestKey}</code></li>
-                  <li>Headers: <code className="bg-muted px-1 rounded">Content-Type: application/json</code></li>
+                  <li>Import the downloaded profile, or create manually:</li>
+                  <li>Profile → Event → Phone → Received Text</li>
+                  <li>Content filter: <code className="bg-muted px-1 rounded">shipped|tracking|delivery|parcel|חבילה|משלוח</code></li>
+                  <li>Task → Net → HTTP Request → POST</li>
+                  <li>URL: your webhook URL (copied above)</li>
                   <li>Body: <code className="bg-muted px-1 rounded">{`{"text": "%SMSRB", "source": "SMS from %SMSRF"}`}</code></li>
                 </ol>
-                <p className="text-xs mt-2">Alternative: Use <strong>Automate</strong> or <strong>MacroDroid</strong> with similar HTTP POST setup.</p>
+                <p className="text-xs mt-2">Alternatives: <strong>MacroDroid</strong> or <strong>Automate</strong> (free)</p>
               </div>
             )}
 
             {showGuide === "ios" && (
               <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2 text-xs text-muted-foreground">
-                <p className="font-medium text-foreground text-sm">iOS — Using Shortcuts + Automation</p>
+                <p className="font-medium text-foreground text-sm">iOS — Using Shortcuts</p>
                 <ol className="list-decimal list-inside space-y-1.5">
                   <li>Open <strong>Shortcuts</strong> app → Automation tab</li>
                   <li>Tap <strong>+</strong> → Personal Automation → <strong>Message</strong></li>
-                  <li>Set &quot;Message contains&quot; keywords: <code className="bg-muted px-1 rounded">tracking, shipped, delivered, חבילה</code></li>
+                  <li>Keywords: <code className="bg-muted px-1 rounded">tracking, shipped, delivered, חבילה</code></li>
                   <li>Add action: <strong>Get Contents of URL</strong></li>
-                  <li>URL: <code className="bg-muted px-1 rounded break-all">{webhookUrl}?key={ingestKey}</code></li>
-                  <li>Method: <strong>POST</strong>, Request Body: JSON</li>
-                  <li>Add key <code className="bg-muted px-1 rounded">text</code> with value: <strong>Shortcut Input</strong></li>
+                  <li>URL: your webhook URL (copied above)</li>
+                  <li>Method: POST, Body: JSON, key <code className="bg-muted px-1 rounded">text</code> = Shortcut Input</li>
                   <li>Turn off &quot;Ask Before Running&quot;</li>
                 </ol>
-                <p className="text-xs mt-2">Note: iOS may require confirmation for automations. IFTTT is an alternative.</p>
               </div>
             )}
           </div>
@@ -686,17 +740,8 @@ function StoreImportSection() {
             <Upload className="h-3.5 w-3.5" /> Import order history (CSV)
           </p>
           <p className="text-xs text-muted-foreground">
-            For older orders not in your email, export from each store and upload here:
+            If you have a CSV or spreadsheet with tracking numbers (exported from any store), upload it here. We&apos;ll extract tracking numbers and start tracking automatically.
           </p>
-          <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1.5 text-xs text-muted-foreground">
-            <p className="font-medium text-foreground text-xs">How to export your order history:</p>
-            <ul className="space-y-1">
-              <li>🛒 <strong>Amazon</strong> → <a href="https://www.amazon.com/gp/b2b/reports" target="_blank" rel="noopener noreferrer" className="underline text-blue-600 dark:text-blue-400">Order Reports</a> → Request Report → Download CSV</li>
-              <li>🏷️ <strong>eBay</strong> → <a href="https://www.ebay.com/mye/myebay/purchase" target="_blank" rel="noopener noreferrer" className="underline text-blue-600 dark:text-blue-400">Purchase History</a> → use eBay CSV export extension</li>
-              <li>📦 <strong>AliExpress</strong> → My Orders → no official export (use email sync instead)</li>
-              <li>🌿 <strong>iHerb</strong> → <a href="https://www.iherb.com/account/orders" target="_blank" rel="noopener noreferrer" className="underline text-blue-600 dark:text-blue-400">Order History</a> → copy tracking numbers</li>
-            </ul>
-          </div>
           <label className="flex items-center justify-center gap-2 rounded-md border-2 border-dashed border-border hover:border-primary/50 p-4 transition-colors cursor-pointer">
             <input
               type="file"
@@ -773,6 +818,42 @@ function parseCsv(text: string): Array<{ orderId?: string; trackingNumber?: stri
   }
 
   return rows;
+}
+
+/** Generate a Tasker profile XML for SMS forwarding */
+function generateTaskerProfile(webhookUrl: string, ingestKey: string): string {
+  const fullUrl = `${webhookUrl}?key=${ingestKey}`;
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<TaskerData sr="" dvi="1" tv="6.3.13">
+  <Profile sr="prof0" ve="2">
+    <cdate>0</cdate>
+    <edate>0</edate>
+    <flags>0</flags>
+    <id>100</id>
+    <mid0>101</mid0>
+    <nme>MailTrack SMS Forward</nme>
+    <Event sr="con0" ve="2">
+      <code>7</code>
+      <pri>0</pri>
+      <Str sr="arg0" ve="3">shipped|tracking|delivery|parcel|חבילה|משלוח|הזמנה|DHL|FedEx|UPS</Str>
+      <Int sr="arg1" val="2"/>
+    </Event>
+  </Profile>
+  <Task sr="task101">
+    <cdate>0</cdate>
+    <edate>0</edate>
+    <id>101</id>
+    <nme>Forward to MailTrack</nme>
+    <Action sr="act0" ve="7">
+      <code>339</code>
+      <Str sr="arg0" ve="3">POST</Str>
+      <Str sr="arg1" ve="3">${fullUrl}</Str>
+      <Str sr="arg2" ve="3">Content-Type: application/json</Str>
+      <Str sr="arg3" ve="3">{"text": "%SMSRB", "source": "SMS from %SMSRF"}</Str>
+      <Int sr="arg4" val="30"/>
+    </Action>
+  </Task>
+</TaskerData>`;
 }
 
 export default function SettingsPage() {

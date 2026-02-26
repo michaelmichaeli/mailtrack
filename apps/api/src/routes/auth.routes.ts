@@ -115,7 +115,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         });
 
         await logAudit(app, userId, "EMAIL_CONNECT", "Gmail: " + email, request.ip);
-        return reply.redirect(`${WEB_URL}/settings?success=${encodeURIComponent("Gmail connected: " + email)}`);
+        return reply.redirect(`${WEB_URL}/settings?success=${encodeURIComponent("Gmail connected: " + email)}&autoSync=1`);
       } catch (err: any) {
         app.log.error(err, "Gmail OAuth callback failed");
         return reply.redirect(`${WEB_URL}/settings?error=${encodeURIComponent("Failed to connect Gmail. Please try again.")}`);

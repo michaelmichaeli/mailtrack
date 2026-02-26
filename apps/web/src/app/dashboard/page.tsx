@@ -9,7 +9,7 @@ import { PackageCard } from "@/components/packages/package-card";
 import { EmptyState } from "@/components/packages/empty-state";
 import { DashboardSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Package, Truck, Clock, CheckCircle2, AlertTriangle, ArrowRight, MessageSquare } from "lucide-react";
+import { RefreshCw, Package, Truck, Clock, CheckCircle2, AlertTriangle, ArrowRight, MessageSquare, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { AddPackageDialog } from "@/components/packages/add-package-dialog";
 import { ScanSmsDialog } from "@/components/packages/scan-sms-dialog";
@@ -26,9 +26,7 @@ export default function DashboardPage() {
   const handleFullSync = async () => {
     setIsSyncing(true);
     try {
-      // Step 1: Sync emails
       const emailResult = await api.syncEmails();
-      // Step 2: Sync tracking data from carriers
       try {
         const trackResult = await api.syncAllTracking();
         toast.success(`Synced ${emailResult.emailsParsed} emails, updated ${trackResult.synced} packages`);
@@ -53,12 +51,14 @@ export default function DashboardPage() {
   const hasPackages = stats && stats.total > 0;
   const busy = isSyncing || isRefetching;
 
-  const statCards = [
-    { label: "Arriving Today", value: stats?.arrivingToday ?? 0, icon: Clock, color: "text-violet-600 dark:text-violet-400", bg: "bg-violet-50 dark:bg-violet-950/50", href: "/packages?status=OUT_FOR_DELIVERY" },
-    { label: "In Transit", value: stats?.inTransit ?? 0, icon: Truck, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50 dark:bg-indigo-950/50", href: "/packages?status=IN_TRANSIT" },
-    { label: "Processing", value: stats?.processing ?? 0, icon: Package, color: "text-slate-600 dark:text-slate-400", bg: "bg-slate-100 dark:bg-slate-800/50", href: "/packages?status=PROCESSING" },
-    { label: "Delivered", value: stats?.delivered ?? 0, icon: CheckCircle2, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/50", href: "/packages?status=DELIVERED" },
-    { label: "Exceptions", value: stats?.exceptions ?? 0, icon: AlertTriangle, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/50", href: "/packages?status=EXCEPTION" },
+  const activeCount = (stats?.arrivingToday ?? 0) + (stats?.inTransit ?? 0) + (stats?.processing ?? 0);
+
+  const pills = [
+    { label: "Today", value: stats?.arrivingToday ?? 0, color: "bg-violet-500", href: "/packages?status=OUT_FOR_DELIVERY" },
+    { label: "In Transit", value: stats?.inTransit ?? 0, color: "bg-indigo-500", href: "/packages?status=IN_TRANSIT" },
+    { label: "Processing", value: stats?.processing ?? 0, color: "bg-slate-400", href: "/packages?status=PROCESSING" },
+    { label: "Delivered", value: stats?.delivered ?? 0, color: "bg-emerald-500", href: "/packages?status=DELIVERED" },
+    { label: "Issues", value: stats?.exceptions ?? 0, color: "bg-amber-500", href: "/packages?status=EXCEPTION" },
   ];
 
   return (
@@ -71,11 +71,11 @@ export default function DashboardPage() {
         </div>
         <div className="flex items-center gap-2">
           <AddPackageDialog />
-          <Button onClick={() => setScanOpen(true)} variant="outline" size="sm">
+          <Button onClick={() => setScanOpen(true)} variant="outline" size="sm" className="cursor-pointer">
             <MessageSquare className="h-4 w-4" />
             Scan Messages
           </Button>
-          <Button onClick={handleFullSync} variant="outline" size="sm" disabled={busy}>
+          <Button onClick={handleFullSync} variant="outline" size="sm" disabled={busy} className="cursor-pointer">
             <RefreshCw className={`h-4 w-4 ${busy ? "animate-spin" : ""}`} />
             {isSyncing ? "Syncing…" : "Sync All"}
           </Button>
@@ -92,29 +92,44 @@ export default function DashboardPage() {
         />
       ) : (
         <>
-          {/* Stats row */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {statCards.map((s) => {
-              const Icon = s.icon;
-              return (
-                <Link key={s.label} href={s.href}>
-                  <Card className="overflow-hidden hover:shadow-md hover:border-primary/20 transition-all group">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${s.bg} shrink-0`}>
-                          <Icon className={`h-5 w-5 ${s.color}`} />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-2xl font-bold text-foreground leading-none">{s.value}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5 whitespace-nowrap">{s.label}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              );
-            })}
-          </div>
+          {/* Stats overview bar */}
+          <Card className="overflow-hidden border-border/60">
+            <div className="flex flex-col sm:flex-row">
+              {/* Hero metric */}
+              <div className="flex items-center gap-4 px-6 py-5 sm:border-r border-b sm:border-b-0 border-border/60 sm:min-w-[180px]">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 shrink-0">
+                  <TrendingUp className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-3xl font-extrabold text-foreground leading-none">{activeCount}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Active shipments</p>
+                </div>
+              </div>
+
+              {/* Status breakdown */}
+              <div className="flex-1 flex items-center px-4 py-4 sm:px-6">
+                <div className="flex flex-wrap gap-2 w-full">
+                  {pills.map((p) => (
+                    <Link key={p.label} href={p.href}>
+                      <button className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card px-3.5 py-1.5 text-sm transition-all hover:shadow-sm hover:border-primary/30 hover:bg-accent/50 cursor-pointer group">
+                        <span className={`h-2 w-2 rounded-full ${p.color} shrink-0`} />
+                        <span className="text-muted-foreground group-hover:text-foreground transition-colors">{p.label}</span>
+                        <span className="font-bold text-foreground min-w-[1.25rem] text-center">{p.value}</span>
+                      </button>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              {/* Total badge */}
+              <div className="hidden sm:flex items-center px-6 border-l border-border/60">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-foreground leading-none">{stats?.total ?? 0}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider">Total</p>
+                </div>
+              </div>
+            </div>
+          </Card>
 
           {/* Order sections */}
           {[
@@ -134,7 +149,7 @@ export default function DashboardPage() {
                     <span className="text-xs font-normal text-muted-foreground">({section.items.length})</span>
                   </h2>
                   {section.items.length > 3 && (
-                    <Link href={`/packages?status=${section.status}`} className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors">
+                    <Link href={`/packages?status=${section.status}`} className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer">
                       View all <ArrowRight className="h-3 w-3" />
                     </Link>
                   )}
