@@ -150,6 +150,7 @@ model Package {
   estimatedDelivery DateTime?
   lastLocation      String?
   items             String?       // JSON string of item descriptions
+  pickupLocation    String?       // JSON: { address, hours, pickupCode, verificationCode }
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 

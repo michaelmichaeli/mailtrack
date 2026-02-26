@@ -166,28 +166,34 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
                 carrier: (parsed.carrier ?? detectCarrier(parsed.trackingNumber)) as any,
                 status: (parsed.status as any) ?? "ORDERED",
                 items: parsed.items.length > 0 ? JSON.stringify(parsed.items) : null,
+                pickupLocation: parsed.pickupLocation ? JSON.stringify(parsed.pickupLocation) : null,
               },
             });
             packageId = newPkg.id;
           } else {
             packageId = existingPkg.id;
+            const updateData: any = {};
             if (parsed.status) {
               // Update package status if we have newer info
               const statusOrder = ["ORDERED", "PROCESSING", "SHIPPED", "IN_TRANSIT", "OUT_FOR_DELIVERY", "DELIVERED"];
               const currentIdx = statusOrder.indexOf(existingPkg.status);
               const newIdx = statusOrder.indexOf(parsed.status);
               if (newIdx > currentIdx) {
-                await app.prisma.package.update({
-                  where: { id: existingPkg.id },
-                  data: { status: parsed.status as any },
-                });
+                updateData.status = parsed.status;
               }
             }
             // Merge items into existing package
             if (parsed.items.length > 0 && !existingPkg.items) {
+              updateData.items = JSON.stringify(parsed.items);
+            }
+            // Save pickup location if we have it and package doesn't
+            if (parsed.pickupLocation && !existingPkg.pickupLocation) {
+              updateData.pickupLocation = JSON.stringify(parsed.pickupLocation);
+            }
+            if (Object.keys(updateData).length > 0) {
               await app.prisma.package.update({
                 where: { id: existingPkg.id },
-                data: { items: JSON.stringify(parsed.items) },
+                data: updateData,
               });
             }
           }

@@ -62,6 +62,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         estimatedDelivery: p.estimatedDelivery?.toISOString() ?? null,
         lastLocation: p.lastLocation,
         items: p.items,
+        pickupLocation: p.pickupLocation,
         events: p.events.map((e: any) => ({
           id: e.id,
           packageId: e.packageId,

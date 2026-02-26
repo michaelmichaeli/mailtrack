@@ -262,6 +262,55 @@ export default function OrderDetailPage() {
                     <TrackingTimeline events={pkg.events} />
                   </div>
                 )}
+
+                {/* Pickup Location */}
+                {(() => {
+                  const pickup = pkg.pickupLocation ? JSON.parse(pkg.pickupLocation) : null;
+                  return pickup ? (
+                    <div className="rounded-lg border bg-green-50 dark:bg-green-950/20 p-4 space-y-3">
+                      <div className="flex items-center gap-2 text-green-700 dark:text-green-400 font-medium text-sm">
+                        <MapPin className="h-4 w-4" />
+                        Pickup Location
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Address</p>
+                          <p className="text-sm font-medium" dir="auto">{pickup.address}</p>
+                        </div>
+                        {pickup.hours && (
+                          <div>
+                            <p className="text-xs text-muted-foreground">Opening Hours</p>
+                            <p className="text-sm font-medium" dir="auto">{pickup.hours}</p>
+                          </div>
+                        )}
+                        {pickup.pickupCode && (
+                          <div>
+                            <p className="text-xs text-muted-foreground">Pickup Code</p>
+                            <p className="text-sm font-mono font-bold text-green-700 dark:text-green-400">{pickup.pickupCode}</p>
+                          </div>
+                        )}
+                        {pickup.verificationCode && (
+                          <div>
+                            <p className="text-xs text-muted-foreground">Verification Code</p>
+                            <p className="text-sm font-mono font-bold">{pickup.verificationCode}</p>
+                          </div>
+                        )}
+                      </div>
+                      {pickup.address && (
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pickup.address)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Button variant="outline" size="sm" className="w-full">
+                            <MapPin className="h-4 w-4 mr-2" />
+                            Open in Google Maps
+                          </Button>
+                        </a>
+                      )}
+                    </div>
+                  ) : null;
+                })()}
               </CardContent>
             </Card>
           );

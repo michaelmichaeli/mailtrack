@@ -78,7 +78,15 @@ export interface ParsedEmail {
   totalAmount: number | null;
   currency: string | null;
   status: PackageStatus | null;
+  pickupLocation: PickupLocation | null;
   confidence: number; // 0-1
+}
+
+export interface PickupLocation {
+  address: string;
+  hours: string;
+  pickupCode: string | null;
+  verificationCode: string | null;
 }
 
 export interface EmailParserResult {

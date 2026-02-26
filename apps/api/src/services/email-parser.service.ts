@@ -63,6 +63,11 @@ export function parseEmail(emailHtml: string, fromAddress: string, subject: stri
   // Detect merchant
   const merchant = detectMerchant(fromAddress, subject, textContent);
 
+  // Parcel Home (Cainiao Israel) — pickup location emails
+  if (fromAddress.toLowerCase().includes("parcelhome") || fromAddress.toLowerCase().includes("parcel home")) {
+    return parseParcelHomeEmail(subject, textContent, fullText, merchant);
+  }
+
   // AliExpress-specific parsing (most of our emails)
   if (merchant.platform === ShopPlatform.ALIEXPRESS) {
     return parseAliExpressEmail(subject, textContent, fullText, merchant);
@@ -95,6 +100,7 @@ export function parseEmail(emailHtml: string, fromAddress: string, subject: stri
     totalAmount: amount,
     currency,
     status,
+    pickupLocation: null,
     confidence,
   };
 }
@@ -163,6 +169,111 @@ function parseAliExpressEmail(
     totalAmount: amount,
     currency,
     status,
+    pickupLocation: null,
+    confidence,
+  };
+}
+
+/**
+ * Parcel Home (Cainiao Israel) email parser.
+ * These emails are in Hebrew and contain pickup location data:
+ * address, opening hours, pickup code, verification code.
+ */
+function parseParcelHomeEmail(
+  subject: string,
+  textContent: string,
+  fullText: string,
+  merchant: { platform: ShopPlatform; name: string }
+): ParsedEmail {
+  // Extract tracking number from text (format: PH8002540186)
+  const subjectTracking = extractTrackingFromSubject(subject);
+  let tracking = subjectTracking;
+  if (!tracking) {
+    const bodyTrackingResults = extractTrackingNumbers(fullText);
+    tracking = bodyTrackingResults[0] ?? null;
+  }
+
+  // Hebrew RTL patterns for pickup data
+  // Address: text before כתובת:
+  let address: string | null = null;
+  const addressMatch = textContent.match(/כתובת\s*:?\s*([^\n:]+?)(?:\s*שעות|\s*קוד|\s*$)/);
+  if (addressMatch) {
+    address = addressMatch[1].trim();
+  }
+  if (!address) {
+    const addressMatch2 = textContent.match(/([^:]{5,60})\s*:\s*כתובת/);
+    if (addressMatch2) {
+      address = addressMatch2[1].trim();
+    }
+  }
+
+  // Opening hours
+  let hours: string | null = null;
+  const hoursMatch = textContent.match(/שעות פתיחה\s*:?\s*([^\n]+?)(?:\s*כתובת|\s*קוד|\s*$)/);
+  if (hoursMatch) {
+    hours = hoursMatch[1].trim();
+  }
+  if (!hours) {
+    const hoursMatch2 = textContent.match(/([^:]{5,120})\s*:\s*שעות פתיחה/);
+    if (hoursMatch2) {
+      hours = hoursMatch2[1].trim();
+    }
+  }
+
+  // Pickup code (format: X-Y-ZZZZ-WW)
+  let pickupCode: string | null = null;
+  const pickupCodeMatch = textContent.match(/(\d+-\d+-\d+-\d+)\s*:?\s*קוד איסוף/);
+  if (pickupCodeMatch) {
+    pickupCode = pickupCodeMatch[1];
+  }
+  if (!pickupCode) {
+    const pickupCodeMatch2 = textContent.match(/קוד איסוף\s*:?\s*(\d+-\d+-\d+-\d+)/);
+    if (pickupCodeMatch2) {
+      pickupCode = pickupCodeMatch2[1];
+    }
+  }
+
+  // Verification code (4-6 digit code)
+  let verificationCode: string | null = null;
+  const verMatch = textContent.match(/קוד אימות\s*:?\s*(\d{4,6})/);
+  if (verMatch) {
+    verificationCode = verMatch[1];
+  }
+  if (!verificationCode) {
+    const verMatch2 = textContent.match(/(\d{4,6})\s*:?\s*קוד אימות/);
+    if (verMatch2) {
+      verificationCode = verMatch2[1];
+    }
+  }
+
+  const pickupLocation = address ? {
+    address,
+    hours: hours ?? "",
+    pickupCode,
+    verificationCode,
+  } : null;
+
+  const status = detectStatus(subject, textContent) ?? PackageStatus.OUT_FOR_DELIVERY;
+
+  const confidence = calculateConfidence({
+    hasMerchant: true,
+    hasTracking: !!tracking,
+    hasOrderId: false,
+    hasItems: false,
+  });
+
+  return {
+    merchant: "Cainiao / Parcel Home",
+    platform: ShopPlatform.ALIEXPRESS,
+    orderId: null,
+    trackingNumber: tracking?.trackingNumber ?? null,
+    carrier: tracking?.carrier ?? null,
+    items: [],
+    orderDate: null,
+    totalAmount: null,
+    currency: null,
+    status,
+    pickupLocation,
     confidence,
   };
 }
