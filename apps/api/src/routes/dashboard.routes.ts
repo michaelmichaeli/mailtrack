@@ -37,9 +37,10 @@ export const dashboardRoutes: FastifyPluginAsync = async (app) => {
 
     for (const order of orders) {
       const pkg = order.packages[0]; // primary package
+      // Use order-level status for categorization
+      const orderStatus = pkg?.status ?? order.status;
 
       if (pkg) {
-        // Order has a tracked package — categorize by package status
         if (
           pkg.status === PackageStatus.OUT_FOR_DELIVERY ||
           (pkg.estimatedDelivery &&
@@ -66,8 +67,14 @@ export const dashboardRoutes: FastifyPluginAsync = async (app) => {
           processing.push(order);
         }
       } else {
-        // No package — treat as processing/awaiting shipment
-        if (order.createdAt >= recentCutoff) {
+        // No package — use order-level status
+        if (orderStatus === PackageStatus.DELIVERED) {
+          if (order.updatedAt >= recentCutoff) delivered.push(order);
+        } else if (orderStatus === PackageStatus.IN_TRANSIT || orderStatus === PackageStatus.SHIPPED) {
+          inTransit.push(order);
+        } else if (orderStatus === PackageStatus.OUT_FOR_DELIVERY) {
+          arrivingToday.push(order);
+        } else if (order.createdAt >= recentCutoff) {
           processing.push(order);
         }
       }
@@ -81,6 +88,8 @@ export const dashboardRoutes: FastifyPluginAsync = async (app) => {
       orderDate: o.orderDate?.toISOString() ?? null,
       totalAmount: o.totalAmount,
       currency: o.currency,
+      items: o.items,
+      status: o.status,
       createdAt: o.createdAt.toISOString(),
       updatedAt: o.updatedAt.toISOString(),
       package: o.packages[0]

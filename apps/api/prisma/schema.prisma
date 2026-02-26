@@ -49,6 +49,7 @@ enum Carrier {
   ROYAL_MAIL
   CAINIAO
   YANWEN
+  ALIEXPRESS_STANDARD
   UNKNOWN
 }
 
@@ -119,16 +120,18 @@ model ConnectedShop {
 }
 
 model Order {
-  id              String       @id @default(uuid())
+  id              String        @id @default(uuid())
   userId          String
   shopPlatform    ShopPlatform
   externalOrderId String?
   orderDate       DateTime?
   merchant        String
   totalAmount     Float?
-  currency        String?      @db.VarChar(3)
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  currency        String?       @db.VarChar(3)
+  items           String?       // JSON array of item descriptions
+  status          PackageStatus @default(ORDERED)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   packages Package[]

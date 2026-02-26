@@ -77,6 +77,7 @@ export interface ParsedEmail {
   orderDate: string | null;
   totalAmount: number | null;
   currency: string | null;
+  status: PackageStatus | null;
   confidence: number; // 0-1
 }
 

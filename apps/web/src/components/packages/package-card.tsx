@@ -4,8 +4,8 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { PackageProgressBar } from "./package-progress-bar";
-import { Package, MapPin, Clock, ShoppingBag, Store, ExternalLink } from "lucide-react";
-import { getCarrierTrackingUrl } from "@/lib/carrier-urls";
+import { Package, MapPin, Clock, ShoppingBag } from "lucide-react";
+import { getCarrierDisplayName } from "@/lib/carrier-urls";
 
 interface OrderCardProps {
   order: {
@@ -16,6 +16,8 @@ interface OrderCardProps {
     orderDate: string | null;
     totalAmount: number | null;
     currency: string | null;
+    items: string | null;
+    status: string;
     package?: {
       id: string;
       trackingNumber: string;
@@ -30,16 +32,21 @@ interface OrderCardProps {
 
 export function PackageCard({ order }: OrderCardProps) {
   const pkg = order.package;
-  const items = pkg?.items ? JSON.parse(pkg.items) : [];
-  const itemText = items.length > 0 ? items[0] : null;
-  const status = pkg?.status ?? "ORDERED";
+
+  // Items: prefer order-level items, then package-level
+  const orderItems = order.items ? JSON.parse(order.items) : [];
+  const pkgItems = pkg?.items ? JSON.parse(pkg.items) : [];
+  const items: string[] = orderItems.length > 0 ? orderItems : pkgItems;
+
+  // Status: prefer package status (more granular), then order status
+  const status = pkg?.status ?? order.status ?? "ORDERED";
 
   const formattedDate = order.orderDate
     ? new Date(order.orderDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })
     : null;
   const formattedAmount =
     order.totalAmount != null
-      ? `${order.currency === "EUR" ? "€" : order.currency === "GBP" ? "£" : "$"}${order.totalAmount.toFixed(2)}`
+      ? `${order.currency === "EUR" ? "€" : order.currency === "GBP" ? "£" : "$"}${Number(order.totalAmount).toFixed(2)}`
       : null;
 
   return (
@@ -65,7 +72,11 @@ export function PackageCard({ order }: OrderCardProps) {
               </p>
               <p className="text-xs text-muted-foreground">
                 {pkg
-                  ? `${pkg.carrier} · ${pkg.trackingNumber}`
+                  ? `${getCarrierDisplayName(pkg.carrier)} · ${pkg.trackingNumber}`
+                  : status === "DELIVERED"
+                  ? "Delivered"
+                  : status === "SHIPPED" || status === "IN_TRANSIT"
+                  ? "Shipped — no tracking number"
                   : "Awaiting shipment"}
               </p>
             </div>
@@ -73,11 +84,19 @@ export function PackageCard({ order }: OrderCardProps) {
           <Badge variant="status" status={status} />
         </div>
 
-        {itemText && (
-          <p className="text-sm text-foreground mb-2 line-clamp-2">{itemText}</p>
+        {/* Show up to 2 items */}
+        {items.length > 0 && (
+          <div className="mb-2 space-y-0.5">
+            {items.slice(0, 2).map((item: string, i: number) => (
+              <p key={i} className="text-sm text-foreground line-clamp-1">{item}</p>
+            ))}
+            {items.length > 2 && (
+              <p className="text-xs text-muted-foreground">+{items.length - 2} more items</p>
+            )}
+          </div>
         )}
 
-        {pkg && <PackageProgressBar status={pkg.status} />}
+        <PackageProgressBar status={status} />
 
         <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
           <div className="flex items-center gap-1">

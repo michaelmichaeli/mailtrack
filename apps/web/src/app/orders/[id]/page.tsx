@@ -13,7 +13,7 @@ import { TrackingTimeline } from "@/components/packages/tracking-timeline";
 import { ArrowLeft, RefreshCw, MapPin, Clock, DollarSign, Store, Package, ShoppingBag, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
-import { getCarrierTrackingUrl } from "@/lib/carrier-urls";
+import { getCarrierTrackingUrl, getCarrierDisplayName } from "@/lib/carrier-urls";
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -135,12 +135,60 @@ export default function OrderDetailPage() {
         </CardContent>
       </Card>
 
+      {/* Order Items */}
+      {(() => {
+        const orderItems = order.items ? JSON.parse(order.items) : [];
+        // Also collect items from packages
+        const pkgItems: string[] = [];
+        for (const pkg of order.packages) {
+          if (pkg.items) {
+            for (const item of JSON.parse(pkg.items)) {
+              if (!orderItems.includes(item) && !pkgItems.includes(item)) pkgItems.push(item);
+            }
+          }
+        }
+        const allItems = [...orderItems, ...pkgItems];
+        return allItems.length > 0 ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ShoppingBag className="h-5 w-5" />
+                Items ({allItems.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {allItems.map((item: string, i: number) => (
+                  <li key={i} className="text-sm">{item}</li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        ) : null;
+      })()}
+
+      {/* Order Status */}
+      <Card>
+        <CardContent className="py-6">
+          <div className="flex items-center justify-between mb-3">
+            <Badge variant="status" status={order.packages[0]?.status ?? order.status ?? "ORDERED"} />
+          </div>
+          <PackageProgressBar status={order.packages[0]?.status ?? order.status ?? "ORDERED"} />
+        </CardContent>
+      </Card>
+
       {/* Packages */}
       {order.packages.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
-            <ShoppingBag className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p>No packages yet — awaiting shipment</p>
+            <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
+            <p>
+              {order.status === "DELIVERED"
+                ? "Delivered — no tracking details available"
+                : order.status === "SHIPPED" || order.status === "IN_TRANSIT"
+                ? "Shipped — tracking number not yet available"
+                : "Awaiting shipment"}
+            </p>
           </CardContent>
         </Card>
       ) : (
@@ -155,7 +203,7 @@ export default function OrderDetailPage() {
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <CardTitle className="flex items-center gap-2">
                     <Package className="h-5 w-5" />
-                    {pkg.carrier} · {pkg.trackingNumber}
+                    {getCarrierDisplayName(pkg.carrier)} · {pkg.trackingNumber}
                   </CardTitle>
                   <div className="flex items-center gap-2">
                     <Badge variant="status" status={pkg.status} />
@@ -163,7 +211,7 @@ export default function OrderDetailPage() {
                       <a href={carrierUrl} target="_blank" rel="noopener noreferrer">
                         <Button variant="outline" size="sm">
                           <ExternalLink className="h-4 w-4 mr-2" />
-                          Track on {pkg.carrier}
+                          Track on {getCarrierDisplayName(pkg.carrier)}
                         </Button>
                       </a>
                     )}
@@ -212,18 +260,6 @@ export default function OrderDetailPage() {
                     </p>
                   </div>
                 </div>
-
-                {/* Items — full text, no truncation */}
-                {items.length > 0 && (
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Items</p>
-                    <ul className="space-y-1">
-                      {items.map((item: string, i: number) => (
-                        <li key={i} className="text-sm">{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
 
                 {/* Tracking timeline */}
                 {pkg.events.length > 0 && (

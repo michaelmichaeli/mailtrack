@@ -1,7 +1,7 @@
 import * as cheerio from "cheerio";
-import { extractTrackingNumbers } from "../lib/carrier-detect.js";
+import { extractTrackingNumbers, extractTrackingFromSubject } from "../lib/carrier-detect.js";
 import type { ParsedEmail } from "@mailtrack/shared";
-import { ShopPlatform, Carrier } from "@mailtrack/shared";
+import { ShopPlatform, Carrier, PackageStatus } from "@mailtrack/shared";
 
 // Merchant detection patterns
 const MERCHANT_PATTERNS: Array<{ pattern: RegExp; platform: ShopPlatform; name: string }> = [
@@ -19,48 +19,59 @@ const ORDER_ID_PATTERNS: RegExp[] = [
   /order\s*#?\s*:?\s*([A-Z0-9-]{5,30})/i,
   /order\s+number\s*:?\s*([A-Z0-9-]{5,30})/i,
   /confirmation\s*#?\s*:?\s*([A-Z0-9-]{5,30})/i,
-  /(?:order|ref|reference)\s*(?:id|number|#)\s*:?\s*(\d{3}-\d{7}-\d{7})/i, // Amazon format
+  /(?:order|ref|reference)\s*(?:id|number|#)\s*:?\s*(\d{3}-\d{7}-\d{7})/i,
 ];
 
 // Price patterns
 const PRICE_PATTERNS: RegExp[] = [
-  /(?:total|amount|grand total)\s*:?\s*\$\s*([\d,]+\.?\d*)/i,
-  /(?:total|amount|grand total)\s*:?\s*€\s*([\d,]+\.?\d*)/i,
-  /(?:total|amount|grand total)\s*:?\s*£\s*([\d,]+\.?\d*)/i,
+  /(?:total|amount|grand total|order total)\s*:?\s*(?:US\s*)?\$\s*([\d,]+\.?\d*)/i,
+  /(?:total|amount|grand total|order total)\s*:?\s*€\s*([\d,]+\.?\d*)/i,
+  /(?:total|amount|grand total|order total)\s*:?\s*£\s*([\d,]+\.?\d*)/i,
   /(?:total|amount)\s*:?\s*([\d,]+\.?\d*)\s*(?:USD|EUR|GBP)/i,
+];
+
+// Status detection from subject/body
+const STATUS_PATTERNS: Array<{ pattern: RegExp; status: PackageStatus }> = [
+  { pattern: /has been delivered|successfully delivered|package delivered/i, status: PackageStatus.DELIVERED },
+  { pattern: /out for delivery/i, status: PackageStatus.OUT_FOR_DELIVERY },
+  { pattern: /in your country|collected by local carrier/i, status: PackageStatus.OUT_FOR_DELIVERY },
+  { pattern: /order shipped|has shipped|has been shipped/i, status: PackageStatus.SHIPPED },
+  { pattern: /in global transit|in transit/i, status: PackageStatus.IN_TRANSIT },
+  { pattern: /delivery update|packages have delivery updates/i, status: PackageStatus.IN_TRANSIT },
+  { pattern: /awaiting confirmation|marked as completed/i, status: PackageStatus.DELIVERED },
+  { pattern: /order confirmed|order placed/i, status: PackageStatus.ORDERED },
+  { pattern: /dispatched/i, status: PackageStatus.SHIPPED },
 ];
 
 /**
  * Multi-layer email parser.
- * Layer 1: Pattern matching for tracking numbers
- * Layer 2: HTML parsing for structured data
- * Layer 3: LLM fallback (stub for now)
+ * Layer 1: AliExpress-specific template parsing
+ * Layer 2: Pattern matching for tracking numbers
+ * Layer 3: HTML parsing for structured data
  */
 export function parseEmail(emailHtml: string, fromAddress: string, subject: string): ParsedEmail {
   const $ = cheerio.load(emailHtml);
-  const textContent = $.text();
+  $("style, script, head").remove();
+  const textContent = $.text().replace(/\s+/g, " ").trim();
   const fullText = `${fromAddress} ${subject} ${textContent}`;
 
   // Detect merchant
   const merchant = detectMerchant(fromAddress, subject, textContent);
 
-  // Extract tracking numbers (Layer 1)
+  // AliExpress-specific parsing (most of our emails)
+  if (merchant.platform === ShopPlatform.ALIEXPRESS) {
+    return parseAliExpressEmail(subject, textContent, fullText, merchant);
+  }
+
+  // Generic parsing for other merchants
   const trackingResults = extractTrackingNumbers(fullText);
   const primaryTracking = trackingResults[0] ?? null;
-
-  // Extract order ID (Layer 2)
   const orderId = extractOrderId(fullText);
-
-  // Extract items from HTML tables
-  const items = extractItems($);
-
-  // Extract price
+  const items = extractItemsFromHtml($);
   const { amount, currency } = extractPrice(fullText);
-
-  // Extract dates
   const orderDate = extractDate(fullText);
+  const status = detectStatus(subject, textContent);
 
-  // Calculate confidence
   const confidence = calculateConfidence({
     hasMerchant: merchant.platform !== ShopPlatform.UNKNOWN,
     hasTracking: !!primaryTracking,
@@ -78,8 +89,151 @@ export function parseEmail(emailHtml: string, fromAddress: string, subject: stri
     orderDate,
     totalAmount: amount,
     currency,
+    status,
     confidence,
   };
+}
+
+/**
+ * AliExpress-specific email parser.
+ * Handles: delivered, shipped, delivery update, awaiting confirmation, package updates
+ */
+function parseAliExpressEmail(
+  subject: string,
+  textContent: string,
+  fullText: string,
+  merchant: { platform: ShopPlatform; name: string }
+): ParsedEmail {
+  // 1. Extract tracking from subject ("Package RS1300705226Y has been delivered")
+  const subjectTracking = extractTrackingFromSubject(subject);
+
+  // 2. Extract order ID from subject or body
+  const orderId = extractOrderId(fullText);
+
+  // 3. Extract items from text content
+  const items = extractAliExpressItems(textContent);
+
+  // 4. Extract price
+  const { amount, currency } = extractPrice(textContent);
+
+  // 5. Detect status from subject
+  const status = detectStatus(subject, textContent);
+
+  // 6. Extract date
+  const orderDate = extractAliExpressDate(textContent);
+
+  // 7. Also try body tracking numbers (but exclude phone numbers)
+  let tracking = subjectTracking;
+  if (!tracking) {
+    const bodyTrackingResults = extractTrackingNumbers(fullText);
+    tracking = bodyTrackingResults[0] ?? null;
+  }
+
+  const confidence = calculateConfidence({
+    hasMerchant: true,
+    hasTracking: !!tracking,
+    hasOrderId: !!orderId,
+    hasItems: items.length > 0,
+  });
+
+  return {
+    merchant: merchant.name,
+    platform: merchant.platform,
+    orderId,
+    trackingNumber: tracking?.trackingNumber ?? null,
+    carrier: tracking?.carrier ?? null,
+    items,
+    orderDate,
+    totalAmount: amount,
+    currency,
+    status,
+    confidence,
+  };
+}
+
+/**
+ * Extract item descriptions from AliExpress email text.
+ * Looks for patterns after "Package details" section.
+ */
+function extractAliExpressItems(text: string): string[] {
+  const raw: string[] = [];
+
+  // Pattern 1: Between "Package details" and "Ship to" / "Download" / end
+  const packageDetailsIdx = text.indexOf("Package details");
+  if (packageDetailsIdx >= 0) {
+    const shipToIdx = text.indexOf("Ship to", packageDetailsIdx);
+    const downloadIdx = text.indexOf("Download", packageDetailsIdx);
+    const pricesIdx = text.indexOf("Prices,", packageDetailsIdx);
+    const endIdx = Math.min(
+      ...[shipToIdx, downloadIdx, pricesIdx, packageDetailsIdx + 2000].filter(i => i > 0)
+    );
+    const section = text.substring(packageDetailsIdx + 15, endIdx);
+
+    // Split by dots used as separators in AliExpress emails
+    const chunks = section.split(/\s*\.\s*/).filter(s => s.trim().length > 5);
+    for (const chunk of chunks) {
+      const cleaned = chunk.trim();
+      // Skip status/navigation/boilerplate lines
+      if (/^(Collected|In global|In your|View more|Track|Download|Prices|See more|Check|Package)/i.test(cleaned)) continue;
+      if (/^(Ship|This email|You are|Visit|Questions)/i.test(cleaned)) continue;
+      if (/^(Order|Placed|Payment|Order total|Order ID|More items)/i.test(cleaned)) continue;
+
+      // Item-like text: starts with letter/number, at least 8 chars
+      if (/^[A-Z0-9]/i.test(cleaned) && cleaned.length >= 8) {
+        let item = cleaned.replace(/\s+China\s*(?:Mainland)?$/i, "").trim();
+        item = item.replace(/\s+x\d+\s*$/, "").trim();
+        // Skip short fragments (e.g. "9 grid D") and generic junk
+        if (item.length >= 10) {
+          raw.push(item);
+        }
+      }
+    }
+  }
+
+  // Pattern 2: "Store_name Item_name..." in shipped emails
+  if (raw.length === 0) {
+    const storeItemMatch = text.match(/\b\w+\s+(?:Official\s+)?Store\s+([A-Z][A-Za-z0-9\s\/,()'".-]{10,100}?)(?:\.\.\.|China|x\d)/);
+    if (storeItemMatch) {
+      raw.push(storeItemMatch[1].trim());
+    }
+  }
+
+  // Pattern 3: "order shipped" specific — after "Track order" button
+  if (raw.length === 0) {
+    const trackOrderIdx = text.indexOf("Track order");
+    if (trackOrderIdx >= 0) {
+      const afterTrack = text.substring(trackOrderIdx + 11, trackOrderIdx + 300);
+      const itemMatch = afterTrack.match(/^\s*([A-Z][A-Za-z0-9\s\/,()'".-]{10,100}?)(?:\.\.\.|China|x\d)/);
+      if (itemMatch) {
+        raw.push(itemMatch[1].trim());
+      }
+    }
+  }
+
+  // Deduplicate items (case-insensitive)
+  const seen = new Set<string>();
+  const items: string[] = [];
+  for (const item of raw) {
+    const key = item.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      items.push(item);
+    }
+  }
+
+  return items.slice(0, 10);
+}
+
+function extractAliExpressDate(text: string): string | null {
+  // "Placed on Feb 16,2026, 15:22"
+  const placedMatch = text.match(/Placed on\s+(\w+\s+\d{1,2},?\s*\d{4})/i);
+  if (placedMatch) {
+    try {
+      const d = new Date(placedMatch[1]);
+      if (!isNaN(d.getTime())) return d.toISOString();
+    } catch { /* fall through */ }
+  }
+  return extractDate(text);
 }
 
 function detectMerchant(
@@ -93,8 +247,6 @@ function detectMerchant(
       return { platform: m.platform, name: m.name };
     }
   }
-
-  // Try to extract merchant from the "from" address
   const fromMatch = from.match(/(?:from\s+)?([^<@]+)/i);
   const name = fromMatch?.[1]?.trim() ?? "Unknown Merchant";
   return { platform: ShopPlatform.UNKNOWN, name };
@@ -108,10 +260,8 @@ function extractOrderId(text: string): string | null {
   return null;
 }
 
-function extractItems($: cheerio.CheerioAPI): string[] {
+function extractItemsFromHtml($: cheerio.CheerioAPI): string[] {
   const items: string[] = [];
-
-  // Common selectors for item names in order emails
   const selectors = [
     'td[class*="item"]',
     'td[class*="product"]',
@@ -119,7 +269,6 @@ function extractItems($: cheerio.CheerioAPI): string[] {
     'span[class*="product-name"]',
     'a[class*="item"]',
   ];
-
   for (const selector of selectors) {
     $(selector).each((_, el) => {
       const text = $(el).text().trim();
@@ -129,8 +278,7 @@ function extractItems($: cheerio.CheerioAPI): string[] {
     });
     if (items.length > 0) break;
   }
-
-  return items.slice(0, 10); // Max 10 items
+  return items.slice(0, 10);
 }
 
 function extractPrice(text: string): { amount: number | null; currency: string | null } {
@@ -148,23 +296,27 @@ function extractPrice(text: string): { amount: number | null; currency: string |
 }
 
 function extractDate(text: string): string | null {
-  // Look for common date formats near "order" or "date" keywords
   const datePatterns = [
     /(?:order|placed|date)\s*:?\s*(\w+\s+\d{1,2},?\s+\d{4})/i,
     /(?:order|placed|date)\s*:?\s*(\d{1,2}\/\d{1,2}\/\d{2,4})/i,
     /(?:order|placed|date)\s*:?\s*(\d{4}-\d{2}-\d{2})/i,
   ];
-
   for (const pattern of datePatterns) {
     const match = text.match(pattern);
     if (match?.[1]) {
       try {
         const date = new Date(match[1]);
         if (!isNaN(date.getTime())) return date.toISOString();
-      } catch {
-        continue;
-      }
+      } catch { continue; }
     }
+  }
+  return null;
+}
+
+function detectStatus(subject: string, body: string): PackageStatus | null {
+  const combined = `${subject} ${body}`;
+  for (const { pattern, status } of STATUS_PATTERNS) {
+    if (pattern.test(combined)) return status;
   }
   return null;
 }
@@ -182,55 +334,3 @@ function calculateConfidence(factors: {
   if (factors.hasItems) score += 0.2;
   return score;
 }
-
-/**
- * Template-based parsers for top merchants.
- * These provide higher accuracy for known email formats.
- */
-export const merchantTemplates: Record<string, (html: string, subject: string) => Partial<ParsedEmail>> = {
-  amazon: (html, subject) => {
-    const $ = cheerio.load(html);
-    const orderId = $.text().match(/(\d{3}-\d{7}-\d{7})/)?.[1] ?? null;
-    const items: string[] = [];
-    $('a[href*="/dp/"]').each((_, el) => {
-      const text = $(el).text().trim();
-      if (text && text.length > 2) items.push(text);
-    });
-    return {
-      merchant: "Amazon",
-      platform: ShopPlatform.AMAZON,
-      orderId,
-      items,
-    };
-  },
-
-  aliexpress: (html, subject) => {
-    const $ = cheerio.load(html);
-    const orderId = $.text().match(/order\s*(?:number|ID|#)\s*:?\s*(\d{15,20})/i)?.[1] ?? null;
-    return {
-      merchant: "AliExpress",
-      platform: ShopPlatform.ALIEXPRESS,
-      orderId,
-    };
-  },
-
-  ebay: (html, subject) => {
-    const $ = cheerio.load(html);
-    const orderId = $.text().match(/(?:order|transaction)\s*(?:number|ID|#)\s*:?\s*(\d{2}-\d{5}-\d{5})/i)?.[1] ?? null;
-    return {
-      merchant: "eBay",
-      platform: ShopPlatform.EBAY,
-      orderId,
-    };
-  },
-
-  etsy: (html, subject) => {
-    const $ = cheerio.load(html);
-    const orderId = $.text().match(/order\s*#?\s*(\d{10,15})/i)?.[1] ?? null;
-    return {
-      merchant: "Etsy",
-      platform: ShopPlatform.ETSY,
-      orderId,
-    };
-  },
-};

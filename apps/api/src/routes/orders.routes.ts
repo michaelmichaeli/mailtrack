@@ -50,6 +50,8 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
       orderDate: order.orderDate?.toISOString() ?? null,
       totalAmount: order.totalAmount,
       currency: order.currency,
+      items: order.items,
+      status: order.status,
       createdAt: order.createdAt.toISOString(),
       updatedAt: order.updatedAt.toISOString(),
       packages: order.packages.map((p: any) => ({

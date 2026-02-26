@@ -34,11 +34,12 @@ export const CARRIER_PATTERNS: Record<string, RegExp> = {
   UPS: /\b1Z[A-Z0-9]{16}\b/i,
   FEDEX: /\b(\d{12}|\d{15}|\d{20})\b/,
   USPS: /\b(9[2-5]\d{20,26}|[A-Z]{2}\d{9}US)\b/i,
-  DHL: /\b(\d{10}|\d{20}|[A-Z]{3}\d{7,20})\b/i,
+  DHL: /\b([A-Z]{3}\d{7,20})\b/i,
   DPD: /\b\d{14}\b/,
   ROYAL_MAIL: /\b[A-Z]{2}\d{9}GB\b/i,
   CAINIAO: /\b(LP|CAINIAO)\d{12,20}\b/i,
   YANWEN: /\bY[A-Z]\d{9}[A-Z]{2}\b/i,
+  ALIEXPRESS_STANDARD: /\b[A-Z]{2}\d{9,13}[A-Z]?\b/,
 };
 
 // Email search queries for known merchants

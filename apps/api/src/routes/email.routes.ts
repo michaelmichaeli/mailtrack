@@ -73,8 +73,42 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
         });
 
         let order;
+        const STATUS_ORDER = ["ORDERED", "PROCESSING", "SHIPPED", "IN_TRANSIT", "OUT_FOR_DELIVERY", "DELIVERED"];
         if (existingOrder) {
-          order = existingOrder; // Already exists, skip creating
+          // Update existing order with new data (later emails may have more info)
+          const updateData: Record<string, any> = {};
+          // Merge items: append new items not already present
+          if (parsed.items.length > 0) {
+            const existing: string[] = existingOrder.items ? JSON.parse(existingOrder.items) : [];
+            const merged = [...existing];
+            for (const item of parsed.items) {
+              if (!merged.some(e => e === item)) merged.push(item);
+            }
+            if (merged.length > existing.length) {
+              updateData.items = JSON.stringify(merged);
+            }
+          }
+          // Progressive status: only move forward
+          if (parsed.status) {
+            const curIdx = STATUS_ORDER.indexOf(existingOrder.status);
+            const newIdx = STATUS_ORDER.indexOf(parsed.status);
+            if (newIdx > curIdx) updateData.status = parsed.status;
+          }
+          if (parsed.totalAmount != null && existingOrder.totalAmount == null) {
+            updateData.totalAmount = parsed.totalAmount;
+            updateData.currency = parsed.currency;
+          }
+          if (parsed.orderDate && !existingOrder.orderDate) {
+            updateData.orderDate = new Date(parsed.orderDate);
+          }
+          if (Object.keys(updateData).length > 0) {
+            order = await app.prisma.order.update({
+              where: { id: existingOrder.id },
+              data: updateData,
+            });
+          } else {
+            order = existingOrder;
+          }
         } else {
           order = await app.prisma.order.create({
             data: {
@@ -85,6 +119,8 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
               merchant: parsed.merchant,
               totalAmount: parsed.totalAmount,
               currency: parsed.currency,
+              items: parsed.items.length > 0 ? JSON.stringify(parsed.items) : null,
+              status: (parsed.status as any) ?? "ORDERED",
             },
           });
           totalOrders++;
@@ -102,9 +138,21 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
                 orderId: order.id,
                 trackingNumber: parsed.trackingNumber,
                 carrier: (parsed.carrier ?? detectCarrier(parsed.trackingNumber)) as any,
+                status: (parsed.status as any) ?? "ORDERED",
                 items: parsed.items.length > 0 ? JSON.stringify(parsed.items) : null,
               },
             });
+          } else if (parsed.status) {
+            // Update package status if we have newer info
+            const statusOrder = ["ORDERED", "PROCESSING", "SHIPPED", "IN_TRANSIT", "OUT_FOR_DELIVERY", "DELIVERED"];
+            const currentIdx = statusOrder.indexOf(existing.status);
+            const newIdx = statusOrder.indexOf(parsed.status);
+            if (newIdx > currentIdx) {
+              await app.prisma.package.update({
+                where: { id: existing.id },
+                data: { status: parsed.status as any },
+              });
+            }
           }
         }
       }
