@@ -178,22 +178,8 @@ export default function OrderDetailPage() {
       </Card>
 
       {/* Packages */}
-      {order.packages.length === 0 ? (
-        <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
-            <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p>
-              {order.status === "DELIVERED"
-                ? "Delivered — no tracking details available"
-                : order.status === "SHIPPED" || order.status === "IN_TRANSIT"
-                ? "Shipped — tracking number not yet available"
-                : "Awaiting shipment"}
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
+      {order.packages.length > 0 && (
         order.packages.map((pkg: any) => {
-          const items = pkg.items ? JSON.parse(pkg.items) : [];
           const isRefreshing = refreshingPkgId === pkg.id && refreshMutation.isPending;
           const carrierUrl = getCarrierTrackingUrl(pkg.carrier, pkg.trackingNumber);
 
