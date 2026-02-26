@@ -4,7 +4,8 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { PackageProgressBar } from "./package-progress-bar";
-import { Package, MapPin, Clock, ShoppingBag, Store } from "lucide-react";
+import { Package, MapPin, Clock, ShoppingBag, Store, ExternalLink } from "lucide-react";
+import { getCarrierTrackingUrl } from "@/lib/carrier-urls";
 
 interface OrderCardProps {
   order: {
@@ -54,7 +55,14 @@ export function PackageCard({ order }: OrderCardProps) {
               )}
             </div>
             <div>
-              <p className="text-sm font-medium">{order.merchant}</p>
+              <p className="text-sm font-medium">
+                {order.merchant}
+                {order.externalOrderId && !order.externalOrderId.startsWith("gmail-") && (
+                  <span className="text-xs text-muted-foreground ml-1.5 font-normal">
+                    #{order.externalOrderId.slice(-8)}
+                  </span>
+                )}
+              </p>
               <p className="text-xs text-muted-foreground">
                 {pkg
                   ? `${pkg.carrier} · ${pkg.trackingNumber}`
@@ -66,7 +74,7 @@ export function PackageCard({ order }: OrderCardProps) {
         </div>
 
         {itemText && (
-          <p className="text-sm text-foreground mb-2 line-clamp-1">{itemText}</p>
+          <p className="text-sm text-foreground mb-2 line-clamp-2">{itemText}</p>
         )}
 
         {pkg && <PackageProgressBar status={pkg.status} />}

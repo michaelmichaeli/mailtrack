@@ -10,9 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PackageProgressBar } from "@/components/packages/package-progress-bar";
 import { TrackingTimeline } from "@/components/packages/tracking-timeline";
-import { ArrowLeft, RefreshCw, MapPin, Clock, DollarSign, Store, Package, ShoppingBag } from "lucide-react";
+import { ArrowLeft, RefreshCw, MapPin, Clock, DollarSign, Store, Package, ShoppingBag, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+import { getCarrierTrackingUrl } from "@/lib/carrier-urls";
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -146,17 +147,26 @@ export default function OrderDetailPage() {
         order.packages.map((pkg: any) => {
           const items = pkg.items ? JSON.parse(pkg.items) : [];
           const isRefreshing = refreshingPkgId === pkg.id && refreshMutation.isPending;
+          const carrierUrl = getCarrierTrackingUrl(pkg.carrier, pkg.trackingNumber);
 
           return (
             <Card key={pkg.id}>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <CardTitle className="flex items-center gap-2">
                     <Package className="h-5 w-5" />
                     {pkg.carrier} · {pkg.trackingNumber}
                   </CardTitle>
                   <div className="flex items-center gap-2">
                     <Badge variant="status" status={pkg.status} />
+                    {carrierUrl && (
+                      <a href={carrierUrl} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" size="sm">
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Track on {pkg.carrier}
+                        </Button>
+                      </a>
+                    )}
                     {pkg.trackingNumber && (
                       <Button
                         variant="outline"
@@ -165,7 +175,7 @@ export default function OrderDetailPage() {
                         disabled={refreshMutation.isPending}
                       >
                         <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
-                        Refresh tracking
+                        Refresh
                       </Button>
                     )}
                   </div>
