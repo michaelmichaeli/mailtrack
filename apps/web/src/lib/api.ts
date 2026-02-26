@@ -106,6 +106,7 @@ class ApiClient {
   async devLogin() {
     const result = await this.request<{ accessToken: string; expiresIn: number; user: any }>("/auth/dev-login", {
       method: "POST",
+      body: JSON.stringify({}),
     });
     this.setToken(result.accessToken);
     return result;

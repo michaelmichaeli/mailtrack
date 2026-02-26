@@ -141,14 +141,17 @@ export default function OrderDetailPage() {
 
       {/* Order Items */}
       {(() => {
-        const orderItems = order.items ? JSON.parse(order.items) : [];
+        const safeParse = (v: any): string[] => {
+          if (!v) return [];
+          if (Array.isArray(v)) return v;
+          try { return JSON.parse(v); } catch { return []; }
+        };
+        const orderItems = safeParse(order.items);
         // Also collect items from packages
         const pkgItems: string[] = [];
         for (const pkg of order.packages) {
-          if (pkg.items) {
-            for (const item of JSON.parse(pkg.items)) {
-              if (!orderItems.includes(item) && !pkgItems.includes(item)) pkgItems.push(item);
-            }
+          for (const item of safeParse(pkg.items)) {
+            if (!orderItems.includes(item) && !pkgItems.includes(item)) pkgItems.push(item);
           }
         }
         const allItems = [...orderItems, ...pkgItems];
@@ -265,7 +268,12 @@ export default function OrderDetailPage() {
 
                 {/* Pickup Location */}
                 {(() => {
-                  const pickup = pkg.pickupLocation ? JSON.parse(pkg.pickupLocation) : null;
+                  let pickup: any = null;
+                  try {
+                    pickup = pkg.pickupLocation
+                      ? (typeof pkg.pickupLocation === 'string' ? JSON.parse(pkg.pickupLocation) : pkg.pickupLocation)
+                      : null;
+                  } catch {}
                   return pickup ? (
                     <div className="rounded-lg border bg-green-50 dark:bg-green-950/20 p-4 space-y-3">
                       <div className="flex items-center gap-2 text-green-700 dark:text-green-400 font-medium text-sm">

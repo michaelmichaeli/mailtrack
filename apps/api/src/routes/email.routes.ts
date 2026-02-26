@@ -253,12 +253,24 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
         try { return JSON.parse(s); } catch { return []; }
       };
 
-      // Helper: check if two item arrays overlap (fuzzy by first 20 chars)
+      // Helper: check if two item arrays overlap (fuzzy by first 15 chars)
       const itemsOverlap = (a: string[], b: string[]): boolean => {
         if (a.length === 0 || b.length === 0) return false;
         const normalize = (s: string) => s.substring(0, 15).toLowerCase().replace(/[^a-z0-9]/g, "");
         const setB = new Set(b.map(normalize));
         return a.some(item => setB.has(normalize(item)));
+      };
+
+      // Stricter check for Phase 4: packages are the same shipment only if
+      // majority of items in the smaller set match the larger set (>= 50%)
+      const sameShipment = (a: string[], b: string[]): boolean => {
+        if (a.length === 0 || b.length === 0) return false;
+        const normalize = (s: string) => s.substring(0, 15).toLowerCase().replace(/[^a-z0-9]/g, "");
+        const setB = new Set(b.map(normalize));
+        const smaller = a.length <= b.length ? a : b;
+        const largerSet = a.length <= b.length ? setB : new Set(a.map(normalize));
+        const matchCount = smaller.filter(item => (a.length <= b.length ? setB : largerSet).has(normalize(item))).length;
+        return matchCount >= Math.max(2, Math.ceil(smaller.length * 0.5));
       };
 
       for (const gmailOrder of gmailOrdersWithPkgs) {
@@ -366,7 +378,7 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
           const orderB = pkgsB[0].order;
           const itemsB = parseItems(orderB.items).concat(pkgsB.flatMap(p => parseItems(p.items)));
 
-          if (itemsOverlap(itemsA, itemsB)) {
+          if (sameShipment(itemsA, itemsB)) {
             // Keep the order with a real ID (non-gmail) or the one with more items
             const keepA = !orderA.externalOrderId.startsWith("gmail-") || orderB.externalOrderId.startsWith("gmail-");
             const [keep, remove] = keepA ? [orderA, orderB] : [orderB, orderA];

@@ -34,8 +34,13 @@ export function PackageCard({ order }: OrderCardProps) {
   const pkg = order.package;
 
   // Items: prefer order-level items, then package-level
-  const orderItems = order.items ? JSON.parse(order.items) : [];
-  const pkgItems = pkg?.items ? JSON.parse(pkg.items) : [];
+  const safeParse = (v: any): string[] => {
+    if (!v) return [];
+    if (Array.isArray(v)) return v;
+    try { return JSON.parse(v); } catch { return []; }
+  };
+  const orderItems = safeParse(order.items);
+  const pkgItems = safeParse(pkg?.items);
   const items: string[] = orderItems.length > 0 ? orderItems : pkgItems;
 
   // Status: prefer package status (more granular), then order status
