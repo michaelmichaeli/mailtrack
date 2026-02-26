@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "MailTrack",
+    "slug": "mailtrack",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "mailtrack",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "backgroundColor": "#3b82f6"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.mailtrack.app",
+      "usesAppleSignIn": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#3b82f6"
+      },
+      "package": "com.mailtrack.app",
+      "googleServicesFile": "./google-services.json"
+    },
+    "plugins": [
+      "expo-apple-authentication",
+      "expo-notifications",
+      "expo-secure-store"
+    ]
+  }
+}

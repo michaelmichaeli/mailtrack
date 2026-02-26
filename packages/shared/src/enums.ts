@@ -1,0 +1,52 @@
+export enum PackageStatus {
+  ORDERED = "ORDERED",
+  PROCESSING = "PROCESSING",
+  SHIPPED = "SHIPPED",
+  IN_TRANSIT = "IN_TRANSIT",
+  OUT_FOR_DELIVERY = "OUT_FOR_DELIVERY",
+  DELIVERED = "DELIVERED",
+  EXCEPTION = "EXCEPTION",
+  RETURNED = "RETURNED",
+}
+
+export enum AuthProvider {
+  GOOGLE = "GOOGLE",
+  APPLE = "APPLE",
+}
+
+export enum EmailProvider {
+  GMAIL = "GMAIL",
+  OUTLOOK = "OUTLOOK",
+}
+
+export enum ShopPlatform {
+  AMAZON = "AMAZON",
+  ALIEXPRESS = "ALIEXPRESS",
+  EBAY = "EBAY",
+  ETSY = "ETSY",
+  SHEIN = "SHEIN",
+  TEMU = "TEMU",
+  WALMART = "WALMART",
+  SHOPIFY = "SHOPIFY",
+  UNKNOWN = "UNKNOWN",
+}
+
+export enum Carrier {
+  UPS = "UPS",
+  FEDEX = "FEDEX",
+  USPS = "USPS",
+  DHL = "DHL",
+  DPD = "DPD",
+  ROYAL_MAIL = "ROYAL_MAIL",
+  CAINIAO = "CAINIAO",
+  YANWEN = "YANWEN",
+  UNKNOWN = "UNKNOWN",
+}
+
+export enum NotificationTrigger {
+  STATUS_CHANGE = "STATUS_CHANGE",
+  ETA_CHANGE = "ETA_CHANGE",
+  DELIVERY_EXCEPTION = "DELIVERY_EXCEPTION",
+  OUT_FOR_DELIVERY = "OUT_FOR_DELIVERY",
+  DELIVERED = "DELIVERED",
+}
