@@ -20,7 +20,13 @@ export default function DashboardPage() {
   const handleSync = async () => {
     try {
       const result = await api.syncEmails();
-      toast.success(`Synced ${result.emailsParsed} emails, found ${result.ordersCreated} orders`);
+      if (result.ordersCreated > 0) {
+        toast.success(`Found ${result.ordersCreated} new orders from ${result.emailsParsed} emails`);
+      } else if (result.emailsParsed > 0) {
+        toast.success(`Scanned ${result.emailsParsed} emails — no new orders found`);
+      } else {
+        toast.success("Sync complete — no new shipping emails found");
+      }
       refetch();
     } catch {
       toast.error("Failed to sync emails. Connect your email first.");

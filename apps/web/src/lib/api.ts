@@ -167,11 +167,11 @@ class ApiClient {
     });
   }
 
-  async syncEmails() {
-    return this.request<{ success: boolean; emailsParsed: number; ordersCreated: number }>("/email/sync", {
-      method: "POST",
-      body: JSON.stringify({}),
-    });
+  async syncEmails(full = true) {
+    return this.request<{ success: boolean; emailsParsed: number; ordersCreated: number }>(
+      `/email/sync${full ? "?full=true" : ""}`,
+      { method: "POST", body: JSON.stringify({}) },
+    );
   }
 
   async disconnectEmail(id: string) {

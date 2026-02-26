@@ -33,6 +33,8 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
     preHandler: [app.authenticate],
   }, async (request) => {
     const userId = request.user.userId;
+    const { full } = (request.query as { full?: string });
+    const isFullSync = full === "true";
 
     const connectedEmails = await app.prisma.connectedEmail.findMany({
       where: { userId },
@@ -48,10 +50,13 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
         const accessToken = decrypt(connEmail.accessToken);
         const refreshToken = connEmail.refreshToken ? decrypt(connEmail.refreshToken) : null;
 
+        // If full sync requested, ignore lastSyncAt
+        const since = isFullSync ? undefined : (connEmail.lastSyncAt ?? undefined);
+
         const emails = await fetchGmailEmails(
           accessToken,
           refreshToken,
-          connEmail.lastSyncAt ?? undefined
+          since
         );
 
       for (const email of emails) {
