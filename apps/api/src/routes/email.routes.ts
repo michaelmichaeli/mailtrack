@@ -44,43 +44,46 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
     for (const connEmail of connectedEmails) {
       if (connEmail.provider !== EmailProvider.GMAIL) continue;
 
-      const accessToken = decrypt(connEmail.accessToken);
-      const refreshToken = connEmail.refreshToken ? decrypt(connEmail.refreshToken) : null;
+      try {
+        const accessToken = decrypt(connEmail.accessToken);
+        const refreshToken = connEmail.refreshToken ? decrypt(connEmail.refreshToken) : null;
 
-      const emails = await fetchGmailEmails(
-        accessToken,
-        refreshToken,
-        connEmail.lastSyncAt ?? undefined
-      );
+        const emails = await fetchGmailEmails(
+          accessToken,
+          refreshToken,
+          connEmail.lastSyncAt ?? undefined
+        );
 
       for (const email of emails) {
         const parsed = parseEmail(email.html, email.from, email.subject);
         totalParsed++;
 
-        if (parsed.confidence < 0.3) continue; // Skip low confidence
+        // Skip very low confidence — but keep anything plausible
+        if (parsed.confidence < 0.2) continue;
 
-        // Create or update order
-        const order = await app.prisma.order.upsert({
-          where: {
-            id: parsed.orderId
-              ? (await app.prisma.order.findFirst({
-                  where: { userId, externalOrderId: parsed.orderId },
-                }))?.id ?? "new"
-              : "new",
-          },
-          update: {},
-          create: {
-            userId,
-            shopPlatform: parsed.platform as any,
-            externalOrderId: parsed.orderId,
-            orderDate: parsed.orderDate ? new Date(parsed.orderDate) : null,
-            merchant: parsed.merchant,
-            totalAmount: parsed.totalAmount,
-            currency: parsed.currency,
-          },
+        // Find existing order by externalOrderId or Gmail message ID
+        const externalId = parsed.orderId ?? `gmail-${email.id}`;
+        const existingOrder = await app.prisma.order.findFirst({
+          where: { userId, externalOrderId: externalId },
         });
 
-        totalOrders++;
+        let order;
+        if (existingOrder) {
+          order = existingOrder; // Already exists, skip creating
+        } else {
+          order = await app.prisma.order.create({
+            data: {
+              userId,
+              shopPlatform: parsed.platform as any,
+              externalOrderId: externalId,
+              orderDate: parsed.orderDate ? new Date(parsed.orderDate) : new Date(email.date),
+              merchant: parsed.merchant,
+              totalAmount: parsed.totalAmount,
+              currency: parsed.currency,
+            },
+          });
+          totalOrders++;
+        }
 
         // Create package if tracking number found
         if (parsed.trackingNumber) {
@@ -106,6 +109,9 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
         where: { id: connEmail.id },
         data: { lastSyncAt: new Date() },
       });
+      } catch (err: any) {
+        app.log.error({ err: err.message, emailId: connEmail.id }, "Failed to sync email account");
+      }
     }
 
     return {

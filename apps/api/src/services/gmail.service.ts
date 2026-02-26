@@ -59,9 +59,9 @@ export async function fetchGmailEmails(
 
   const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
-  // Build search query
+  // Build search query — broad match for shipping/order related emails
   let query =
-    'from:(amazon OR aliexpress OR ebay OR etsy OR shein OR temu OR walmart) subject:(order OR shipping OR tracking OR delivered OR dispatched)';
+    'subject:(order OR shipping OR tracking OR delivered OR dispatched OR shipment OR "out for delivery" OR "order confirmed" OR "has shipped")';
 
   if (since) {
     const afterDate = Math.floor(since.getTime() / 1000);
@@ -92,11 +92,13 @@ export async function fetchGmailEmails(
     const subject = headers.find((h) => h.name?.toLowerCase() === "subject")?.value ?? "";
     const date = headers.find((h) => h.name?.toLowerCase() === "date")?.value ?? "";
 
-    // Extract HTML body
+    // Extract HTML body, fall back to plain text
     const html = extractHtmlBody(msgResponse.data.payload);
+    const text = html ? null : extractTextBody(msgResponse.data.payload);
+    const body = html ?? (text ? `<pre>${text}</pre>` : null);
 
-    if (html) {
-      emails.push({ id: msg.id, html, from, subject, date });
+    if (body) {
+      emails.push({ id: msg.id, html: body, from, subject, date });
     }
   }
 
@@ -116,6 +118,23 @@ function extractHtmlBody(payload: any): string | null {
     for (const part of payload.parts) {
       const html = extractHtmlBody(part);
       if (html) return html;
+    }
+  }
+
+  return null;
+}
+
+function extractTextBody(payload: any): string | null {
+  if (!payload) return null;
+
+  if (payload.mimeType === "text/plain" && payload.body?.data) {
+    return Buffer.from(payload.body.data, "base64url").toString("utf-8");
+  }
+
+  if (payload.parts) {
+    for (const part of payload.parts) {
+      const text = extractTextBody(part);
+      if (text) return text;
     }
   }
 

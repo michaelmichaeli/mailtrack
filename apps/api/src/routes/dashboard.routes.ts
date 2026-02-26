@@ -10,99 +10,107 @@ export const dashboardRoutes: FastifyPluginAsync = async (app) => {
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
-    const recentCutoff = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const recentCutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    // Fetch all user packages with orders
-    const packages = await app.prisma.package.findMany({
-      where: {
-        order: { userId },
-      },
+    // Fetch all user orders with packages
+    const orders = await app.prisma.order.findMany({
+      where: { userId },
       include: {
-        order: true,
-        events: {
-          orderBy: { timestamp: "desc" },
-          take: 5,
+        packages: {
+          include: {
+            events: {
+              orderBy: { timestamp: "desc" },
+              take: 3,
+            },
+          },
         },
       },
       orderBy: { updatedAt: "desc" },
     });
 
-    // Group by status
-    const arrivingToday = packages.filter(
-      (p: any) =>
-        p.status === PackageStatus.OUT_FOR_DELIVERY ||
-        (p.estimatedDelivery &&
-          p.estimatedDelivery >= todayStart &&
-          p.estimatedDelivery < todayEnd &&
-          p.status !== PackageStatus.DELIVERED)
-    );
+    // Categorize orders
+    const arrivingToday: any[] = [];
+    const inTransit: any[] = [];
+    const processing: any[] = [];
+    const delivered: any[] = [];
+    const exceptions: any[] = [];
 
-    const inTransit = packages.filter(
-      (p: any) =>
-        p.status === PackageStatus.IN_TRANSIT ||
-        p.status === PackageStatus.SHIPPED
-    );
+    for (const order of orders) {
+      const pkg = order.packages[0]; // primary package
 
-    const processing = packages.filter(
-      (p: any) =>
-        p.status === PackageStatus.ORDERED ||
-        p.status === PackageStatus.PROCESSING
-    );
+      if (pkg) {
+        // Order has a tracked package — categorize by package status
+        if (
+          pkg.status === PackageStatus.OUT_FOR_DELIVERY ||
+          (pkg.estimatedDelivery &&
+            pkg.estimatedDelivery >= todayStart &&
+            pkg.estimatedDelivery < todayEnd &&
+            pkg.status !== PackageStatus.DELIVERED)
+        ) {
+          arrivingToday.push(order);
+        } else if (
+          pkg.status === PackageStatus.IN_TRANSIT ||
+          pkg.status === PackageStatus.SHIPPED
+        ) {
+          inTransit.push(order);
+        } else if (
+          pkg.status === PackageStatus.DELIVERED
+        ) {
+          if (pkg.updatedAt >= recentCutoff) delivered.push(order);
+        } else if (
+          pkg.status === PackageStatus.EXCEPTION ||
+          pkg.status === PackageStatus.RETURNED
+        ) {
+          exceptions.push(order);
+        } else {
+          processing.push(order);
+        }
+      } else {
+        // No package — treat as processing/awaiting shipment
+        if (order.createdAt >= recentCutoff) {
+          processing.push(order);
+        }
+      }
+    }
 
-    const delivered = packages.filter(
-      (p: any) =>
-        p.status === PackageStatus.DELIVERED &&
-        p.updatedAt >= recentCutoff
-    );
-
-    const exceptions = packages.filter(
-      (p: any) =>
-        p.status === PackageStatus.EXCEPTION ||
-        p.status === PackageStatus.RETURNED
-    );
-
-    const formatPackage = (p: Record<string, any>) => ({
-      id: p.id,
-      orderId: p.orderId,
-      trackingNumber: p.trackingNumber,
-      carrier: p.carrier,
-      status: p.status,
-      estimatedDelivery: p.estimatedDelivery?.toISOString() ?? null,
-      lastLocation: p.lastLocation,
-      items: p.items,
-      createdAt: p.createdAt.toISOString(),
-      updatedAt: p.updatedAt.toISOString(),
-      order: {
-        id: p.order.id,
-        userId: p.order.userId,
-        shopPlatform: p.order.shopPlatform,
-        externalOrderId: p.order.externalOrderId,
-        orderDate: p.order.orderDate?.toISOString() ?? null,
-        merchant: p.order.merchant,
-        totalAmount: p.order.totalAmount,
-        currency: p.order.currency,
-        createdAt: p.order.createdAt.toISOString(),
-        updatedAt: p.order.updatedAt.toISOString(),
-      },
-      events: p.events.map((e: Record<string, any>) => ({
-        id: e.id,
-        packageId: e.packageId,
-        timestamp: e.timestamp.toISOString(),
-        location: e.location,
-        status: e.status,
-        description: e.description,
-        createdAt: e.createdAt.toISOString(),
-      })),
+    const formatOrder = (o: Record<string, any>) => ({
+      id: o.id,
+      externalOrderId: o.externalOrderId,
+      shopPlatform: o.shopPlatform,
+      merchant: o.merchant,
+      orderDate: o.orderDate?.toISOString() ?? null,
+      totalAmount: o.totalAmount,
+      currency: o.currency,
+      createdAt: o.createdAt.toISOString(),
+      updatedAt: o.updatedAt.toISOString(),
+      package: o.packages[0]
+        ? {
+            id: o.packages[0].id,
+            trackingNumber: o.packages[0].trackingNumber,
+            carrier: o.packages[0].carrier,
+            status: o.packages[0].status,
+            estimatedDelivery: o.packages[0].estimatedDelivery?.toISOString() ?? null,
+            lastLocation: o.packages[0].lastLocation,
+            items: o.packages[0].items,
+            events: o.packages[0].events.map((e: Record<string, any>) => ({
+              id: e.id,
+              timestamp: e.timestamp.toISOString(),
+              location: e.location,
+              status: e.status,
+              description: e.description,
+            })),
+          }
+        : null,
     });
 
     return {
-      arrivingToday: arrivingToday.map(formatPackage),
-      inTransit: inTransit.map(formatPackage),
-      processing: processing.map(formatPackage),
-      delivered: delivered.map(formatPackage),
-      exceptions: exceptions.map(formatPackage),
+      arrivingToday: arrivingToday.map(formatOrder),
+      inTransit: inTransit.map(formatOrder),
+      processing: processing.map(formatOrder),
+      delivered: delivered.map(formatOrder),
+      exceptions: exceptions.map(formatOrder),
       stats: {
-        total: packages.length,
+        total: orders.length,
         arrivingToday: arrivingToday.length,
         inTransit: inTransit.length,
         processing: processing.length,

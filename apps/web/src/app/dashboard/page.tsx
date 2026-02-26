@@ -38,7 +38,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Track all your packages in one place</p>
+          <p className="text-muted-foreground">Track all your orders and packages in one place</p>
         </div>
         <Button onClick={handleSync} variant="outline" disabled={isRefetching}>
           <RefreshCw className={`h-4 w-4 mr-2 ${isRefetching ? "animate-spin" : ""}`} />
@@ -124,7 +124,7 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          {/* Package sections */}
+          {/* Order sections */}
           {data.arrivingToday.length > 0 && (
             <section>
               <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
@@ -132,8 +132,8 @@ export default function DashboardPage() {
                 Arriving Today
               </h2>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-                {data.arrivingToday.map((pkg: any) => (
-                  <PackageCard key={pkg.id} pkg={pkg} />
+                {data.arrivingToday.map((order: any) => (
+                  <PackageCard key={order.id} order={order} />
                 ))}
               </div>
             </section>
@@ -146,8 +146,8 @@ export default function DashboardPage() {
                 In Transit
               </h2>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-                {data.inTransit.map((pkg: any) => (
-                  <PackageCard key={pkg.id} pkg={pkg} />
+                {data.inTransit.map((order: any) => (
+                  <PackageCard key={order.id} order={order} />
                 ))}
               </div>
             </section>
@@ -157,11 +157,11 @@ export default function DashboardPage() {
             <section>
               <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
                 <Package className="h-5 w-5 text-gray-500" />
-                Processing
+                Processing / Awaiting Shipment
               </h2>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-                {data.processing.map((pkg: any) => (
-                  <PackageCard key={pkg.id} pkg={pkg} />
+                {data.processing.map((order: any) => (
+                  <PackageCard key={order.id} order={order} />
                 ))}
               </div>
             </section>
@@ -174,8 +174,8 @@ export default function DashboardPage() {
                 Recently Delivered
               </h2>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-                {data.delivered.map((pkg: any) => (
-                  <PackageCard key={pkg.id} pkg={pkg} />
+                {data.delivered.map((order: any) => (
+                  <PackageCard key={order.id} order={order} />
                 ))}
               </div>
             </section>
@@ -188,8 +188,8 @@ export default function DashboardPage() {
                 Exceptions
               </h2>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-                {data.exceptions.map((pkg: any) => (
-                  <PackageCard key={pkg.id} pkg={pkg} />
+                {data.exceptions.map((order: any) => (
+                  <PackageCard key={order.id} order={order} />
                 ))}
               </div>
             </section>

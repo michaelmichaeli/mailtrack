@@ -39,8 +39,8 @@ export default function PackagesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Packages</h1>
-        <p className="text-muted-foreground">Search and filter all your packages</p>
+        <h1 className="text-2xl font-bold">Orders</h1>
+        <p className="text-muted-foreground">Search and filter all your orders and packages</p>
       </div>
 
       {/* Search & Filter */}
@@ -82,15 +82,15 @@ export default function PackagesPage() {
         </div>
       ) : !data || data.items.length === 0 ? (
         <EmptyState
-          title="No packages found"
-          description={query || status ? "Try adjusting your search or filters" : "Connect your email to start tracking packages"}
+          title="No orders found"
+          description={query || status ? "Try adjusting your search or filters" : "Connect your email to start tracking orders"}
           action={!query && !status ? { label: "Connect email", href: "/settings" } : undefined}
         />
       ) : (
         <>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {data.items.map((pkg: any) => (
-              <PackageCard key={pkg.id} pkg={pkg} />
+            {data.items.map((order: any) => (
+              <PackageCard key={order.id} order={order} />
             ))}
           </div>
 
@@ -98,7 +98,7 @@ export default function PackagesPage() {
           {data.totalPages > 1 && (
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                Page {data.page} of {data.totalPages} · {data.total} packages
+                Page {data.page} of {data.totalPages} · {data.total} orders
               </p>
               <div className="flex gap-2">
                 <Button

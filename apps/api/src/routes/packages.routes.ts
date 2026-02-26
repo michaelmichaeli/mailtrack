@@ -3,26 +3,28 @@ import { searchParamsSchema } from "@mailtrack/shared";
 import { trackPackage } from "../services/tracking.service.js";
 
 export const packageRoutes: FastifyPluginAsync = async (app) => {
-  // GET /api/packages — List packages with search/filter
+  // GET /api/packages — List orders with their packages (search/filter)
   app.get("/", {
     preHandler: [app.authenticate],
   }, async (request) => {
     const userId = request.user.userId;
     const params = searchParamsSchema.parse(request.query);
 
-    const where: any = {
-      order: { userId },
-    };
+    const where: any = { userId };
 
-    if (params.status) where.status = params.status;
-    if (params.carrier) where.carrier = params.carrier;
-    if (params.merchant) where.order = { ...where.order, merchant: { contains: params.merchant, mode: "insensitive" } };
+    if (params.merchant) {
+      where.merchant = { contains: params.merchant, mode: "insensitive" };
+    }
     if (params.query) {
       where.OR = [
-        { trackingNumber: { contains: params.query, mode: "insensitive" } },
-        { items: { contains: params.query, mode: "insensitive" } },
-        { order: { merchant: { contains: params.query, mode: "insensitive" } } },
+        { merchant: { contains: params.query, mode: "insensitive" } },
+        { externalOrderId: { contains: params.query, mode: "insensitive" } },
+        { packages: { some: { trackingNumber: { contains: params.query, mode: "insensitive" } } } },
+        { packages: { some: { items: { contains: params.query, mode: "insensitive" } } } },
       ];
+    }
+    if (params.status) {
+      where.packages = { some: { status: params.status } };
     }
     if (params.dateFrom || params.dateTo) {
       where.createdAt = {};
@@ -31,45 +33,46 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
     }
 
     const [items, total] = await Promise.all([
-      app.prisma.package.findMany({
+      app.prisma.order.findMany({
         where,
         include: {
-          order: true,
-          events: { orderBy: { timestamp: "desc" }, take: 1 },
+          packages: {
+            include: { events: { orderBy: { timestamp: "desc" }, take: 1 } },
+          },
         },
         orderBy: { updatedAt: "desc" },
         skip: (params.page - 1) * params.limit,
         take: params.limit,
       }),
-      app.prisma.package.count({ where }),
+      app.prisma.order.count({ where }),
     ]);
 
     return {
-      items: items.map((p: Record<string, any>) => ({
-        id: p.id,
-        orderId: p.orderId,
-        trackingNumber: p.trackingNumber,
-        carrier: p.carrier,
-        status: p.status,
-        estimatedDelivery: p.estimatedDelivery?.toISOString() ?? null,
-        lastLocation: p.lastLocation,
-        items: p.items,
-        createdAt: p.createdAt.toISOString(),
-        updatedAt: p.updatedAt.toISOString(),
-        order: {
-          id: p.order.id,
-          merchant: p.order.merchant,
-          shopPlatform: p.order.shopPlatform,
-          externalOrderId: p.order.externalOrderId,
-        },
-        latestEvent: p.events[0]
-          ? {
-              timestamp: p.events[0].timestamp.toISOString(),
-              description: p.events[0].description,
-              location: p.events[0].location,
-            }
-          : null,
-      })),
+      items: items.map((o: Record<string, any>) => {
+        const pkg = o.packages[0];
+        return {
+          id: o.id,
+          externalOrderId: o.externalOrderId,
+          shopPlatform: o.shopPlatform,
+          merchant: o.merchant,
+          orderDate: o.orderDate?.toISOString() ?? null,
+          totalAmount: o.totalAmount,
+          currency: o.currency,
+          createdAt: o.createdAt.toISOString(),
+          updatedAt: o.updatedAt.toISOString(),
+          package: pkg
+            ? {
+                id: pkg.id,
+                trackingNumber: pkg.trackingNumber,
+                carrier: pkg.carrier,
+                status: pkg.status,
+                estimatedDelivery: pkg.estimatedDelivery?.toISOString() ?? null,
+                lastLocation: pkg.lastLocation,
+                items: pkg.items,
+              }
+            : null,
+        };
+      }),
       total,
       page: params.page,
       limit: params.limit,
