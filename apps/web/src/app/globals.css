@@ -1,33 +1,38 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #ffffff;
-  --color-foreground: #0a0a0a;
-  --color-muted: #f5f5f5;
-  --color-muted-foreground: #737373;
-  --color-border: #e5e5e5;
-  --color-ring: #3b82f6;
-  --color-primary: #3b82f6;
-  --color-primary-foreground: #ffffff;
-  --color-secondary: #f5f5f5;
-  --color-secondary-foreground: #0a0a0a;
-  --color-accent: #f5f5f5;
-  --color-accent-foreground: #0a0a0a;
-  --color-destructive: #ef4444;
-  --color-destructive-foreground: #ffffff;
-  --color-card: #ffffff;
-  --color-card-foreground: #0a0a0a;
-  --color-popover: #ffffff;
-  --color-popover-foreground: #0a0a0a;
-  --radius: 0.5rem;
+  /* 60-30-10 palette: 60% neutral, 30% secondary surfaces, 10% accent */
+  --color-background: #F8FAFC;
+  --color-foreground: #0F172A;
+  --color-muted: #F1F5F9;
+  --color-muted-foreground: #64748B;
+  --color-border: #E2E8F0;
+  --color-ring: #6366F1;
+  --color-primary: #6366F1;
+  --color-primary-foreground: #FFFFFF;
+  --color-secondary: #F1F5F9;
+  --color-secondary-foreground: #334155;
+  --color-accent: #EEF2FF;
+  --color-accent-foreground: #4338CA;
+  --color-destructive: #EF4444;
+  --color-destructive-foreground: #FFFFFF;
+  --color-card: #FFFFFF;
+  --color-card-foreground: #0F172A;
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #0F172A;
+  --color-success: #10B981;
+  --color-success-foreground: #FFFFFF;
+  --color-warning: #F59E0B;
+  --color-warning-foreground: #FFFFFF;
+  --radius: 0.625rem;
 
-  --color-status-ordered: #9CA3AF;
-  --color-status-processing: #9CA3AF;
+  --color-status-ordered: #94A3B8;
+  --color-status-processing: #94A3B8;
   --color-status-shipped: #3B82F6;
-  --color-status-in-transit: #3B82F6;
-  --color-status-out-for-delivery: #6366F1;
+  --color-status-in-transit: #6366F1;
+  --color-status-out-for-delivery: #8B5CF6;
   --color-status-delivered: #10B981;
-  --color-status-exception: #F97316;
+  --color-status-exception: #F59E0B;
   --color-status-returned: #EF4444;
 }
 
@@ -38,21 +43,23 @@
 
   .dark {
     color-scheme: dark;
-    --color-background: #0a0a0a;
-    --color-foreground: #fafafa;
-    --color-muted: #262626;
-    --color-muted-foreground: #a3a3a3;
-    --color-border: #262626;
-    --color-card: #0a0a0a;
-    --color-card-foreground: #fafafa;
-    --color-popover: #0a0a0a;
-    --color-popover-foreground: #fafafa;
-    --color-primary: #3b82f6;
-    --color-primary-foreground: #ffffff;
-    --color-secondary: #262626;
-    --color-secondary-foreground: #fafafa;
-    --color-accent: #262626;
-    --color-accent-foreground: #fafafa;
+    --color-background: #0B0F1A;
+    --color-foreground: #F1F5F9;
+    --color-muted: #1E293B;
+    --color-muted-foreground: #94A3B8;
+    --color-border: #1E293B;
+    --color-card: #111827;
+    --color-card-foreground: #F1F5F9;
+    --color-popover: #111827;
+    --color-popover-foreground: #F1F5F9;
+    --color-primary: #818CF8;
+    --color-primary-foreground: #0F172A;
+    --color-secondary: #1E293B;
+    --color-secondary-foreground: #E2E8F0;
+    --color-accent: #1E1B4B;
+    --color-accent-foreground: #C7D2FE;
+    --color-success: #34D399;
+    --color-warning: #FBBF24;
   }
 
   * {
@@ -61,6 +68,13 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* Utility for catalog-style equal-height grid children */
+@layer utilities {
+  .grid-catalog > * {
+    @apply h-full;
   }
 }

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { PackageProgressBar } from "./package-progress-bar";
-import { Package, MapPin, Clock, ShoppingBag } from "lucide-react";
+import { Package, MapPin, Clock, ShoppingBag, ChevronRight, Hash } from "lucide-react";
 import { getCarrierDisplayName } from "@/lib/carrier-urls";
 
 interface OrderCardProps {
@@ -33,7 +33,6 @@ interface OrderCardProps {
 export function PackageCard({ order }: OrderCardProps) {
   const pkg = order.package;
 
-  // Items: prefer order-level items, then package-level
   const safeParse = (v: any): string[] => {
     if (!v) return [];
     if (Array.isArray(v)) return v;
@@ -42,8 +41,6 @@ export function PackageCard({ order }: OrderCardProps) {
   const orderItems = safeParse(order.items);
   const pkgItems = safeParse(pkg?.items);
   const items: string[] = orderItems.length > 0 ? orderItems : pkgItems;
-
-  // Status: prefer package status (more granular), then order status
   const status = pkg?.status ?? order.status ?? "ORDERED";
 
   const formattedDate = order.orderDate
@@ -56,77 +53,78 @@ export function PackageCard({ order }: OrderCardProps) {
 
   return (
     <Link href={`/orders/${order.id}`}>
-      <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer">
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+      <Card className="flex flex-col h-full p-4 hover:shadow-md hover:border-primary/20 transition-all cursor-pointer group">
+        {/* Row 1: Merchant + badge */}
+        <div className="flex items-start justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent shrink-0">
               {pkg ? (
-                <Package className="h-4 w-4 text-muted-foreground" />
+                <Package className="h-4 w-4 text-accent-foreground" />
               ) : (
-                <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                <ShoppingBag className="h-4 w-4 text-accent-foreground" />
               )}
             </div>
-            <div>
-              <p className="text-sm font-medium">
-                {order.merchant}
-                {order.externalOrderId && !order.externalOrderId.startsWith("gmail-") && (
-                  <span className="text-xs text-muted-foreground ml-1.5 font-normal">
-                    #{order.externalOrderId.slice(-8)}
-                  </span>
-                )}
-              </p>
-              <p className="text-xs text-muted-foreground">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground truncate">{order.merchant}</p>
+              <p className="text-xs text-muted-foreground truncate">
                 {pkg
                   ? `${getCarrierDisplayName(pkg.carrier)} · ${pkg.trackingNumber}`
                   : status === "DELIVERED"
                   ? "Delivered"
                   : status === "SHIPPED" || status === "IN_TRANSIT"
-                  ? "Shipped — no tracking number"
+                  ? "Shipped — tracking pending"
                   : "Awaiting shipment"}
               </p>
             </div>
           </div>
-          <Badge variant="status" status={status} />
+          <Badge variant="status" status={status} className="shrink-0" />
         </div>
 
-        {/* Show up to 2 items */}
-        {items.length > 0 && (
-          <div className="mb-2 space-y-0.5">
-            {items.slice(0, 2).map((item: string, i: number) => (
-              <p key={i} className="text-sm text-foreground line-clamp-1">{item}</p>
-            ))}
-            {items.length > 2 && (
-              <p className="text-xs text-muted-foreground">+{items.length - 2} more items</p>
-            )}
-          </div>
-        )}
+        {/* Row 2: Items list */}
+        <div className="flex-1 mb-3 min-h-[40px]">
+          {items.length > 0 ? (
+            <ul className="space-y-1">
+              {items.slice(0, 2).map((item: string, i: number) => (
+                <li key={i} className="flex items-start gap-1.5 text-sm text-secondary-foreground leading-tight">
+                  <span className="inline-block h-1 w-1 rounded-full bg-muted-foreground/40 mt-1.5 shrink-0" />
+                  <span className="line-clamp-1">{item}</span>
+                </li>
+              ))}
+              {items.length > 2 && (
+                <li className="text-xs text-muted-foreground pl-3">+{items.length - 2} more</li>
+              )}
+            </ul>
+          ) : (
+            <p className="text-xs text-muted-foreground italic">No item details</p>
+          )}
+        </div>
 
-        <PackageProgressBar status={status} />
+        {/* Row 3: Progress */}
+        <div className="mb-3">
+          <PackageProgressBar status={status} />
+        </div>
 
-        <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1">
-            {pkg?.lastLocation ? (
-              <>
-                <MapPin className="h-3 w-3" />
-                <span>{pkg.lastLocation}</span>
-              </>
-            ) : formattedDate ? (
-              <>
+        {/* Row 4: Footer meta */}
+        <div className="flex items-center justify-between pt-2 border-t border-border/50">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            {formattedDate && (
+              <span className="flex items-center gap-1">
                 <Clock className="h-3 w-3" />
-                <span>Ordered {formattedDate}</span>
-              </>
-            ) : null}
+                {formattedDate}
+              </span>
+            )}
+            {order.externalOrderId && !order.externalOrderId.startsWith("gmail-") && (
+              <span className="flex items-center gap-1 font-mono">
+                <Hash className="h-3 w-3" />
+                {order.externalOrderId.slice(-6)}
+              </span>
+            )}
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             {formattedAmount && (
-              <span className="font-medium">{formattedAmount}</span>
+              <span className="text-xs font-semibold text-foreground">{formattedAmount}</span>
             )}
-            {pkg?.estimatedDelivery && (
-              <>
-                <Clock className="h-3 w-3 ml-2" />
-                <span>ETA: {new Date(pkg.estimatedDelivery).toLocaleDateString()}</span>
-              </>
-            )}
+            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
           </div>
         </div>
       </Card>

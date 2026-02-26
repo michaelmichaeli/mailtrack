@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PackageProgressBar } from "@/components/packages/package-progress-bar";
 import { TrackingTimeline } from "@/components/packages/tracking-timeline";
-import { ArrowLeft, RefreshCw, MapPin, Clock, DollarSign, Store, Package, ShoppingBag, ExternalLink } from "lucide-react";
+import { ArrowLeft, RefreshCw, MapPin, Clock, DollarSign, Store, Package, ShoppingBag, ExternalLink, ChevronRight, Navigation, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { getCarrierTrackingUrl, getCarrierDisplayName } from "@/lib/carrier-urls";
@@ -26,7 +26,6 @@ export default function OrderDetailPage() {
     queryFn: () => api.getOrder(id),
   });
 
-  // Track which package is currently refreshing
   const [refreshingPkgId, setRefreshingPkgId] = useState<string | null>(null);
 
   const refreshMutation = useMutation({
@@ -52,7 +51,7 @@ export default function OrderDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-3xl">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-48 w-full rounded-xl" />
         <Skeleton className="h-64 w-full rounded-xl" />
@@ -63,74 +62,82 @@ export default function OrderDetailPage() {
   if (!order) {
     return (
       <div className="text-center py-16">
+        <Package className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
         <p className="text-muted-foreground">Order not found</p>
-        <Button variant="outline" className="mt-4" onClick={() => router.back()}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
+        <Button variant="outline" size="sm" className="mt-4" onClick={() => router.back()}>
+          <ArrowLeft className="h-4 w-4" />
           Go back
         </Button>
       </div>
     );
   }
 
+  const safeParse = (v: any): string[] => {
+    if (!v) return [];
+    if (Array.isArray(v)) return v;
+    try { return JSON.parse(v); } catch { return []; }
+  };
+
   const formattedDate = order.orderDate
-    ? new Date(order.orderDate).toLocaleDateString()
+    ? new Date(order.orderDate).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
     : null;
   const formattedAmount =
     order.totalAmount != null
       ? `${order.currency === "EUR" ? "€" : order.currency === "GBP" ? "£" : "$"}${Number(order.totalAmount).toFixed(2)}`
       : null;
 
+  const orderItems = safeParse(order.items);
+  const pkgItems: string[] = [];
+  for (const pkg of order.packages) {
+    for (const item of safeParse(pkg.items)) {
+      if (!orderItems.includes(item) && !pkgItems.includes(item)) pkgItems.push(item);
+    }
+  }
+  const allItems = [...orderItems, ...pkgItems];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-3xl">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
+        <Button variant="ghost" size="icon" onClick={() => router.back()} className="shrink-0">
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div>
-          <h1 className="text-2xl font-bold">Order Details</h1>
-          <p className="text-muted-foreground">{order.merchant}</p>
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold tracking-tight text-foreground truncate">{order.merchant}</h1>
+          <div className="flex items-center gap-2 mt-0.5">
+            <Badge variant="status" status={order.status ?? "ORDERED"} />
+            {order.externalOrderId && !order.externalOrderId.startsWith("gmail-") && (
+              <span className="text-xs text-muted-foreground font-mono">#{order.externalOrderId}</span>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Order info */}
+      {/* Order info grid */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Store className="h-5 w-5" />
-            Order Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <CardContent className="p-5">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
             <div>
-              <p className="text-xs text-muted-foreground">Merchant</p>
-              <p className="text-sm font-medium">{order.merchant}</p>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Platform</p>
+              <p className="text-sm font-medium text-foreground mt-0.5 flex items-center gap-1.5">
+                <Store className="h-3.5 w-3.5 text-muted-foreground" />
+                {order.shopPlatform}
+              </p>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Platform</p>
-              <p className="text-sm font-medium">{order.shopPlatform}</p>
-            </div>
-            {order.externalOrderId && (
-              <div>
-                <p className="text-xs text-muted-foreground">Order ID</p>
-                <p className="text-sm font-medium font-mono">{order.externalOrderId}</p>
-              </div>
-            )}
             {formattedDate && (
               <div>
-                <p className="text-xs text-muted-foreground">Order Date</p>
-                <p className="text-sm font-medium flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Order Date</p>
+                <p className="text-sm font-medium text-foreground mt-0.5 flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                   {formattedDate}
                 </p>
               </div>
             )}
             {formattedAmount && (
               <div>
-                <p className="text-xs text-muted-foreground">Amount</p>
-                <p className="text-sm font-medium flex items-center gap-1">
-                  <DollarSign className="h-3 w-3" />
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Amount</p>
+                <p className="text-sm font-medium text-foreground mt-0.5 flex items-center gap-1.5">
+                  <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
                   {formattedAmount}
                 </p>
               </div>
@@ -139,40 +146,27 @@ export default function OrderDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Order Items */}
-      {(() => {
-        const safeParse = (v: any): string[] => {
-          if (!v) return [];
-          if (Array.isArray(v)) return v;
-          try { return JSON.parse(v); } catch { return []; }
-        };
-        const orderItems = safeParse(order.items);
-        // Also collect items from packages
-        const pkgItems: string[] = [];
-        for (const pkg of order.packages) {
-          for (const item of safeParse(pkg.items)) {
-            if (!orderItems.includes(item) && !pkgItems.includes(item)) pkgItems.push(item);
-          }
-        }
-        const allItems = [...orderItems, ...pkgItems];
-        return allItems.length > 0 ? (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ShoppingBag className="h-5 w-5" />
-                Items ({allItems.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {allItems.map((item: string, i: number) => (
-                  <li key={i} className="text-sm">{item}</li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        ) : null;
-      })()}
+      {/* Items */}
+      {allItems.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <ShoppingBag className="h-4 w-4 text-primary" />
+              Items ({allItems.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <ul className="space-y-1.5">
+              {allItems.map((item: string, i: number) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-foreground">
+                  <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary/50 shrink-0" />
+                  <span className="leading-relaxed">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Tracking & Shipment */}
       {order.packages.length > 0 ? (
@@ -180,12 +174,19 @@ export default function OrderDetailPage() {
           const isRefreshing = refreshingPkgId === pkg.id && refreshMutation.isPending;
           const carrierUrl = getCarrierTrackingUrl(pkg.carrier, pkg.trackingNumber);
 
+          let pickup: any = null;
+          try {
+            pickup = pkg.pickupLocation
+              ? (typeof pkg.pickupLocation === 'string' ? JSON.parse(pkg.pickupLocation) : pkg.pickupLocation)
+              : null;
+          } catch {}
+
           return (
             <Card key={pkg.id}>
-              <CardHeader>
+              <CardHeader className="pb-3">
                 <div className="flex items-center justify-between flex-wrap gap-2">
-                  <CardTitle className="flex items-center gap-2">
-                    <Package className="h-5 w-5" />
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Package className="h-4 w-4 text-primary" />
                     Tracking & Shipment
                   </CardTitle>
                   <div className="flex items-center gap-2">
@@ -197,62 +198,53 @@ export default function OrderDetailPage() {
                         onClick={() => refreshMutation.mutate(pkg.id)}
                         disabled={refreshMutation.isPending}
                       >
-                        <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
+                        <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
                         Refresh
                       </Button>
                     )}
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-5 pt-0">
                 <PackageProgressBar status={pkg.status} />
 
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
                   <div>
-                    <p className="text-xs text-muted-foreground">Tracking Number</p>
-                    <p className="text-sm font-medium font-mono">{pkg.trackingNumber}</p>
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Tracking</p>
+                    <p className="text-sm font-medium font-mono text-foreground mt-0.5">{pkg.trackingNumber}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Carrier</p>
-                    <p className="text-sm font-medium">{getCarrierDisplayName(pkg.carrier)}</p>
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Carrier</p>
+                    <p className="text-sm font-medium text-foreground mt-0.5">{getCarrierDisplayName(pkg.carrier)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Status</p>
-                    <p className="text-sm font-medium capitalize">{pkg.status.toLowerCase().replace(/_/g, " ")}</p>
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Status</p>
+                    <p className="text-sm font-medium text-foreground mt-0.5 capitalize">{pkg.status.toLowerCase().replace(/_/g, " ")}</p>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Last Location</p>
-                    <p className="text-sm font-medium flex items-center gap-1">
-                      {pkg.lastLocation ? (
-                        <>
-                          <MapPin className="h-3 w-3" />
-                          {pkg.lastLocation}
-                        </>
-                      ) : (
-                        "—"
-                      )}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Estimated Delivery</p>
-                    <p className="text-sm font-medium flex items-center gap-1">
-                      {pkg.estimatedDelivery ? (
-                        <>
-                          <Clock className="h-3 w-3" />
-                          {new Date(pkg.estimatedDelivery).toLocaleDateString()}
-                        </>
-                      ) : (
-                        "—"
-                      )}
-                    </p>
-                  </div>
+                  {pkg.lastLocation && (
+                    <div>
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Location</p>
+                      <p className="text-sm font-medium text-foreground mt-0.5 flex items-center gap-1">
+                        <MapPin className="h-3 w-3 text-muted-foreground" />
+                        {pkg.lastLocation}
+                      </p>
+                    </div>
+                  )}
+                  {pkg.estimatedDelivery && (
+                    <div>
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Est. Delivery</p>
+                      <p className="text-sm font-medium text-foreground mt-0.5 flex items-center gap-1">
+                        <Clock className="h-3 w-3 text-muted-foreground" />
+                        {new Date(pkg.estimatedDelivery).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
-                {/* External tracking link */}
                 {carrierUrl && (
                   <a href={carrierUrl} target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" className="w-full">
-                      <ExternalLink className="h-4 w-4 mr-2" />
+                    <Button variant="outline" size="sm" className="w-full">
+                      <ExternalLink className="h-3.5 w-3.5" />
                       Track on {getCarrierDisplayName(pkg.carrier)}
                     </Button>
                   </a>
@@ -261,109 +253,123 @@ export default function OrderDetailPage() {
                 {/* Tracking timeline */}
                 {pkg.events.length > 0 && (
                   <div>
-                    <p className="text-xs text-muted-foreground mb-3">Tracking History</p>
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-3">Tracking History</p>
                     <TrackingTimeline events={pkg.events} />
                   </div>
                 )}
 
-                {/* Pickup Location */}
-                {(() => {
-                  let pickup: any = null;
-                  try {
-                    pickup = pkg.pickupLocation
-                      ? (typeof pkg.pickupLocation === 'string' ? JSON.parse(pkg.pickupLocation) : pkg.pickupLocation)
-                      : null;
-                  } catch {}
-                  return pickup ? (
-                    <div className="rounded-lg border bg-green-50 dark:bg-green-950/20 p-4 space-y-3">
-                      <div className="flex items-center gap-2 text-green-700 dark:text-green-400 font-medium text-sm">
-                        <MapPin className="h-4 w-4" />
-                        Pickup Location
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                          <p className="text-xs text-muted-foreground">Address</p>
-                          <p className="text-sm font-medium" dir="auto">{pickup.address}</p>
+                {/* Pickup Location with map */}
+                {pickup && (
+                  <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/50 dark:bg-emerald-950/20 overflow-hidden">
+                    <div className="p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/50">
+                          <Navigation className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                         </div>
+                        <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">Pickup Location</p>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {pickup.address && (
+                          <div>
+                            <p className="text-[11px] font-medium uppercase tracking-wider text-emerald-600/70 dark:text-emerald-400/70">Address</p>
+                            <p className="text-sm font-medium text-foreground mt-0.5 flex items-start gap-1.5" dir="auto">
+                              <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                              {pickup.address}
+                            </p>
+                          </div>
+                        )}
                         {pickup.hours && (
                           <div>
-                            <p className="text-xs text-muted-foreground">Opening Hours</p>
-                            <p className="text-sm font-medium" dir="auto">{pickup.hours}</p>
+                            <p className="text-[11px] font-medium uppercase tracking-wider text-emerald-600/70 dark:text-emerald-400/70">Opening Hours</p>
+                            <p className="text-sm font-medium text-foreground mt-0.5 flex items-start gap-1.5" dir="auto">
+                              <Clock className="h-3.5 w-3.5 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                              {pickup.hours}
+                            </p>
                           </div>
                         )}
                         {pickup.pickupCode && (
                           <div>
-                            <p className="text-xs text-muted-foreground">Pickup Code</p>
-                            <p className="text-sm font-mono font-bold text-green-700 dark:text-green-400">{pickup.pickupCode}</p>
+                            <p className="text-[11px] font-medium uppercase tracking-wider text-emerald-600/70 dark:text-emerald-400/70">Pickup Code</p>
+                            <p className="text-sm font-mono font-bold text-emerald-700 dark:text-emerald-300 mt-0.5 flex items-center gap-1.5">
+                              <KeyRound className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                              {pickup.pickupCode}
+                            </p>
                           </div>
                         )}
                         {pickup.verificationCode && (
                           <div>
-                            <p className="text-xs text-muted-foreground">Verification Code</p>
-                            <p className="text-sm font-mono font-bold">{pickup.verificationCode}</p>
+                            <p className="text-[11px] font-medium uppercase tracking-wider text-emerald-600/70 dark:text-emerald-400/70">Verification</p>
+                            <p className="text-sm font-mono font-bold text-foreground mt-0.5">{pickup.verificationCode}</p>
                           </div>
                         )}
                       </div>
-                      {pickup.address && (
-                        <a
-                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pickup.address)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <Button variant="outline" size="sm" className="w-full">
-                            <MapPin className="h-4 w-4 mr-2" />
-                            Open in Google Maps
-                          </Button>
-                        </a>
-                      )}
                     </div>
-                  ) : null;
-                })()}
+
+                    {/* Embedded map */}
+                    {pickup.address && (
+                      <div className="border-t border-emerald-200 dark:border-emerald-800/50">
+                        <iframe
+                          src={`https://www.google.com/maps/embed/v1/search?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(pickup.address)}`}
+                          className="w-full h-48"
+                          style={{ border: 0 }}
+                          allowFullScreen
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                          title="Pickup location map"
+                        />
+                        <div className="p-3 border-t border-emerald-200 dark:border-emerald-800/50">
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pickup.address)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <Button variant="outline" size="sm" className="w-full">
+                              <ExternalLink className="h-3.5 w-3.5" />
+                              Open in Google Maps
+                            </Button>
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           );
         })
       ) : (
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5" />
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Package className="h-4 w-4 text-primary" />
               Tracking & Shipment
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-0">
             <PackageProgressBar status={order.status ?? "ORDERED"} />
 
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
               <div>
-                <p className="text-xs text-muted-foreground">Status</p>
-                <p className="text-sm font-medium capitalize">
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Status</p>
+                <p className="text-sm font-medium text-foreground mt-0.5 capitalize">
                   {(order.status ?? "ORDERED").toLowerCase().replace(/_/g, " ")}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Tracking Number</p>
-                <p className="text-sm text-muted-foreground">Not found in emails</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Carrier</p>
-                <p className="text-sm text-muted-foreground">Unknown</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Source</p>
-                <p className="text-sm text-muted-foreground">Email notifications</p>
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Tracking</p>
+                <p className="text-sm text-muted-foreground mt-0.5">Not found in emails</p>
               </div>
             </div>
 
-            {/* Link to check on AliExpress / 17track */}
             {order.externalOrderId && !order.externalOrderId.startsWith("gmail-") && order.shopPlatform === "ALIEXPRESS" && (
               <a
                 href={`https://www.aliexpress.com/p/order/detail.html?orderId=${order.externalOrderId}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Button variant="outline" className="w-full">
-                  <ExternalLink className="h-4 w-4 mr-2" />
+                <Button variant="outline" size="sm" className="w-full">
+                  <ExternalLink className="h-3.5 w-3.5" />
                   View order on AliExpress
                 </Button>
               </a>
@@ -375,27 +381,30 @@ export default function OrderDetailPage() {
       {/* Related orders */}
       {order.relatedOrders && order.relatedOrders.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle>Related Orders (same tracking number)</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Related Orders</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
+          <CardContent className="pt-0">
+            <div className="space-y-2">
               {order.relatedOrders.map((ro: any) => (
                 <Link key={ro.id} href={`/orders/${ro.id}`}>
-                  <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors">
-                    <div>
-                      <p className="text-sm font-medium">{ro.merchant}</p>
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors group">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground">{ro.merchant}</p>
                       <p className="text-xs text-muted-foreground">
                         {ro.shopPlatform}
                         {ro.externalOrderId ? ` · ${ro.externalOrderId}` : ""}
                       </p>
                     </div>
-                    {ro.totalAmount != null && (
-                      <span className="text-sm font-medium">
-                        {ro.currency === "EUR" ? "€" : ro.currency === "GBP" ? "£" : "$"}
-                        {Number(ro.totalAmount).toFixed(2)}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2 shrink-0">
+                      {ro.totalAmount != null && (
+                        <span className="text-sm font-medium text-foreground">
+                          {ro.currency === "EUR" ? "€" : ro.currency === "GBP" ? "£" : "$"}
+                          {Number(ro.totalAmount).toFixed(2)}
+                        </span>
+                      )}
+                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                    </div>
                   </div>
                 </Link>
               ))}

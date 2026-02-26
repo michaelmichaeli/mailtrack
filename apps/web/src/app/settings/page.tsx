@@ -14,11 +14,13 @@ import {
   Trash2,
   Download,
   Link as LinkIcon,
-  Unlink,
+  XCircle,
   Moon,
   Sun,
   AlertCircle,
   CheckCircle2,
+  Palette,
+  Shield,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
@@ -50,7 +52,6 @@ function SettingsContent() {
       toast.error("Please log in first");
       return;
     }
-    // Pass token as query param since browser navigation can't set auth headers
     window.location.href = `${API_URL}/api/email/connect/gmail?token=${encodeURIComponent(token)}`;
   };
 
@@ -103,23 +104,38 @@ function SettingsContent() {
     }
   };
 
+  const ToggleSwitch = ({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) => (
+    <button
+      onClick={onToggle}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${
+        enabled ? "bg-primary" : "bg-slate-200 dark:bg-slate-700"
+      }`}
+    >
+      <span
+        className={`inline-block h-4.5 w-4.5 transform rounded-full bg-white shadow-sm transition-transform ${
+          enabled ? "translate-x-[22px]" : "translate-x-[3px]"
+        }`}
+      />
+    </button>
+  );
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Manage your account and preferences</p>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Settings</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Manage your account and preferences</p>
       </div>
 
       {successParam && (
-        <div className="flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
-          <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+        <div className="flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+          <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" />
           <span>{successParam}</span>
         </div>
       )}
 
       {errorParam && (
-        <div className="flex items-start gap-2 rounded-lg border border-orange-200 bg-orange-50 p-3 text-sm text-orange-800 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-200">
-          <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+          <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
           <span>{errorParam}</span>
         </div>
       )}
@@ -127,8 +143,8 @@ function SettingsContent() {
       {/* Connected Emails */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Mail className="h-4 w-4 text-primary" />
             Connected Emails
           </CardTitle>
           <CardDescription>
@@ -139,32 +155,34 @@ function SettingsContent() {
           {accounts?.emails?.map((email: any) => (
             <div
               key={email.id}
-              className="flex items-center justify-between rounded-lg border border-border p-3"
+              className="flex items-center justify-between rounded-lg border border-border p-3 bg-muted/30"
             >
-              <div className="flex items-center gap-3">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">{email.email}</p>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 dark:bg-red-950/50 shrink-0">
+                  <Mail className="h-4 w-4 text-red-500" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{email.email}</p>
                   <p className="text-xs text-muted-foreground">
                     {email.provider} · Last synced:{" "}
                     {email.lastSyncAt
-                      ? new Date(email.lastSyncAt).toLocaleString()
+                      ? new Date(email.lastSyncAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
                       : "Never"}
                   </p>
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
                 onClick={() => disconnectEmail.mutate(email.id)}
                 disabled={disconnectEmail.isPending}
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors shrink-0"
+                title="Disconnect email"
               >
-                <Unlink className={`h-4 w-4 ${disconnectEmail.isPending ? "animate-spin" : ""}`} />
-              </Button>
+                <XCircle className="h-4 w-4" />
+              </button>
             </div>
           ))}
           <Button variant="outline" className="w-full" onClick={connectGmail}>
-            <LinkIcon className="h-4 w-4 mr-2" />
+            <LinkIcon className="h-4 w-4" />
             Connect Gmail
           </Button>
         </CardContent>
@@ -173,8 +191,8 @@ function SettingsContent() {
       {/* Connected Shops */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ShoppingBag className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ShoppingBag className="h-4 w-4 text-primary" />
             Connected Shops
           </CardTitle>
           <CardDescription>
@@ -185,10 +203,12 @@ function SettingsContent() {
           {accounts?.shops?.map((shop: any) => (
             <div
               key={shop.id}
-              className="flex items-center justify-between rounded-lg border border-border p-3"
+              className="flex items-center justify-between rounded-lg border border-border p-3 bg-muted/30"
             >
               <div className="flex items-center gap-3">
-                <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-50 dark:bg-orange-950/50 shrink-0">
+                  <ShoppingBag className="h-4 w-4 text-orange-500" />
+                </div>
                 <div>
                   <p className="text-sm font-medium">{shop.platform}</p>
                   <p className="text-xs text-muted-foreground">
@@ -199,10 +219,10 @@ function SettingsContent() {
             </div>
           ))}
           {(!accounts?.shops || accounts.shops.length === 0) && (
-            <p className="text-sm text-muted-foreground py-2">No shops connected yet</p>
+            <div className="text-center py-3 text-sm text-muted-foreground">No shops connected yet</div>
           )}
           <Button variant="outline" className="w-full" disabled>
-            <LinkIcon className="h-4 w-4 mr-2" />
+            <LinkIcon className="h-4 w-4" />
             Connect Amazon (Coming soon)
           </Button>
         </CardContent>
@@ -211,51 +231,32 @@ function SettingsContent() {
       {/* Notifications */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Bell className="h-4 w-4 text-primary" />
             Notifications
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Push notifications</p>
+              <p className="text-sm font-medium text-foreground">Push notifications</p>
               <p className="text-xs text-muted-foreground">Get notified on status changes</p>
             </div>
-            <button
-              onClick={() =>
-                updateNotifications.mutate({ pushEnabled: !notifPrefs?.pushEnabled })
-              }
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                notifPrefs?.pushEnabled ? "bg-primary" : "bg-muted"
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  notifPrefs?.pushEnabled ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
+            <ToggleSwitch
+              enabled={notifPrefs?.pushEnabled ?? false}
+              onToggle={() => updateNotifications.mutate({ pushEnabled: !notifPrefs?.pushEnabled })}
+            />
           </div>
+          <div className="h-px bg-border" />
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Email notifications</p>
+              <p className="text-sm font-medium text-foreground">Email notifications</p>
               <p className="text-xs text-muted-foreground">Receive email digests</p>
             </div>
-            <button
-              onClick={() =>
-                updateNotifications.mutate({ emailEnabled: !notifPrefs?.emailEnabled })
-              }
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                notifPrefs?.emailEnabled ? "bg-primary" : "bg-muted"
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  notifPrefs?.emailEnabled ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
+            <ToggleSwitch
+              enabled={notifPrefs?.emailEnabled ?? false}
+              onToggle={() => updateNotifications.mutate({ emailEnabled: !notifPrefs?.emailEnabled })}
+            />
           </div>
         </CardContent>
       </Card>
@@ -263,21 +264,24 @@ function SettingsContent() {
       {/* Appearance */}
       <Card>
         <CardHeader>
-          <CardTitle>Appearance</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Palette className="h-4 w-4 text-primary" />
+            Appearance
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Theme</p>
+              <p className="text-sm font-medium text-foreground">Theme</p>
               <p className="text-xs text-muted-foreground">Toggle between light and dark mode</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               <Button
                 variant={theme === "light" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setTheme("light")}
               >
-                <Sun className="h-4 w-4 mr-1" />
+                <Sun className="h-4 w-4" />
                 Light
               </Button>
               <Button
@@ -285,7 +289,7 @@ function SettingsContent() {
                 size="sm"
                 onClick={() => setTheme("dark")}
               >
-                <Moon className="h-4 w-4 mr-1" />
+                <Moon className="h-4 w-4" />
                 Dark
               </Button>
             </div>
@@ -296,16 +300,19 @@ function SettingsContent() {
       {/* Data & Privacy */}
       <Card>
         <CardHeader>
-          <CardTitle>Data & Privacy</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Shield className="h-4 w-4 text-primary" />
+            Data & Privacy
+          </CardTitle>
           <CardDescription>Export your data or delete your account</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <Button variant="outline" className="w-full" onClick={handleExport} disabled={isExporting}>
-            <Download className={`h-4 w-4 mr-2 ${isExporting ? "animate-spin" : ""}`} />
+            <Download className={`h-4 w-4 ${isExporting ? "animate-spin" : ""}`} />
             {isExporting ? "Exporting…" : "Export all data (JSON)"}
           </Button>
           <Button variant="destructive" className="w-full" onClick={handleDeleteAccount} disabled={isDeleting}>
-            <Trash2 className={`h-4 w-4 mr-2 ${isDeleting ? "animate-spin" : ""}`} />
+            <Trash2 className={`h-4 w-4 ${isDeleting ? "animate-spin" : ""}`} />
             {isDeleting ? "Deleting…" : "Delete account"}
           </Button>
         </CardContent>

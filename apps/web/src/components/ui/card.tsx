@@ -14,11 +14,11 @@ export function Card({ className, children }: CardProps) {
 }
 
 export function CardHeader({ className, children }: CardProps) {
-  return <div className={cn("flex flex-col space-y-1.5 p-6", className)}>{children}</div>;
+  return <div className={cn("flex flex-col space-y-1 p-5 pb-4", className)}>{children}</div>;
 }
 
 export function CardTitle({ className, children }: CardProps) {
-  return <h3 className={cn("text-lg font-semibold leading-none tracking-tight", className)}>{children}</h3>;
+  return <h3 className={cn("text-base font-semibold leading-none tracking-tight", className)}>{children}</h3>;
 }
 
 export function CardDescription({ className, children }: CardProps) {
@@ -26,9 +26,9 @@ export function CardDescription({ className, children }: CardProps) {
 }
 
 export function CardContent({ className, children }: CardProps) {
-  return <div className={cn("p-6 pt-0", className)}>{children}</div>;
+  return <div className={cn("px-5 pb-5 pt-0", className)}>{children}</div>;
 }
 
 export function CardFooter({ className, children }: CardProps) {
-  return <div className={cn("flex items-center p-6 pt-0", className)}>{children}</div>;
+  return <div className={cn("flex items-center px-5 pb-5 pt-0", className)}>{children}</div>;
 }

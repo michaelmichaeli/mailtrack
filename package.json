@@ -7,6 +7,11 @@
   ],
   "scripts": {
     "dev": "turbo dev",
+    "start": "pm2 start ecosystem.config.cjs",
+    "stop": "pm2 stop all",
+    "restart": "pm2 restart all",
+    "logs": "pm2 logs",
+    "status": "pm2 list",
     "build": "turbo build",
     "lint": "turbo lint",
     "test": "turbo test",

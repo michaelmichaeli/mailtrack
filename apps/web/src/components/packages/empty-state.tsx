@@ -17,16 +17,16 @@ export function EmptyState({ title, description, action, icon = "package" }: Emp
 
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted mb-4">
-        <Icon className="h-8 w-8 text-muted-foreground" />
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent mb-4">
+        <Icon className="h-7 w-7 text-primary/50" />
       </div>
-      <h3 className="text-lg font-semibold mb-1">{title}</h3>
-      <p className="text-sm text-muted-foreground max-w-md mb-6">{description}</p>
+      <h3 className="text-base font-semibold text-foreground mb-1">{title}</h3>
+      <p className="text-sm text-muted-foreground max-w-sm mb-6">{description}</p>
       {action && (
         <Link href={action.href}>
-          <Button>
+          <Button size="sm">
             {action.label}
-            <ArrowRight className="h-4 w-4 ml-2" />
+            <ArrowRight className="h-4 w-4" />
           </Button>
         </Link>
       )}
