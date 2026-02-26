@@ -101,6 +101,7 @@ export const dashboardRoutes: FastifyPluginAsync = async (app) => {
             estimatedDelivery: o.packages[0].estimatedDelivery?.toISOString() ?? null,
             lastLocation: o.packages[0].lastLocation,
             items: o.packages[0].items,
+            pickupLocation: o.packages[0].pickupLocation,
             events: o.packages[0].events.map((e: Record<string, any>) => ({
               id: e.id,
               timestamp: e.timestamp.toISOString(),

@@ -76,6 +76,7 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
                 estimatedDelivery: pkg.estimatedDelivery?.toISOString() ?? null,
                 lastLocation: pkg.lastLocation,
                 items: pkg.items,
+                pickupLocation: pkg.pickupLocation,
               }
             : null,
         };
@@ -141,7 +142,7 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
     };
   });
 
-  // POST /api/packages/:id/refresh — Refresh tracking info
+  // POST /api/packages/:id/refresh — Refresh tracking info from Cainiao
   app.post("/:id/refresh", {
     preHandler: [app.authenticate],
   }, async (request, reply) => {
@@ -156,44 +157,149 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(404).send({ error: "Package not found" });
     }
 
-    // Fetch latest tracking info
     const result = await trackPackage(pkg.trackingNumber, pkg.carrier as any);
 
     if (result) {
-      // Update package
-      await app.prisma.package.update({
-        where: { id },
-        data: {
-          status: result.status as any,
-          estimatedDelivery: result.estimatedDelivery ? new Date(result.estimatedDelivery) : null,
-          lastLocation: result.lastLocation,
-        },
-      });
-
-      // Add new events
-      for (const event of result.events) {
-        const exists = await app.prisma.trackingEvent.findFirst({
-          where: {
-            packageId: id,
-            timestamp: new Date(event.timestamp),
-            description: event.description,
-          },
-        });
-
-        if (!exists) {
-          await app.prisma.trackingEvent.create({
-            data: {
-              packageId: id,
-              timestamp: new Date(event.timestamp),
-              location: event.location,
-              status: event.status as any,
-              description: event.description,
-            },
-          });
-        }
-      }
+      await syncPackageFromResult(app.prisma, id, result);
     }
 
     return { success: true, updated: !!result };
   });
+
+  // POST /api/packages/sync-all — Refresh all non-delivered packages from Cainiao
+  app.post("/sync-all", {
+    preHandler: [app.authenticate],
+  }, async (request) => {
+    const userId = request.user.userId;
+
+    const packages = await app.prisma.package.findMany({
+      where: { order: { userId } },
+      select: { id: true, trackingNumber: true, carrier: true, status: true },
+    });
+
+    let synced = 0;
+    let errors = 0;
+
+    // Process sequentially with 1.5s delay to avoid rate limiting
+    for (const pkg of packages) {
+      try {
+        const result = await trackPackage(pkg.trackingNumber, pkg.carrier as any);
+        if (result) {
+          await syncPackageFromResult(app.prisma, pkg.id, result);
+          synced++;
+        }
+      } catch (e) {
+        errors++;
+        console.error(`[sync-all] Error syncing ${pkg.trackingNumber}:`, e);
+      }
+      // Delay between requests to avoid Cainiao rate limiting
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+
+    return { success: true, synced, errors, total: packages.length };
+  });
+
+  // POST /api/packages/add — Manually add a package by tracking number
+  app.post("/add", {
+    preHandler: [app.authenticate],
+  }, async (request, reply) => {
+    const userId = request.user.userId;
+    const { trackingNumber, carrier, description } = request.body as {
+      trackingNumber: string;
+      carrier?: string;
+      description?: string;
+    };
+
+    if (!trackingNumber?.trim()) {
+      return reply.status(400).send({ error: "Tracking number is required" });
+    }
+
+    const tn = trackingNumber.trim().toUpperCase();
+
+    // Check if already tracked
+    const existing = await app.prisma.package.findFirst({
+      where: { trackingNumber: tn, order: { userId } },
+    });
+    if (existing) {
+      return reply.status(409).send({ error: "Package already tracked", packageId: existing.id, orderId: existing.orderId });
+    }
+
+    // Auto-detect carrier if not provided
+    const { detectCarrier } = await import("../lib/carrier-detect.js");
+    const detectedCarrier = carrier || detectCarrier(tn);
+
+    // Create an order + package for the manual entry
+    const order = await app.prisma.order.create({
+      data: {
+        userId,
+        shopPlatform: "UNKNOWN",
+        merchant: description || "Manual Entry",
+        externalOrderId: `manual-${tn}`,
+        status: "PROCESSING",
+        items: description ? JSON.stringify([description]) : null,
+        packages: {
+          create: {
+            trackingNumber: tn,
+            carrier: detectedCarrier,
+            status: "PROCESSING",
+            items: description ? JSON.stringify([description]) : null,
+          },
+        },
+      },
+      include: { packages: true },
+    });
+
+    // Try to fetch tracking data immediately
+    const pkg = order.packages[0];
+    try {
+      const result = await trackPackage(tn, detectedCarrier as any);
+      if (result) {
+        await syncPackageFromResult(app.prisma, pkg.id, result);
+      }
+    } catch (e) {
+      console.error(`[add] Error fetching tracking for ${tn}:`, e);
+    }
+
+    return { success: true, orderId: order.id, packageId: pkg.id };
+  });
 };
+
+/** Merge carrier result into DB: update status, upsert events */
+async function syncPackageFromResult(prisma: any, packageId: string, result: any) {
+  // Update package status and location
+  await prisma.package.update({
+    where: { id: packageId },
+    data: {
+      status: result.status as any,
+      ...(result.estimatedDelivery ? { estimatedDelivery: new Date(result.estimatedDelivery) } : {}),
+      ...(result.lastLocation ? { lastLocation: result.lastLocation } : {}),
+    },
+  });
+
+  // Upsert events — deduplicate by timestamp (within 2 seconds)
+  for (const event of result.events) {
+    const eventTime = new Date(event.timestamp);
+    const windowStart = new Date(eventTime.getTime() - 2000);
+    const windowEnd = new Date(eventTime.getTime() + 2000);
+
+    const exists = await prisma.trackingEvent.findFirst({
+      where: {
+        packageId,
+        timestamp: { gte: windowStart, lte: windowEnd },
+        description: event.description,
+      },
+    });
+
+    if (!exists) {
+      await prisma.trackingEvent.create({
+        data: {
+          packageId,
+          timestamp: eventTime,
+          location: event.location,
+          status: event.status as any,
+          description: event.description,
+        },
+      });
+    }
+  }
+}

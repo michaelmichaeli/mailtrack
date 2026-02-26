@@ -7,14 +7,22 @@ import { Carrier, CARRIER_PATTERNS } from "@mailtrack/shared";
 export function detectCarrier(trackingNumber: string): Carrier {
   const n = trackingNumber.trim().toUpperCase();
 
+  // Very specific patterns first
   if (CARRIER_PATTERNS.UPS.test(n)) return Carrier.UPS;
   if (CARRIER_PATTERNS.USPS.test(n)) return Carrier.USPS;
   if (CARRIER_PATTERNS.ROYAL_MAIL.test(n)) return Carrier.ROYAL_MAIL;
   if (CARRIER_PATTERNS.YANWEN.test(n)) return Carrier.YANWEN;
   if (CARRIER_PATTERNS.CAINIAO.test(n)) return Carrier.CAINIAO;
+  if (CARRIER_PATTERNS.ISRAEL_POST.test(n)) return Carrier.ISRAEL_POST;
+  if (CARRIER_PATTERNS.LA_POSTE.test(n)) return Carrier.LA_POSTE;
+  if (CARRIER_PATTERNS.FOUR_PX.test(n)) return Carrier.FOUR_PX;
+  if (CARRIER_PATTERNS.SUNYOU.test(n)) return Carrier.SUNYOU;
+  if (CARRIER_PATTERNS.YUNEXPRESS.test(n)) return Carrier.YUNEXPRESS;
+  if (CARRIER_PATTERNS.JT_EXPRESS.test(n)) return Carrier.JT_EXPRESS;
   if (/^\d{12}$/.test(n) || /^\d{15}$/.test(n) || /^\d{20}$/.test(n)) return Carrier.FEDEX;
-  if (/^[A-Z]{3}\d{7,20}$/.test(n)) return Carrier.DHL;
+  if (/^(JJD|JD)\d{18}$/.test(n) || /^[A-Z]{3}\d{7,20}$/.test(n)) return Carrier.DHL;
   if (/^\d{14}$/.test(n)) return Carrier.DPD;
+  if (/^(3S|LS)\d{10,13}(NL)?$/i.test(n)) return Carrier.POSTNL;
   if (CARRIER_PATTERNS.ALIEXPRESS_STANDARD.test(n)) return Carrier.ALIEXPRESS_STANDARD;
 
   return Carrier.UNKNOWN;
@@ -46,7 +54,11 @@ export function extractTrackingNumbers(text: string): Array<{ trackingNumber: st
   const seen = new Set<string>();
 
   // Check specific carriers first (not ALIEXPRESS_STANDARD — too broad for body text)
-  const specificCarriers = ["UPS", "USPS", "ROYAL_MAIL", "YANWEN", "CAINIAO", "DHL"];
+  const specificCarriers = [
+    "UPS", "USPS", "ROYAL_MAIL", "YANWEN", "CAINIAO", "DHL",
+    "ISRAEL_POST", "FOUR_PX", "SUNYOU", "YUNEXPRESS", "JT_EXPRESS",
+    "POSTNL", "LA_POSTE",
+  ];
 
   for (const carrierName of specificCarriers) {
     const pattern = CARRIER_PATTERNS[carrierName];

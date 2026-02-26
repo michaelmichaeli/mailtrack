@@ -13,6 +13,12 @@ const MERCHANT_PATTERNS: Array<{ pattern: RegExp; platform: ShopPlatform; name: 
   { pattern: /shein\.com/i, platform: ShopPlatform.SHEIN, name: "Shein" },
   { pattern: /temu\.com/i, platform: ShopPlatform.TEMU, name: "Temu" },
   { pattern: /walmart\.com/i, platform: ShopPlatform.WALMART, name: "Walmart" },
+  { pattern: /iherb\.com/i, platform: ShopPlatform.IHERB, name: "iHerb" },
+  { pattern: /zara\.com/i, platform: ShopPlatform.ZARA, name: "Zara" },
+  { pattern: /asos\.com/i, platform: ShopPlatform.ASOS, name: "ASOS" },
+  { pattern: /next\.co\.uk|nextdirect\.com/i, platform: ShopPlatform.NEXT, name: "Next" },
+  { pattern: /hm\.com|h&m/i, platform: ShopPlatform.HM, name: "H&M" },
+  { pattern: /shopify\.com|myshopify\.com/i, platform: ShopPlatform.SHOPIFY, name: "Shopify Store" },
 ];
 
 // Order ID patterns
@@ -20,7 +26,10 @@ const ORDER_ID_PATTERNS: RegExp[] = [
   /order\s*#?\s*:?\s*([A-Z0-9-]{5,30})/i,
   /order\s+number\s*:?\s*([A-Z0-9-]{5,30})/i,
   /confirmation\s*#?\s*:?\s*([A-Z0-9-]{5,30})/i,
-  /(?:order|ref|reference)\s*(?:id|number|#)\s*:?\s*(\d{3}-\d{7}-\d{7})/i,
+  /(?:order|ref|reference)\s*(?:id|number|#)\s*:?\s*(\d{3}-\d{7}-\d{7})/i, // Amazon
+  /(?:order|ref|reference)\s*(?:id|number|#)\s*:?\s*(\d{2}-\d{5}-\d{5})/i, // eBay
+  /(?:order|ref|reference)\s*(?:id|number|#)\s*:?\s*([A-Z]{2}\d{10,15})/i, // Shein/Temu
+  /(?:your order|order)\s*(?:no|number)?\.?\s*:?\s*#?([A-Z0-9]{8,20})/i, // Generic
 ];
 
 // Price patterns
@@ -33,19 +42,34 @@ const PRICE_PATTERNS: RegExp[] = [
 
 // Status detection from subject/body
 const STATUS_PATTERNS: Array<{ pattern: RegExp; status: PackageStatus }> = [
+  // Delivered
   { pattern: /has been delivered|successfully delivered|package delivered/i, status: PackageStatus.DELIVERED },
+  { pattern: /your order has been delivered|delivery confirmed/i, status: PackageStatus.DELIVERED },
+  { pattern: /left at|left with|handed to/i, status: PackageStatus.DELIVERED },
+  // Out for delivery / pickup
   { pattern: /ready for pickup|waiting to be picked up|awaiting collection/i, status: PackageStatus.OUT_FOR_DELIVERY },
-  { pattern: /out for delivery/i, status: PackageStatus.OUT_FOR_DELIVERY },
+  { pattern: /out for delivery|arriving today/i, status: PackageStatus.OUT_FOR_DELIVERY },
   { pattern: /in your country|with local carrier|collected by local carrier/i, status: PackageStatus.OUT_FOR_DELIVERY },
+  { pattern: /delivery attempt|attempted delivery/i, status: PackageStatus.OUT_FOR_DELIVERY },
+  // In transit
   { pattern: /has cleared customs|clearing customs/i, status: PackageStatus.IN_TRANSIT },
   { pattern: /left the departure region|in global transit|in transit/i, status: PackageStatus.IN_TRANSIT },
   { pattern: /has an update|have delivery updates/i, status: PackageStatus.IN_TRANSIT },
+  { pattern: /on its way|on the way|en route/i, status: PackageStatus.IN_TRANSIT },
+  { pattern: /arrived at|departed from|processed through/i, status: PackageStatus.IN_TRANSIT },
+  { pattern: /delivery update/i, status: PackageStatus.IN_TRANSIT },
+  // Shipped
   { pattern: /collected by the carrier/i, status: PackageStatus.SHIPPED },
   { pattern: /order shipped|has shipped|has been shipped|dispatched/i, status: PackageStatus.SHIPPED },
-  { pattern: /ready to ship/i, status: PackageStatus.PROCESSING },
-  { pattern: /delivery update/i, status: PackageStatus.IN_TRANSIT },
+  { pattern: /shipment confirmed|label created|shipping confirmation/i, status: PackageStatus.SHIPPED },
+  // Processing
+  { pattern: /ready to ship|preparing for shipment|preparing your order/i, status: PackageStatus.PROCESSING },
+  { pattern: /order processing|being prepared/i, status: PackageStatus.PROCESSING },
+  // Other
   { pattern: /awaiting confirmation|marked as completed/i, status: PackageStatus.DELIVERED },
-  { pattern: /order confirmed|order placed/i, status: PackageStatus.ORDERED },
+  { pattern: /order confirmed|order placed|thank you for your order/i, status: PackageStatus.ORDERED },
+  { pattern: /refund|refunded|return accepted/i, status: PackageStatus.RETURNED },
+  { pattern: /delivery exception|delivery failed|unable to deliver/i, status: PackageStatus.EXCEPTION },
 ];
 
 /**
@@ -71,6 +95,36 @@ export function parseEmail(emailHtml: string, fromAddress: string, subject: stri
   // AliExpress-specific parsing (most of our emails)
   if (merchant.platform === ShopPlatform.ALIEXPRESS) {
     return parseAliExpressEmail(subject, textContent, fullText, merchant);
+  }
+
+  // Amazon-specific parsing
+  if (merchant.platform === ShopPlatform.AMAZON) {
+    return parseAmazonEmail($, subject, textContent, fullText, merchant);
+  }
+
+  // eBay-specific parsing
+  if (merchant.platform === ShopPlatform.EBAY) {
+    return parseEbayEmail($, subject, textContent, fullText, merchant);
+  }
+
+  // iHerb-specific parsing
+  if (merchant.platform === ShopPlatform.IHERB) {
+    return parseIherbEmail($, subject, textContent, fullText, merchant);
+  }
+
+  // Shein-specific parsing
+  if (merchant.platform === ShopPlatform.SHEIN) {
+    return parseSheinEmail($, subject, textContent, fullText, merchant);
+  }
+
+  // Temu-specific parsing
+  if (merchant.platform === ShopPlatform.TEMU) {
+    return parseTemuEmail($, subject, textContent, fullText, merchant);
+  }
+
+  // Shopify store emails (generic)
+  if (merchant.platform === ShopPlatform.SHOPIFY) {
+    return parseShopifyEmail($, subject, textContent, fullText, merchant);
   }
 
   // Generic parsing for other merchants
@@ -274,6 +328,406 @@ function parseParcelHomeEmail(
     currency: null,
     status,
     pickupLocation,
+    confidence,
+  };
+}
+
+/**
+ * Amazon email parser.
+ * Handles: order confirmations, shipping notifications, delivery updates, return confirmations.
+ * Amazon order IDs: 123-1234567-1234567
+ */
+function parseAmazonEmail(
+  $: cheerio.CheerioAPI,
+  subject: string,
+  textContent: string,
+  fullText: string,
+  merchant: { platform: ShopPlatform; name: string }
+): ParsedEmail {
+  // Amazon order ID format: 123-1234567-1234567
+  let orderId: string | null = null;
+  const amazonOrderMatch = fullText.match(/(\d{3}-\d{7}-\d{7})/);
+  if (amazonOrderMatch) orderId = amazonOrderMatch[1];
+
+  // Extract tracking — Amazon uses various carriers
+  const trackingResults = extractTrackingNumbers(fullText);
+  let tracking = trackingResults[0] ?? null;
+
+  // Amazon sometimes puts tracking in specific elements
+  if (!tracking) {
+    const trackLink = $('a[href*="tracking"]').first().attr("href") ?? "";
+    const tnMatch = trackLink.match(/tracknum=([A-Z0-9]+)/i) ?? trackLink.match(/tracking[/-]([A-Z0-9]+)/i);
+    if (tnMatch) {
+      const tn = tnMatch[1].toUpperCase();
+      tracking = { trackingNumber: tn, carrier: detectCarrier(tn) };
+    }
+  }
+
+  // Extract items — Amazon uses table rows or specific classes
+  let items: string[] = [];
+  $('td[class*="name"], td[class*="item"], a[class*="item"]').each((_, el) => {
+    const text = $(el).text().trim();
+    if (text.length > 5 && text.length < 200 && !/\$|order|total|subtotal|shipping/i.test(text)) {
+      items.push(text);
+    }
+  });
+  if (items.length === 0) items = extractItemsFromHtml($);
+  if (items.length === 0) {
+    // Fallback: extract from subject "Your order of ITEM has shipped"
+    const subjectItem = subject.match(/(?:your order of|your .+ order)\s+(.{5,80}?)(?:\s+has|\s+will|\s+is)/i);
+    if (subjectItem) items.push(subjectItem[1].trim());
+  }
+
+  const { amount, currency } = extractPrice(fullText);
+  const status = detectStatus(subject, textContent);
+
+  // Amazon-specific status patterns
+  let amazonStatus = status;
+  if (!amazonStatus) {
+    if (/your order has been delivered/i.test(fullText)) amazonStatus = PackageStatus.DELIVERED;
+    else if (/arriving\s+(today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i.test(fullText)) amazonStatus = PackageStatus.OUT_FOR_DELIVERY;
+    else if (/shipped|on its way/i.test(fullText)) amazonStatus = PackageStatus.SHIPPED;
+    else if (/order confirmed|thank you for your order/i.test(fullText)) amazonStatus = PackageStatus.ORDERED;
+    else if (/preparing for shipment|preparing your order/i.test(fullText)) amazonStatus = PackageStatus.PROCESSING;
+    else if (/refund|returned/i.test(fullText)) amazonStatus = PackageStatus.RETURNED;
+  }
+
+  const confidence = calculateConfidence({
+    hasMerchant: true,
+    hasTracking: !!tracking,
+    hasOrderId: !!orderId,
+    hasItems: items.length > 0,
+  });
+
+  return {
+    merchant: merchant.name,
+    platform: merchant.platform,
+    orderId,
+    trackingNumber: tracking?.trackingNumber ?? null,
+    carrier: tracking?.carrier ?? null,
+    items,
+    orderDate: extractDate(fullText),
+    totalAmount: amount,
+    currency,
+    status: amazonStatus,
+    pickupLocation: null,
+    confidence,
+  };
+}
+
+/**
+ * eBay email parser.
+ * Handles: order confirmations, shipping notifications, delivery updates.
+ * eBay item numbers: 12-digit numbers, order IDs: XX-XXXXX-XXXXX
+ */
+function parseEbayEmail(
+  $: cheerio.CheerioAPI,
+  subject: string,
+  textContent: string,
+  fullText: string,
+  merchant: { platform: ShopPlatform; name: string }
+): ParsedEmail {
+  // eBay order ID formats
+  let orderId: string | null = null;
+  const ebayOrderMatch = fullText.match(/(\d{2}-\d{5}-\d{5})/);
+  if (ebayOrderMatch) orderId = ebayOrderMatch[1];
+  if (!orderId) {
+    const itemMatch = fullText.match(/item\s*(?:number|#|id)\s*:?\s*(\d{10,14})/i);
+    if (itemMatch) orderId = itemMatch[1];
+  }
+
+  const trackingResults = extractTrackingNumbers(fullText);
+  const tracking = trackingResults[0] ?? null;
+
+  let items: string[] = [];
+  // eBay item title from subject: "You bought ITEM_NAME"
+  const subjectItem = subject.match(/(?:you bought|you won|item shipped)\s*:?\s*(.{5,100})/i);
+  if (subjectItem) items.push(subjectItem[1].trim());
+  if (items.length === 0) items = extractItemsFromHtml($);
+
+  const { amount, currency } = extractPrice(fullText);
+  const status = detectStatus(subject, textContent);
+
+  const confidence = calculateConfidence({
+    hasMerchant: true,
+    hasTracking: !!tracking,
+    hasOrderId: !!orderId,
+    hasItems: items.length > 0,
+  });
+
+  return {
+    merchant: merchant.name,
+    platform: merchant.platform,
+    orderId,
+    trackingNumber: tracking?.trackingNumber ?? null,
+    carrier: tracking?.carrier ?? null,
+    items,
+    orderDate: extractDate(fullText),
+    totalAmount: amount,
+    currency,
+    status,
+    pickupLocation: null,
+    confidence,
+  };
+}
+
+/**
+ * iHerb email parser.
+ * Handles: order confirmations, shipping notifications.
+ * iHerb order IDs: typically 8-10 digit numbers.
+ */
+function parseIherbEmail(
+  $: cheerio.CheerioAPI,
+  subject: string,
+  textContent: string,
+  fullText: string,
+  merchant: { platform: ShopPlatform; name: string }
+): ParsedEmail {
+  // iHerb order ID
+  let orderId = extractOrderId(fullText);
+  if (!orderId) {
+    const iherbMatch = fullText.match(/order\s*#?\s*:?\s*(\d{8,10})/i);
+    if (iherbMatch) orderId = iherbMatch[1];
+  }
+
+  const trackingResults = extractTrackingNumbers(fullText);
+  const tracking = trackingResults[0] ?? null;
+
+  // iHerb items from table
+  let items: string[] = [];
+  $('td, span, div').each((_, el) => {
+    const text = $(el).text().trim();
+    // iHerb products often have brand names and supplement descriptions
+    if (text.length > 10 && text.length < 150 && /\d+\s*(mg|g|oz|ml|capsules?|tablets?|softgels?)/i.test(text)) {
+      items.push(text.replace(/\s+/g, ' '));
+    }
+  });
+  if (items.length === 0) items = extractItemsFromHtml($);
+
+  const { amount, currency } = extractPrice(fullText);
+  const status = detectStatus(subject, textContent);
+
+  let iherbStatus = status;
+  if (!iherbStatus) {
+    if (/your order has shipped|shipment confirmation/i.test(fullText)) iherbStatus = PackageStatus.SHIPPED;
+    else if (/order confirmation|thank you for your order/i.test(fullText)) iherbStatus = PackageStatus.ORDERED;
+    else if (/delivered/i.test(fullText)) iherbStatus = PackageStatus.DELIVERED;
+  }
+
+  const confidence = calculateConfidence({
+    hasMerchant: true,
+    hasTracking: !!tracking,
+    hasOrderId: !!orderId,
+    hasItems: items.length > 0,
+  });
+
+  return {
+    merchant: merchant.name,
+    platform: merchant.platform,
+    orderId,
+    trackingNumber: tracking?.trackingNumber ?? null,
+    carrier: tracking?.carrier ?? null,
+    items: [...new Set(items)].slice(0, 10),
+    orderDate: extractDate(fullText),
+    totalAmount: amount,
+    currency,
+    status: iherbStatus,
+    pickupLocation: null,
+    confidence,
+  };
+}
+
+/**
+ * Shein email parser.
+ * Handles: order confirmations, shipping updates, delivery notifications.
+ */
+function parseSheinEmail(
+  $: cheerio.CheerioAPI,
+  subject: string,
+  textContent: string,
+  fullText: string,
+  merchant: { platform: ShopPlatform; name: string }
+): ParsedEmail {
+  let orderId = extractOrderId(fullText);
+  // Shein order IDs are typically long numbers
+  if (!orderId) {
+    const sheinMatch = fullText.match(/order\s*(?:number|#|id)?\s*:?\s*([A-Z0-9]{10,20})/i);
+    if (sheinMatch) orderId = sheinMatch[1];
+  }
+
+  const trackingResults = extractTrackingNumbers(fullText);
+  const tracking = trackingResults[0] ?? null;
+
+  let items = extractItemsFromHtml($);
+  // Shein uses product images with alt text
+  if (items.length === 0) {
+    $('img[alt]').each((_, el) => {
+      const alt = $(el).attr('alt')?.trim() ?? '';
+      if (alt.length > 10 && alt.length < 150 && !/logo|banner|icon|button/i.test(alt)) {
+        items.push(alt);
+      }
+    });
+  }
+
+  const { amount, currency } = extractPrice(fullText);
+  const status = detectStatus(subject, textContent);
+
+  let sheinStatus = status;
+  if (!sheinStatus) {
+    if (/package has been shipped|your package is on its way/i.test(fullText)) sheinStatus = PackageStatus.SHIPPED;
+    else if (/order received|order confirmed/i.test(fullText)) sheinStatus = PackageStatus.ORDERED;
+    else if (/delivered/i.test(fullText)) sheinStatus = PackageStatus.DELIVERED;
+    else if (/customs/i.test(fullText)) sheinStatus = PackageStatus.IN_TRANSIT;
+  }
+
+  const confidence = calculateConfidence({
+    hasMerchant: true,
+    hasTracking: !!tracking,
+    hasOrderId: !!orderId,
+    hasItems: items.length > 0,
+  });
+
+  return {
+    merchant: merchant.name,
+    platform: merchant.platform,
+    orderId,
+    trackingNumber: tracking?.trackingNumber ?? null,
+    carrier: tracking?.carrier ?? null,
+    items: items.slice(0, 10),
+    orderDate: extractDate(fullText),
+    totalAmount: amount,
+    currency,
+    status: sheinStatus,
+    pickupLocation: null,
+    confidence,
+  };
+}
+
+/**
+ * Temu email parser.
+ * Handles: order confirmations, shipping updates, delivery notifications.
+ */
+function parseTemuEmail(
+  $: cheerio.CheerioAPI,
+  subject: string,
+  textContent: string,
+  fullText: string,
+  merchant: { platform: ShopPlatform; name: string }
+): ParsedEmail {
+  let orderId = extractOrderId(fullText);
+  if (!orderId) {
+    const temuMatch = fullText.match(/(?:order|PO)\s*(?:number|#|id)?\s*:?\s*([A-Z0-9-]{8,25})/i);
+    if (temuMatch) orderId = temuMatch[1];
+  }
+
+  const trackingResults = extractTrackingNumbers(fullText);
+  const tracking = trackingResults[0] ?? null;
+
+  let items = extractItemsFromHtml($);
+  if (items.length === 0) {
+    // Temu often uses image alt text for product names
+    $('img[alt]').each((_, el) => {
+      const alt = $(el).attr('alt')?.trim() ?? '';
+      if (alt.length > 10 && alt.length < 150 && !/logo|banner|icon|button/i.test(alt)) {
+        items.push(alt);
+      }
+    });
+  }
+
+  const { amount, currency } = extractPrice(fullText);
+  const status = detectStatus(subject, textContent);
+
+  let temuStatus = status;
+  if (!temuStatus) {
+    if (/your package is on its way|shipped/i.test(fullText)) temuStatus = PackageStatus.SHIPPED;
+    else if (/order placed|order confirmed/i.test(fullText)) temuStatus = PackageStatus.ORDERED;
+    else if (/delivered/i.test(fullText)) temuStatus = PackageStatus.DELIVERED;
+  }
+
+  const confidence = calculateConfidence({
+    hasMerchant: true,
+    hasTracking: !!tracking,
+    hasOrderId: !!orderId,
+    hasItems: items.length > 0,
+  });
+
+  return {
+    merchant: merchant.name,
+    platform: merchant.platform,
+    orderId,
+    trackingNumber: tracking?.trackingNumber ?? null,
+    carrier: tracking?.carrier ?? null,
+    items: items.slice(0, 10),
+    orderDate: extractDate(fullText),
+    totalAmount: amount,
+    currency,
+    status: temuStatus,
+    pickupLocation: null,
+    confidence,
+  };
+}
+
+/**
+ * Shopify store email parser (generic — covers thousands of Shopify-powered stores).
+ * Handles: order confirmations, shipping updates from any Shopify store.
+ */
+function parseShopifyEmail(
+  $: cheerio.CheerioAPI,
+  subject: string,
+  textContent: string,
+  fullText: string,
+  merchant: { platform: ShopPlatform; name: string }
+): ParsedEmail {
+  // Shopify order IDs: #1001, #12345, etc.
+  let orderId = extractOrderId(fullText);
+  if (!orderId) {
+    const shopifyMatch = fullText.match(/order\s*#?\s*(\d{3,8})/i);
+    if (shopifyMatch) orderId = shopifyMatch[1];
+  }
+
+  const trackingResults = extractTrackingNumbers(fullText);
+  const tracking = trackingResults[0] ?? null;
+
+  // Shopify uses structured HTML tables for items
+  let items: string[] = [];
+  $('table td').each((_, el) => {
+    const text = $(el).text().trim();
+    if (text.length > 5 && text.length < 200 && !/\$|total|subtotal|shipping|tax|qty/i.test(text)) {
+      // Check if it looks like a product name (has letters)
+      if (/[a-zA-Z]{3,}/.test(text)) {
+        items.push(text.replace(/\s+/g, ' '));
+      }
+    }
+  });
+  if (items.length === 0) items = extractItemsFromHtml($);
+
+  // Try to extract store name from subject or "from" field
+  let storeName = merchant.name;
+  const storeMatch = subject.match(/(?:from|at)\s+(.+?)(?:\s*[-–—]|\s*order|\s*#|$)/i);
+  if (storeMatch) storeName = storeMatch[1].trim();
+
+  const { amount, currency } = extractPrice(fullText);
+  const status = detectStatus(subject, textContent);
+
+  const confidence = calculateConfidence({
+    hasMerchant: true,
+    hasTracking: !!tracking,
+    hasOrderId: !!orderId,
+    hasItems: items.length > 0,
+  });
+
+  return {
+    merchant: storeName,
+    platform: merchant.platform,
+    orderId,
+    trackingNumber: tracking?.trackingNumber ?? null,
+    carrier: tracking?.carrier ?? null,
+    items: [...new Set(items)].slice(0, 10),
+    orderDate: extractDate(fullText),
+    totalAmount: amount,
+    currency,
+    status,
+    pickupLocation: null,
     confidence,
   };
 }

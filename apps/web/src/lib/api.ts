@@ -160,6 +160,17 @@ class ApiClient {
     return this.request<any>(`/packages/${id}/refresh`, { method: "POST" });
   }
 
+  async syncAllTracking() {
+    return this.request<{ synced: number; errors: number; total: number }>("/packages/sync-all", { method: "POST" });
+  }
+
+  async addPackage(data: { trackingNumber: string; carrier?: string; description?: string }) {
+    return this.request<{ success: boolean; orderId: string; packageId: string }>("/packages/add", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
   // Orders
   async getOrder(id: string) {
     return this.request<any>(`/orders/${id}`);

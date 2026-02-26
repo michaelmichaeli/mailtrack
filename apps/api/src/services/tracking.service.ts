@@ -1,106 +1,123 @@
 import type { CarrierTrackingResult, CarrierTrackingEvent } from "@mailtrack/shared";
 import { PackageStatus, Carrier } from "@mailtrack/shared";
 
-const API_BASE = "https://api.17track.net/track/v2.2";
+const CAINIAO_API = "https://global.cainiao.com/global/detail.json";
 
-// 17track status mapping to our unified enum
-const STATUS_MAP: Record<number, PackageStatus> = {
-  0: PackageStatus.ORDERED,       // Not found
-  10: PackageStatus.IN_TRANSIT,    // In transit
-  20: PackageStatus.EXCEPTION,     // Expired
-  30: PackageStatus.PROCESSING,    // Ready to be picked up
-  35: PackageStatus.EXCEPTION,     // Undelivered
-  40: PackageStatus.DELIVERED,     // Delivered
-  50: PackageStatus.EXCEPTION,     // Alert
+// Rate limit: track last fetch time per tracking number
+const lastFetchMap = new Map<string, number>();
+const RATE_LIMIT_MS = 5 * 60 * 1000; // 5 minutes between fetches per tracking number
+
+// Cainiao status → our status
+const CAINIAO_STATUS_MAP: Record<string, PackageStatus> = {
+  WAIT_ACCEPT: PackageStatus.PROCESSING,
+  ACCEPTED: PackageStatus.PROCESSING,
+  TRANSITING: PackageStatus.IN_TRANSIT,
+  CLEAR_CUSTOMS: PackageStatus.IN_TRANSIT,
+  DELIVERING: PackageStatus.OUT_FOR_DELIVERY,
+  DELIVERED: PackageStatus.DELIVERED,
+  SIGN: PackageStatus.DELIVERED,
+  FAILED: PackageStatus.EXCEPTION,
+  RETURN: PackageStatus.RETURNED,
 };
 
-// 17track carrier code mapping
-const CARRIER_CODE_MAP: Record<string, number> = {
-  UPS: 100002,
-  FEDEX: 100003,
-  USPS: 100001,
-  DHL: 100004,
-  DPD: 190012,
-  ROYAL_MAIL: 190001,
-  CAINIAO: 190271,
-  YANWEN: 190011,
-};
+// Cainiao actionCode → fine-grained status
+function actionCodeToStatus(actionCode: string, fallback: PackageStatus): PackageStatus {
+  if (!actionCode) return fallback;
+  if (actionCode.includes("DELIVERED") || actionCode.includes("SIGN") || actionCode === "GTMS_STA_SIGNED_DELIVER") return PackageStatus.DELIVERED;
+  if (actionCode === "GTMS_STA_SIGNED" || actionCode.includes("PICKUP")) return PackageStatus.OUT_FOR_DELIVERY;
+  if (actionCode.includes("GTMS_ACCEPT") || actionCode.includes("DELIVERING")) return PackageStatus.OUT_FOR_DELIVERY;
+  if (actionCode.includes("CC_IM") || actionCode.includes("CC_EX")) return PackageStatus.IN_TRANSIT;
+  if (actionCode.includes("LH_") || actionCode.includes("SC_")) return PackageStatus.IN_TRANSIT;
+  if (actionCode.includes("GWMS_")) return PackageStatus.PROCESSING;
+  if (actionCode.includes("INFORM_BUYER")) return PackageStatus.OUT_FOR_DELIVERY;
+  return fallback;
+}
+
+// Extract location from Cainiao event description, e.g. "[IL,תל אביב - יפו,מחוז תל אביב 5339001]"
+function extractLocation(desc: string, standerdDesc: string): string | null {
+  const combined = `${standerdDesc} ${desc}`;
+  const match = combined.match(/\[([^\]]+)\]/);
+  if (match) return match[1].replace(/^IL,?\s*/, "").trim() || match[1].trim();
+  return null;
+}
 
 /**
- * Track a package using the 17track API.
+ * Track a package using Cainiao's public API (no API key required).
+ * Works for AliExpress Standard, Cainiao, and most China-origin packages.
  */
 export async function trackPackage(
   trackingNumber: string,
   carrier: Carrier
 ): Promise<CarrierTrackingResult | null> {
-  const apiKey = process.env.TRACKING_API_KEY;
-
-  if (!apiKey || apiKey === "your-17track-api-key") {
-    // Without API key, return existing data from DB (events from email parsing)
+  // Rate limiting per tracking number
+  const lastFetch = lastFetchMap.get(trackingNumber);
+  if (lastFetch && Date.now() - lastFetch < RATE_LIMIT_MS) {
+    console.log(`[tracking] Rate limited: ${trackingNumber} (fetched ${Math.round((Date.now() - lastFetch) / 1000)}s ago)`);
     return null;
   }
 
   try {
-    const carrierCode = CARRIER_CODE_MAP[carrier];
-    const body = [
-      {
-        number: trackingNumber,
-        ...(carrierCode ? { carrier: carrierCode } : {}),
-      },
-    ];
-
-    const response = await fetch(`${API_BASE}/register`, {
-      method: "POST",
+    const url = `${CAINIAO_API}?mailNos=${encodeURIComponent(trackingNumber)}&lang=en-US`;
+    const response = await fetch(url, {
       headers: {
-        "Content-Type": "application/json",
-        "17token": apiKey,
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+        Accept: "application/json",
       },
-      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(10000),
     });
 
     if (!response.ok) {
-      throw new Error(`17track API error: ${response.status}`);
+      console.error(`[tracking] Cainiao HTTP ${response.status} for ${trackingNumber}`);
+      return null;
     }
 
-    // Wait a moment for tracking to be processed, then fetch results
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    const trackResponse = await fetch(`${API_BASE}/gettrackinfo`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "17token": apiKey,
-      },
-      body: JSON.stringify([{ number: trackingNumber }]),
-    });
-
-    if (!trackResponse.ok) {
-      throw new Error(`17track API error: ${trackResponse.status}`);
+    const contentType = response.headers.get("content-type") ?? "";
+    if (!contentType.includes("application/json")) {
+      console.error(`[tracking] Cainiao returned non-JSON for ${trackingNumber} (rate limited?)`);
+      return null;
     }
 
-    const data: Record<string, any> = await trackResponse.json() as Record<string, any>;
-    const accepted = data?.data?.accepted?.[0];
+    const data: any = await response.json();
+    if (!data?.success || !data?.module?.[0]) {
+      console.error(`[tracking] Cainiao: no data for ${trackingNumber}`);
+      return null;
+    }
 
-    if (!accepted) return null;
+    lastFetchMap.set(trackingNumber, Date.now());
 
-    const trackInfo = accepted.track;
-    const events: CarrierTrackingEvent[] = (trackInfo?.z ?? []).map((e: any) => ({
-      timestamp: e.a ?? new Date().toISOString(),
-      location: e.c ?? null,
-      status: STATUS_MAP[trackInfo.e] ?? PackageStatus.IN_TRANSIT,
-      description: e.z ?? "",
-    }));
+    const module = data.module[0];
+    const overallStatus = CAINIAO_STATUS_MAP[module.status] ?? PackageStatus.IN_TRANSIT;
+    const detailList: any[] = module.detailList ?? [];
+
+    const events: CarrierTrackingEvent[] = detailList
+      .filter((e: any) => e.actionCode !== "LAST_MILE_ASN_NOTIFY") // skip forecast noise
+      .map((e: any) => {
+        const desc = e.standerdDesc || e.desc || "";
+        const rawDesc = e.desc || e.standerdDesc || "";
+        const location = extractLocation(e.desc ?? "", e.standerdDesc ?? "");
+        const eventStatus = actionCodeToStatus(e.actionCode ?? "", overallStatus);
+
+        return {
+          timestamp: new Date(e.time).toISOString(),
+          location,
+          status: eventStatus,
+          description: desc,
+        };
+      });
+
+    // Determine last known location from latest event with a location
+    const lastLocation = events.find((e) => e.location)?.location ?? null;
 
     return {
       trackingNumber,
       carrier,
-      status: STATUS_MAP[trackInfo?.e] ?? PackageStatus.IN_TRANSIT,
-      estimatedDelivery: trackInfo?.d ?? null,
-      lastLocation: events[0]?.location ?? null,
+      status: overallStatus,
+      estimatedDelivery: null,
+      lastLocation,
       events,
     };
-  } catch (error) {
-    console.error("Tracking API error:", error);
+  } catch (error: any) {
+    console.error(`[tracking] Error fetching ${trackingNumber}:`, error?.message ?? error);
     return null;
   }
 }

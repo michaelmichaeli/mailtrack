@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,10 +9,12 @@ import { PackageCard } from "@/components/packages/package-card";
 import { EmptyState } from "@/components/packages/empty-state";
 import { DashboardSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Package, Truck, Clock, CheckCircle2, AlertTriangle, ArrowRight } from "lucide-react";
+import { RefreshCw, Package, Truck, Clock, CheckCircle2, AlertTriangle, ArrowRight, Satellite } from "lucide-react";
 import { toast } from "sonner";
+import { AddPackageDialog } from "@/components/packages/add-package-dialog";
 
 export default function DashboardPage() {
+  const queryClient = useQueryClient();
   const [isSyncing, setIsSyncing] = useState(false);
   const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["dashboard"],
@@ -37,6 +39,18 @@ export default function DashboardPage() {
     }
   };
 
+  const syncTrackingMutation = useMutation({
+    mutationFn: () => api.syncAllTracking(),
+    onSuccess: (data) => {
+      toast.success(`Updated ${data.synced} of ${data.total} packages from carriers`);
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["packages"] });
+    },
+    onError: () => {
+      toast.error("Failed to sync tracking data");
+    },
+  });
+
   if (isLoading) return <DashboardSkeleton />;
 
   const stats = data?.stats;
@@ -59,10 +73,17 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Track all your orders and packages in one place</p>
         </div>
-        <Button onClick={handleSync} variant="outline" size="sm" disabled={busy}>
-          <RefreshCw className={`h-4 w-4 ${busy ? "animate-spin" : ""}`} />
-          {isSyncing ? "Syncing…" : "Sync emails"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <AddPackageDialog />
+          <Button onClick={() => syncTrackingMutation.mutate()} variant="outline" size="sm" disabled={busy || syncTrackingMutation.isPending}>
+            <Satellite className={`h-4 w-4 ${syncTrackingMutation.isPending ? "animate-pulse" : ""}`} />
+            {syncTrackingMutation.isPending ? "Syncing…" : "Sync tracking"}
+          </Button>
+          <Button onClick={handleSync} variant="outline" size="sm" disabled={busy}>
+            <RefreshCw className={`h-4 w-4 ${busy ? "animate-spin" : ""}`} />
+            {isSyncing ? "Syncing…" : "Sync emails"}
+          </Button>
+        </div>
       </div>
 
       {!hasPackages ? (

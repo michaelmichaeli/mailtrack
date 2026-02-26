@@ -182,7 +182,8 @@ export default function OrderDetailPage() {
           } catch {}
 
           return (
-            <Card key={pkg.id}>
+            <div key={pkg.id} className="space-y-6">
+            <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <CardTitle className="text-base flex items-center gap-2">
@@ -257,85 +258,99 @@ export default function OrderDetailPage() {
                     <TrackingTimeline events={pkg.events} />
                   </div>
                 )}
+              </CardContent>
+            </Card>
 
-                {/* Pickup Location with map */}
-                {pickup && (
-                  <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/50 dark:bg-emerald-950/20 overflow-hidden">
-                    <div className="p-4 space-y-3">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/50">
-                          <Navigation className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                        </div>
-                        <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">Pickup Location</p>
+            {/* Pickup Location — separate prominent card */}
+            {pickup && (
+              <Card className="overflow-hidden border-emerald-200 dark:border-emerald-800/50">
+                <div className="bg-emerald-50 dark:bg-emerald-950/30 px-5 py-4 border-b border-emerald-200 dark:border-emerald-800/50">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500">
+                      <Navigation className="h-4 w-4 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200">📦 Ready for Pickup</p>
+                      <p className="text-xs text-emerald-600/80 dark:text-emerald-400/70">Your package is waiting at the location below</p>
+                    </div>
+                  </div>
+                </div>
+
+                <CardContent className="p-5 space-y-4">
+                  {/* Pickup code — large and prominent */}
+                  {pickup.pickupCode && (
+                    <div className="flex items-center gap-3 p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/50 shrink-0">
+                        <KeyRound className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                       </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {pickup.address && (
-                          <div>
-                            <p className="text-[11px] font-medium uppercase tracking-wider text-emerald-600/70 dark:text-emerald-400/70">Address</p>
-                            <p className="text-sm font-medium text-foreground mt-0.5 flex items-start gap-1.5" dir="auto">
-                              <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                              {pickup.address}
-                            </p>
-                          </div>
-                        )}
-                        {pickup.hours && (
-                          <div>
-                            <p className="text-[11px] font-medium uppercase tracking-wider text-emerald-600/70 dark:text-emerald-400/70">Opening Hours</p>
-                            <p className="text-sm font-medium text-foreground mt-0.5 flex items-start gap-1.5" dir="auto">
-                              <Clock className="h-3.5 w-3.5 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                              {pickup.hours}
-                            </p>
-                          </div>
-                        )}
-                        {pickup.pickupCode && (
-                          <div>
-                            <p className="text-[11px] font-medium uppercase tracking-wider text-emerald-600/70 dark:text-emerald-400/70">Pickup Code</p>
-                            <p className="text-sm font-mono font-bold text-emerald-700 dark:text-emerald-300 mt-0.5 flex items-center gap-1.5">
-                              <KeyRound className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                              {pickup.pickupCode}
-                            </p>
-                          </div>
-                        )}
-                        {pickup.verificationCode && (
-                          <div>
-                            <p className="text-[11px] font-medium uppercase tracking-wider text-emerald-600/70 dark:text-emerald-400/70">Verification</p>
-                            <p className="text-sm font-mono font-bold text-foreground mt-0.5">{pickup.verificationCode}</p>
-                          </div>
-                        )}
+                      <div>
+                        <p className="text-[11px] font-medium uppercase tracking-wider text-emerald-600/70 dark:text-emerald-400/70">Pickup Code</p>
+                        <p className="text-lg font-mono font-black text-emerald-700 dark:text-emerald-300 tracking-widest">{pickup.pickupCode}</p>
                       </div>
                     </div>
+                  )}
 
-                    {/* Embedded map */}
+                  {/* Address and hours */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {pickup.address && (
-                      <div className="border-t border-emerald-200 dark:border-emerald-800/50">
-                        <iframe
-                          src={`https://www.google.com/maps/embed/v1/search?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(pickup.address)}`}
-                          className="w-full h-48"
-                          style={{ border: 0 }}
-                          allowFullScreen
-                          loading="lazy"
-                          referrerPolicy="no-referrer-when-downgrade"
-                          title="Pickup location map"
-                        />
-                        <div className="p-3 border-t border-emerald-200 dark:border-emerald-800/50">
-                          <a
-                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pickup.address)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <Button variant="outline" size="sm" className="w-full">
-                              <ExternalLink className="h-3.5 w-3.5" />
-                              Open in Google Maps
-                            </Button>
-                          </a>
+                      <div className="flex items-start gap-2.5">
+                        <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                        <div>
+                          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Address</p>
+                          <p className="text-sm font-medium text-foreground mt-0.5 leading-relaxed" dir="auto">{pickup.address}</p>
+                        </div>
+                      </div>
+                    )}
+                    {pickup.hours && (
+                      <div className="flex items-start gap-2.5">
+                        <Clock className="h-4 w-4 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                        <div>
+                          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Opening Hours</p>
+                          <p className="text-sm font-medium text-foreground mt-0.5 leading-relaxed" dir="auto">{pickup.hours}</p>
                         </div>
                       </div>
                     )}
                   </div>
+
+                  {pickup.verificationCode && (
+                    <div className="flex items-center gap-2.5">
+                      <KeyRound className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <div>
+                        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Verification Code</p>
+                        <p className="text-sm font-mono font-bold text-foreground mt-0.5">{pickup.verificationCode}</p>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+
+                {/* Embedded map */}
+                {pickup.address && (
+                  <div className="border-t border-emerald-200 dark:border-emerald-800/50">
+                    <iframe
+                      src={`https://maps.google.com/maps?q=${encodeURIComponent(pickup.address)}&output=embed&z=15`}
+                      className="w-full h-56"
+                      style={{ border: 0 }}
+                      allowFullScreen
+                      loading="lazy"
+                      title="Pickup location map"
+                    />
+                    <div className="p-3 bg-muted/30">
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pickup.address)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button variant="outline" size="sm" className="w-full text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/30">
+                          <Navigation className="h-3.5 w-3.5" />
+                          Get Directions
+                        </Button>
+                      </a>
+                    </div>
+                  </div>
                 )}
-              </CardContent>
-            </Card>
+              </Card>
+            )}
+            </div>
           );
         })
       ) : (

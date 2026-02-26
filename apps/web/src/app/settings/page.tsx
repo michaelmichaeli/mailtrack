@@ -221,10 +221,24 @@ function SettingsContent() {
           {(!accounts?.shops || accounts.shops.length === 0) && (
             <div className="text-center py-3 text-sm text-muted-foreground">No shops connected yet</div>
           )}
-          <Button variant="outline" className="w-full" disabled>
-            <LinkIcon className="h-4 w-4" />
-            Connect Amazon (Coming soon)
-          </Button>
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="outline" className="w-full text-xs" disabled>
+              <ShoppingBag className="h-3.5 w-3.5" />
+              Amazon (Soon)
+            </Button>
+            <Button variant="outline" className="w-full text-xs" disabled>
+              <ShoppingBag className="h-3.5 w-3.5" />
+              iHerb (Soon)
+            </Button>
+            <Button variant="outline" className="w-full text-xs" disabled>
+              <ShoppingBag className="h-3.5 w-3.5" />
+              eBay (Soon)
+            </Button>
+            <Button variant="outline" className="w-full text-xs" disabled>
+              <ShoppingBag className="h-3.5 w-3.5" />
+              Shein (Soon)
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
