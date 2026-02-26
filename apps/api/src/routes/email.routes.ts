@@ -1,8 +1,8 @@
 import type { FastifyPluginAsync } from "fastify";
 import { EmailProvider } from "@mailtrack/shared";
-import { getGmailAuthUrl, exchangeGmailCode, fetchGmailEmails } from "../services/gmail.service.js";
+import { getGmailAuthUrl, fetchGmailEmails } from "../services/gmail.service.js";
 import { parseEmail } from "../services/email-parser.service.js";
-import { encrypt, decrypt } from "../lib/encryption.js";
+import { decrypt } from "../lib/encryption.js";
 import { detectCarrier } from "../lib/carrier-detect.js";
 import { logAudit } from "../services/auth.service.js";
 
@@ -17,77 +17,15 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
       return reply.redirect(`${WEB_URL}/settings?error=${encodeURIComponent("Authentication required")}`);
     }
 
-    // Verify the JWT to confirm the user is logged in
     try {
       app.jwt.verify(token);
     } catch {
       return reply.redirect(`${WEB_URL}/settings?error=${encodeURIComponent("Session expired. Please log in again.")}`);
     }
 
-    // Pass the JWT as OAuth state so callback can identify the user
+    // Redirect to Google with state containing flow type + user token
     const url = getGmailAuthUrl(token);
     return reply.redirect(url);
-  });
-
-  // GET /api/email/connect/gmail/callback — Handle Gmail OAuth redirect from Google
-  app.get("/connect/gmail/callback", async (request, reply) => {
-    const { code, error, state } = request.query as { code?: string; error?: string; state?: string };
-
-    if (error || !code) {
-      return reply.redirect(`${WEB_URL}/settings?error=${encodeURIComponent(error ?? "Gmail connection cancelled")}`);
-    }
-
-    if (!state) {
-      return reply.redirect(`${WEB_URL}/settings?error=${encodeURIComponent("Invalid session. Please try again.")}`);
-    }
-
-    // Verify the JWT from state to get userId
-    let userId: string;
-    try {
-      const decoded = app.jwt.verify(state) as { userId: string };
-      userId = decoded.userId;
-    } catch {
-      return reply.redirect(`${WEB_URL}/settings?error=${encodeURIComponent("Session expired. Please log in again.")}`);
-    }
-
-    try {
-      const tokens = await exchangeGmailCode(code);
-
-      if (!tokens.access_token) {
-        return reply.redirect(`${WEB_URL}/settings?error=${encodeURIComponent("Failed to get Gmail access token")}`);
-      }
-
-      // Get user's email from Gmail
-      const { google } = await import("googleapis");
-      const oauth2Client = new google.auth.OAuth2();
-      oauth2Client.setCredentials({ access_token: tokens.access_token });
-      const gmail = google.gmail({ version: "v1", auth: oauth2Client });
-      const profile = await gmail.users.getProfile({ userId: "me" });
-      const email = profile.data.emailAddress ?? "";
-
-      // Store encrypted tokens
-      await app.prisma.connectedEmail.upsert({
-        where: { userId_email: { userId, email } },
-        update: {
-          accessToken: encrypt(tokens.access_token),
-          refreshToken: tokens.refresh_token ? encrypt(tokens.refresh_token) : null,
-        },
-        create: {
-          userId,
-          provider: EmailProvider.GMAIL,
-          email,
-          accessToken: encrypt(tokens.access_token),
-          refreshToken: tokens.refresh_token ? encrypt(tokens.refresh_token) : null,
-        },
-      });
-
-      await logAudit(app, userId, "EMAIL_CONNECT", `Gmail: ${email}`, request.ip);
-
-      return reply.redirect(`${WEB_URL}/settings?success=${encodeURIComponent("Gmail connected: " + email)}`);
-    } catch (error: any) {
-      app.log.error(error, "Gmail OAuth callback failed");
-      return reply.redirect(`${WEB_URL}/settings?error=${encodeURIComponent("Failed to connect Gmail. Please try again.")}`);
-    }
   });
 
   // POST /api/email/sync — Trigger email sync

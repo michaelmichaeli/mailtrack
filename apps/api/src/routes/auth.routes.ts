@@ -11,6 +11,9 @@ import {
   getGoogleAuthUrl,
   exchangeGoogleCode,
 } from "../services/auth.service.js";
+import { exchangeGmailCode } from "../services/gmail.service.js";
+import { encrypt } from "../lib/encryption.js";
+import { EmailProvider } from "@mailtrack/shared";
 
 const WEB_URL = process.env.WEB_URL ?? "http://localhost:3003";
 
@@ -47,14 +50,79 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     }
   });
 
-  // GET /api/auth/google/callback — Handle Google OAuth callback
+  // GET /api/auth/google/callback — Handle Google OAuth callback (login + Gmail connect)
   app.get("/google/callback", async (request, reply) => {
-    const { code, error } = request.query as { code?: string; error?: string };
+    const { code, error, state } = request.query as { code?: string; error?: string; state?: string };
 
-    if (error || !code) {
-      return reply.redirect(`${WEB_URL}/login?error=${encodeURIComponent(error ?? "No authorization code received")}`);
+    // Parse state to determine flow type
+    let flow = "login";
+    let userToken: string | undefined;
+    if (state) {
+      try {
+        const parsed = JSON.parse(state);
+        if (parsed.flow === "gmail") {
+          flow = "gmail";
+          userToken = parsed.token;
+        }
+      } catch {
+        // Not JSON state — treat as login flow
+      }
     }
 
+    if (error || !code) {
+      const redirectUrl = flow === "gmail" ? `${WEB_URL}/settings` : `${WEB_URL}/login`;
+      return reply.redirect(`${redirectUrl}?error=${encodeURIComponent(error ?? "No authorization code received")}`);
+    }
+
+    // === Gmail connect flow ===
+    if (flow === "gmail" && userToken) {
+      let userId: string;
+      try {
+        const decoded = app.jwt.verify(userToken) as { userId: string };
+        userId = decoded.userId;
+      } catch {
+        return reply.redirect(`${WEB_URL}/settings?error=${encodeURIComponent("Session expired. Please log in again.")}`);
+      }
+
+      try {
+        const tokens = await exchangeGmailCode(code);
+        if (!tokens.access_token) {
+          return reply.redirect(`${WEB_URL}/settings?error=${encodeURIComponent("Failed to get Gmail access token")}`);
+        }
+
+        // Get user's email from Gmail
+        const { google } = await import("googleapis");
+        const oauth2Client = new google.auth.OAuth2();
+        oauth2Client.setCredentials({ access_token: tokens.access_token });
+        const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+        const profile = await gmail.users.getProfile({ userId: "me" });
+        const email = profile.data.emailAddress ?? "";
+
+        // Store encrypted tokens
+        await app.prisma.connectedEmail.upsert({
+          where: { userId_email: { userId, email } },
+          update: {
+            accessToken: encrypt(tokens.access_token),
+            refreshToken: tokens.refresh_token ? encrypt(tokens.refresh_token) : null,
+          },
+          create: {
+            userId,
+            provider: EmailProvider.GMAIL as any,
+            email,
+            accessToken: encrypt(tokens.access_token),
+            refreshToken: tokens.refresh_token ? encrypt(tokens.refresh_token) : null,
+          },
+        });
+
+        await logAudit(app, userId, "EMAIL_CONNECT", "Gmail: " + email, request.ip);
+        return reply.redirect(`${WEB_URL}/settings?success=${encodeURIComponent("Gmail connected: " + email)}`);
+      } catch (err: any) {
+        app.log.error(err, "Gmail OAuth callback failed");
+        return reply.redirect(`${WEB_URL}/settings?error=${encodeURIComponent("Failed to connect Gmail. Please try again.")}`);
+      }
+    }
+
+    // === Login flow ===
     try {
       const payload = await exchangeGoogleCode(code);
 
@@ -77,7 +145,6 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         maxAge: 30 * 24 * 60 * 60,
       });
 
-      // Redirect to web app with the access token
       return reply.redirect(`${WEB_URL}/auth/callback?token=${tokens.accessToken}`);
     } catch (err: any) {
       app.log.error(err, "Google OAuth callback failed");

@@ -3,21 +3,24 @@ import type { FastifyInstance } from "fastify";
 import { decrypt } from "../lib/encryption.js";
 
 const API_URL = process.env.API_URL ?? "http://localhost:3002";
+const GMAIL_REDIRECT_URI = `${API_URL}/api/auth/google/callback`;
 const SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"];
 
 function getOAuth2Client() {
   return new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    `${API_URL}/api/email/connect/gmail/callback`
+    GMAIL_REDIRECT_URI
   );
 }
 
 /**
  * Get Gmail OAuth2 URL for user authorization.
+ * State encodes the flow type and user token as JSON.
  */
-export function getGmailAuthUrl(state?: string): string {
+export function getGmailAuthUrl(userToken: string): string {
   const oauth2Client = getOAuth2Client();
+  const state = JSON.stringify({ flow: "gmail", token: userToken });
 
   return oauth2Client.generateAuthUrl({
     access_type: "offline",
