@@ -42,9 +42,13 @@ class ApiClient {
     const authToken = token ?? this.loadToken();
 
     const headers: Record<string, string> = {
-      "Content-Type": "application/json",
       ...((fetchOptions.headers as Record<string, string>) ?? {}),
     };
+
+    // Only set Content-Type for requests that have a body
+    if (fetchOptions.body) {
+      headers["Content-Type"] = "application/json";
+    }
 
     if (authToken) {
       headers["Authorization"] = `Bearer ${authToken}`;
