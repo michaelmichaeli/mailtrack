@@ -3,9 +3,14 @@ import type { FastifyInstance } from "fastify";
 import type { AuthProvider } from "@mailtrack/shared";
 import crypto from "node:crypto";
 
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const API_URL = process.env.API_URL ?? "http://localhost:3002";
+
 const googleClient = new OAuth2Client(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
+  `${API_URL}/api/auth/google/callback`
 );
 
 interface GooglePayload {
@@ -13,6 +18,46 @@ interface GooglePayload {
   email: string;
   name: string;
   picture?: string;
+}
+
+/**
+ * Generate Google OAuth consent URL.
+ */
+export function getGoogleAuthUrl(): string {
+  if (!GOOGLE_CLIENT_ID) {
+    throw new Error("GOOGLE_CLIENT_ID is not configured. Add it to your .env file.");
+  }
+  return googleClient.generateAuthUrl({
+    access_type: "offline",
+    scope: [
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/userinfo.profile",
+    ],
+    prompt: "consent",
+  });
+}
+
+/**
+ * Exchange Google OAuth authorization code for user info.
+ */
+export async function exchangeGoogleCode(code: string): Promise<GooglePayload> {
+  const { tokens } = await googleClient.getToken(code);
+  googleClient.setCredentials(tokens);
+
+  const ticket = await googleClient.verifyIdToken({
+    idToken: tokens.id_token!,
+    audience: GOOGLE_CLIENT_ID,
+  });
+  const payload = ticket.getPayload();
+  if (!payload || !payload.email || !payload.sub) {
+    throw new Error("Invalid Google token payload");
+  }
+  return {
+    sub: payload.sub,
+    email: payload.email,
+    name: payload.name ?? payload.email.split("@")[0],
+    picture: payload.picture,
+  };
 }
 
 /**

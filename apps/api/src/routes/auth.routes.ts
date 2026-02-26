@@ -8,9 +8,61 @@ import {
   generateTokens,
   refreshAccessToken,
   logAudit,
+  getGoogleAuthUrl,
+  exchangeGoogleCode,
 } from "../services/auth.service.js";
 
+const WEB_URL = process.env.WEB_URL ?? "http://localhost:3003";
+
 export const authRoutes: FastifyPluginAsync = async (app) => {
+  // GET /api/auth/google — Redirect to Google OAuth consent screen
+  app.get("/google", async (_request, reply) => {
+    try {
+      const url = getGoogleAuthUrl();
+      return reply.redirect(url);
+    } catch (err: any) {
+      return reply.redirect(`${WEB_URL}/login?error=${encodeURIComponent(err.message)}`);
+    }
+  });
+
+  // GET /api/auth/google/callback — Handle Google OAuth callback
+  app.get("/google/callback", async (request, reply) => {
+    const { code, error } = request.query as { code?: string; error?: string };
+
+    if (error || !code) {
+      return reply.redirect(`${WEB_URL}/login?error=${encodeURIComponent(error ?? "No authorization code received")}`);
+    }
+
+    try {
+      const payload = await exchangeGoogleCode(code);
+
+      const user = await findOrCreateUser(app, {
+        email: payload.email,
+        name: payload.name,
+        avatar: payload.picture ?? null,
+        authProvider: AuthProvider.GOOGLE,
+      });
+
+      const tokens = await generateTokens(app, user.id);
+
+      await logAudit(app, user.id, "LOGIN", "Provider: GOOGLE (OAuth)", request.ip);
+
+      reply.setCookie("refreshToken", tokens.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/api/auth",
+        maxAge: 30 * 24 * 60 * 60,
+      });
+
+      // Redirect to web app with the access token
+      return reply.redirect(`${WEB_URL}/auth/callback?token=${tokens.accessToken}`);
+    } catch (err: any) {
+      app.log.error(err, "Google OAuth callback failed");
+      return reply.redirect(`${WEB_URL}/login?error=${encodeURIComponent("Authentication failed. Please try again.")}`);
+    }
+  });
+
   // POST /api/auth/dev-login — Development-only login (no OAuth needed)
   if (process.env.NODE_ENV !== "production") {
     app.post("/dev-login", async (request, reply) => {
