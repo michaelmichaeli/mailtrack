@@ -33,17 +33,9 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
       ];
     }
     if (params.dateFrom || params.dateTo) {
-      if (params.dateFrom && !params.dateTo) {
-        const since = new Date(params.dateFrom);
-        where.AND = [
-          ...(where.AND ?? []),
-          { OR: [{ orderDate: { gte: since } }, { updatedAt: { gte: since } }] },
-        ];
-      } else {
-        where.createdAt = {};
-        if (params.dateFrom) where.createdAt.gte = new Date(params.dateFrom);
-        if (params.dateTo) where.createdAt.lte = new Date(params.dateTo);
-      }
+      where.orderDate = {};
+      if (params.dateFrom) where.orderDate.gte = new Date(params.dateFrom);
+      if (params.dateTo) where.orderDate.lte = new Date(params.dateTo);
     }
 
     const [items, total] = await Promise.all([

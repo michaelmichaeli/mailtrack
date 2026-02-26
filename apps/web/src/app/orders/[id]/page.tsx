@@ -216,30 +216,47 @@ export default function OrderDetailPage() {
         </Card>
       )}
 
-      {/* Tracking & Shipment */}
+      {/* Tracking & Shipment — all packages merged */}
       {order.packages.length > 0 ? (
-        order.packages.map((pkg: any) => {
-          const isRefreshing = refreshingPkgId === pkg.id && refreshMutation.isPending;
-          const carrierUrl = getCarrierTrackingUrl(pkg.carrier, pkg.trackingNumber);
+        <div className="space-y-6">
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Package className="h-4 w-4 text-primary" />
+                Tracking & Shipment
+                {order.packages.length > 1 && (
+                  <span className="text-xs font-normal text-muted-foreground">({order.packages.length} shipments)</span>
+                )}
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-5 pt-0">
+            {/* Progress bar — use most advanced status */}
+            <PackageProgressBar status={(() => {
+              const statusOrder = ["ORDERED", "PROCESSING", "SHIPPED", "IN_TRANSIT", "OUT_FOR_DELIVERY", "DELIVERED"];
+              let best = order.status ?? "ORDERED";
+              for (const pkg of order.packages) {
+                const idx = statusOrder.indexOf(pkg.status);
+                if (idx > statusOrder.indexOf(best)) best = pkg.status;
+              }
+              return best;
+            })()} />
 
-          let pickup: any = null;
-          try {
-            pickup = pkg.pickupLocation
-              ? (typeof pkg.pickupLocation === 'string' ? JSON.parse(pkg.pickupLocation) : pkg.pickupLocation)
-              : null;
-          } catch {}
+            {/* Per-shipment tracking info */}
+            {order.packages.map((pkg: any, pkgIdx: number) => {
+              const isRefreshing = refreshingPkgId === pkg.id && refreshMutation.isPending;
+              const carrierUrl = getCarrierTrackingUrl(pkg.carrier, pkg.trackingNumber);
 
-          return (
-            <div key={pkg.id} className="space-y-6">
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Package className="h-4 w-4 text-primary" />
-                    Tracking & Shipment
-                  </CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="status" status={pkg.status} />
+              return (
+                <div key={pkg.id} className={pkgIdx > 0 ? "border-t border-border pt-5" : ""}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="status" status={pkg.status} />
+                      {order.packages.length > 1 && (
+                        <span className="text-xs text-muted-foreground">Shipment {pkgIdx + 1}</span>
+                      )}
+                    </div>
                     {pkg.trackingNumber && (
                       <Button
                         variant="outline"
@@ -252,247 +269,266 @@ export default function OrderDetailPage() {
                       </Button>
                     )}
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-5 pt-0">
-                <PackageProgressBar status={pkg.status} />
 
-                <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
-                  <div>
-                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Tracking</p>
-                    <p className="text-sm font-medium font-mono text-foreground mt-0.5 flex items-center gap-1">
-                      {pkg.trackingNumber}
-                      <CopyButton value={pkg.trackingNumber} />
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Carrier</p>
-                    <p className="text-sm font-medium text-foreground mt-0.5">{getCarrierDisplayName(pkg.carrier)}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Status</p>
-                    <p className="text-sm font-medium text-foreground mt-0.5 capitalize">{pkg.status.toLowerCase().replace(/_/g, " ")}</p>
-                  </div>
-                  {pkg.lastLocation && (
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
                     <div>
-                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Location</p>
-                      <p className="text-sm font-medium text-foreground mt-0.5 flex items-center gap-1">
-                        <MapPin className="h-3 w-3 text-muted-foreground" />
-                        {pkg.lastLocation}
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Tracking</p>
+                      <p className="text-sm font-medium font-mono text-foreground mt-0.5 flex items-center gap-1">
+                        {pkg.trackingNumber}
+                        <CopyButton value={pkg.trackingNumber} />
                       </p>
                     </div>
-                  )}
-                  {pkg.estimatedDelivery && (
                     <div>
-                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Est. Delivery</p>
-                      <p className="text-sm font-medium text-foreground mt-0.5 flex items-center gap-1">
-                        <Clock className="h-3 w-3 text-muted-foreground" />
-                        {new Date(pkg.estimatedDelivery).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {carrierUrl && (
-                  <a href={carrierUrl} target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" size="sm" className="w-full">
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      Track on {getCarrierDisplayName(pkg.carrier)}
-                    </Button>
-                  </a>
-                )}
-
-                {/* Tracking timeline */}
-                {pkg.events.length > 0 && (
-                  <div className="border-t border-border pt-5">
-                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-4">Tracking History</p>
-                    <TrackingTimeline events={pkg.events} />
-                  </div>
-                )}
-
-                {/* Location Journey — extracted from events */}
-                {(() => {
-                  const locations = pkg.events
-                    .filter((e: any) => e.location)
-                    .map((e: any) => ({
-                      location: e.location,
-                      timestamp: e.timestamp,
-                      description: e.description,
-                    }));
-                  // Deduplicate by location name
-                  const unique: typeof locations = [];
-                  const seen = new Set<string>();
-                  for (const loc of locations) {
-                    const key = loc.location.toLowerCase();
-                    if (!seen.has(key)) {
-                      seen.add(key);
-                      unique.push(loc);
-                    }
-                  }
-                  if (unique.length === 0 && !pkg.lastLocation) return null;
-
-                  const allLocations = unique.length > 0 ? unique : (pkg.lastLocation ? [{ location: pkg.lastLocation, timestamp: pkg.updatedAt, description: "Last known location" }] : []);
-                  if (allLocations.length === 0) return null;
-
-                  // Build a route for the map
-                  const mapQuery = allLocations.map((l: any) => l.location).join(" to ");
-
-                  return (
-                    <div className="border-t border-border pt-5">
-                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-1.5">
-                        <MapPin className="h-3.5 w-3.5" /> Location Journey
-                      </p>
-                      <div className="space-y-0">
-                        {allLocations.map((loc: any, idx: number) => (
-                          <div key={idx} className="flex gap-3">
-                            <div className="flex flex-col items-center">
-                              <div className={`h-3 w-3 rounded-full border-2 shrink-0 ${idx === 0 ? "bg-primary border-primary" : "bg-background border-muted-foreground/40"}`} />
-                              {idx < allLocations.length - 1 && (
-                                <div className="w-0.5 flex-1 bg-muted-foreground/20 min-h-[28px]" />
-                              )}
-                            </div>
-                            <div className="pb-4 min-w-0">
-                              <p className="text-sm font-medium text-foreground" dir="auto">{loc.location}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {new Date(loc.timestamp).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                                {" · "}
-                                {new Date(loc.timestamp).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Map showing last known location */}
-                      <div className="mt-3 rounded-lg overflow-hidden border border-border">
-                        <iframe
-                          src={`https://maps.google.com/maps?q=${encodeURIComponent(allLocations[0].location)}&output=embed&z=12`}
-                          className="w-full h-44"
-                          style={{ border: 0 }}
-                          allowFullScreen
-                          loading="lazy"
-                          title="Package location"
-                        />
-                        <div className="p-2 bg-muted/30">
-                          <a
-                            href={`https://www.google.com/maps/dir/${allLocations.map((l: any) => encodeURIComponent(l.location)).join("/")}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <Button variant="outline" size="sm" className="w-full text-xs gap-1.5">
-                              <Navigation className="h-3 w-3" />
-                              View Full Route on Maps
-                            </Button>
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </CardContent>
-            </Card>
-
-            {/* Pickup Location — separate prominent card */}
-            {pickup && (
-              <Card className="overflow-hidden border-emerald-200 dark:border-emerald-800/50">
-                <div className="bg-emerald-50 dark:bg-emerald-950/30 px-5 py-4 border-b border-emerald-200 dark:border-emerald-800/50">
-                  <div className="flex items-center gap-2.5">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500">
-                      <Navigation className="h-4 w-4 text-white" />
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Carrier</p>
+                      <p className="text-sm font-medium text-foreground mt-0.5">{getCarrierDisplayName(pkg.carrier)}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200">📦 Ready for Pickup</p>
-                      <p className="text-xs text-emerald-600/80 dark:text-emerald-400/70">Your package is waiting at the location below</p>
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Status</p>
+                      <p className="text-sm font-medium text-foreground mt-0.5 capitalize">{pkg.status.toLowerCase().replace(/_/g, " ")}</p>
                     </div>
-                  </div>
-                </div>
-
-                <CardContent className="p-5 space-y-4">
-                  {/* Pickup code — large and prominent */}
-                  {pickup.pickupCode && (
-                    <div className="flex items-center gap-3 p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/50 shrink-0">
-                        <KeyRound className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                      </div>
+                    {pkg.lastLocation && (
                       <div>
-                        <p className="text-[11px] font-medium uppercase tracking-wider text-emerald-600/70 dark:text-emerald-400/70">Pickup Code</p>
-                        <p className="text-lg font-mono font-black text-emerald-700 dark:text-emerald-300 tracking-widest flex items-center gap-2">
-                          {pickup.pickupCode}
-                          <CopyButton value={pickup.pickupCode} />
+                        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Location</p>
+                        <p className="text-sm font-medium text-foreground mt-0.5 flex items-center gap-1">
+                          <MapPin className="h-3 w-3 text-muted-foreground" />
+                          {pkg.lastLocation}
                         </p>
                       </div>
-                    </div>
-                  )}
+                    )}
+                    {pkg.estimatedDelivery && (
+                      <div>
+                        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Est. Delivery</p>
+                        <p className="text-sm font-medium text-foreground mt-0.5 flex items-center gap-1">
+                          <Clock className="h-3 w-3 text-muted-foreground" />
+                          {new Date(pkg.estimatedDelivery).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                        </p>
+                      </div>
+                    )}
+                  </div>
 
-                  {/* Address and hours */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {pickup.address && (
-                      <div className="flex items-start gap-2.5">
-                        <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                        <div>
-                          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Address</p>
-                          <p className="text-sm font-medium text-foreground mt-0.5 leading-relaxed flex items-start gap-1" dir="auto">
-                            <span className="flex-1">{pickup.address}</span>
-                            <CopyButton value={pickup.address} className="mt-0.5" />
+                  {carrierUrl && (
+                    <a href={carrierUrl} target="_blank" rel="noopener noreferrer" className="block mt-3">
+                      <Button variant="outline" size="sm" className="w-full">
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        Track on {getCarrierDisplayName(pkg.carrier)}
+                      </Button>
+                    </a>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Merged tracking timeline — all events from all packages */}
+            {(() => {
+              const allEvents = order.packages
+                .flatMap((pkg: any) => pkg.events.map((e: any) => ({
+                  ...e,
+                  carrier: pkg.carrier,
+                  trackingNumber: pkg.trackingNumber,
+                })))
+                .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+              if (allEvents.length === 0) return null;
+
+              return (
+                <div className="border-t border-border pt-5">
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-4">Tracking History</p>
+                  <TrackingTimeline events={allEvents} />
+                </div>
+              );
+            })()}
+
+            {/* Location Journey — extracted from all packages' events */}
+            {(() => {
+              const locations = order.packages
+                .flatMap((pkg: any) => pkg.events
+                  .filter((e: any) => e.location)
+                  .map((e: any) => ({
+                    location: e.location,
+                    timestamp: e.timestamp,
+                    description: e.description,
+                  }))
+                )
+                .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+              const unique: typeof locations = [];
+              const seen = new Set<string>();
+              for (const loc of locations) {
+                const key = loc.location.toLowerCase();
+                if (!seen.has(key)) {
+                  seen.add(key);
+                  unique.push(loc);
+                }
+              }
+
+              const fallbackLocation = order.packages.find((p: any) => p.lastLocation)?.lastLocation;
+              if (unique.length === 0 && !fallbackLocation) return null;
+
+              const allLocations = unique.length > 0 ? unique : (fallbackLocation ? [{ location: fallbackLocation, timestamp: order.updatedAt, description: "Last known location" }] : []);
+              if (allLocations.length === 0) return null;
+
+              return (
+                <div className="border-t border-border pt-5">
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5" /> Location Journey
+                  </p>
+                  <div className="space-y-0">
+                    {allLocations.map((loc: any, idx: number) => (
+                      <div key={idx} className="flex gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className={`h-3 w-3 rounded-full border-2 shrink-0 ${idx === 0 ? "bg-primary border-primary" : "bg-background border-muted-foreground/40"}`} />
+                          {idx < allLocations.length - 1 && (
+                            <div className="w-0.5 flex-1 bg-muted-foreground/20 min-h-[28px]" />
+                          )}
+                        </div>
+                        <div className="pb-4 min-w-0">
+                          <p className="text-sm font-medium text-foreground" dir="auto">{loc.location}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(loc.timestamp).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                            {" · "}
+                            {new Date(loc.timestamp).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
                           </p>
                         </div>
                       </div>
-                    )}
-                    {pickup.hours && (
-                      <div className="flex items-start gap-2.5">
-                        <Clock className="h-4 w-4 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                        <div>
-                          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Opening Hours</p>
-                          <p className="text-sm font-medium text-foreground mt-0.5 leading-relaxed" dir="auto">{pickup.hours}</p>
-                        </div>
-                      </div>
-                    )}
+                    ))}
                   </div>
 
-                  {pickup.verificationCode && (
-                    <div className="flex items-center gap-2.5">
-                      <KeyRound className="h-4 w-4 shrink-0 text-muted-foreground" />
-                      <div>
-                        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Verification Code</p>
-                        <p className="text-sm font-mono font-bold text-foreground mt-0.5 flex items-center gap-1">
-                          {pickup.verificationCode}
-                          <CopyButton value={pickup.verificationCode} />
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-
-                {/* Embedded map */}
-                {pickup.address && (
-                  <div className="border-t border-emerald-200 dark:border-emerald-800/50">
+                  <div className="mt-3 rounded-lg overflow-hidden border border-border">
                     <iframe
-                      src={`https://maps.google.com/maps?q=${encodeURIComponent(pickup.address)}&output=embed&z=15`}
-                      className="w-full h-56"
+                      src={`https://maps.google.com/maps?q=${encodeURIComponent(allLocations[0].location)}&output=embed&z=12`}
+                      className="w-full h-44"
                       style={{ border: 0 }}
                       allowFullScreen
                       loading="lazy"
-                      title="Pickup location map"
+                      title="Package location"
                     />
-                    <div className="p-3 bg-muted/30">
+                    <div className="p-2 bg-muted/30">
                       <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pickup.address)}`}
+                        href={`https://www.google.com/maps/dir/${allLocations.map((l: any) => encodeURIComponent(l.location)).join("/")}`}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        <Button variant="outline" size="sm" className="w-full text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/30">
-                          <Navigation className="h-3.5 w-3.5" />
-                          Get Directions
+                        <Button variant="outline" size="sm" className="w-full text-xs gap-1.5">
+                          <Navigation className="h-3 w-3" />
+                          View Full Route on Maps
                         </Button>
                       </a>
                     </div>
                   </div>
+                </div>
+              );
+            })()}
+          </CardContent>
+        </Card>
+
+        {/* Pickup Location — from any package that has one */}
+        {(() => {
+          const pkgWithPickup = order.packages.find((p: any) => p.pickupLocation);
+          if (!pkgWithPickup) return null;
+          let pickup: any = null;
+          try {
+            pickup = typeof pkgWithPickup.pickupLocation === 'string'
+              ? JSON.parse(pkgWithPickup.pickupLocation)
+              : pkgWithPickup.pickupLocation;
+          } catch { return null; }
+          if (!pickup) return null;
+
+          return (
+            <Card className="overflow-hidden border-emerald-200 dark:border-emerald-800/50">
+              <div className="bg-emerald-50 dark:bg-emerald-950/30 px-5 py-4 border-b border-emerald-200 dark:border-emerald-800/50">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500">
+                    <Navigation className="h-4 w-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200">📦 Ready for Pickup</p>
+                    <p className="text-xs text-emerald-600/80 dark:text-emerald-400/70">Your package is waiting at the location below</p>
+                  </div>
+                </div>
+              </div>
+
+              <CardContent className="p-5 space-y-4">
+                {pickup.pickupCode && (
+                  <div className="flex items-center gap-3 p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/50 shrink-0">
+                      <KeyRound className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-emerald-600/70 dark:text-emerald-400/70">Pickup Code</p>
+                      <p className="text-lg font-mono font-black text-emerald-700 dark:text-emerald-300 tracking-widest flex items-center gap-2">
+                        {pickup.pickupCode}
+                        <CopyButton value={pickup.pickupCode} />
+                      </p>
+                    </div>
+                  </div>
                 )}
-              </Card>
-            )}
-            </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {pickup.address && (
+                    <div className="flex items-start gap-2.5">
+                      <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                      <div>
+                        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Address</p>
+                        <p className="text-sm font-medium text-foreground mt-0.5 leading-relaxed flex items-start gap-1" dir="auto">
+                          <span className="flex-1">{pickup.address}</span>
+                          <CopyButton value={pickup.address} className="mt-0.5" />
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {pickup.hours && (
+                    <div className="flex items-start gap-2.5">
+                      <Clock className="h-4 w-4 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                      <div>
+                        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Opening Hours</p>
+                        <p className="text-sm font-medium text-foreground mt-0.5 leading-relaxed" dir="auto">{pickup.hours}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {pickup.verificationCode && (
+                  <div className="flex items-center gap-2.5">
+                    <KeyRound className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <div>
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Verification Code</p>
+                      <p className="text-sm font-mono font-bold text-foreground mt-0.5 flex items-center gap-1">
+                        {pickup.verificationCode}
+                        <CopyButton value={pickup.verificationCode} />
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+
+              {pickup.address && (
+                <div className="border-t border-emerald-200 dark:border-emerald-800/50">
+                  <iframe
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(pickup.address)}&output=embed&z=15`}
+                    className="w-full h-56"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    title="Pickup location map"
+                  />
+                  <div className="p-3 bg-muted/30">
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pickup.address)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button variant="outline" size="sm" className="w-full text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/30">
+                        <Navigation className="h-3.5 w-3.5" />
+                        Get Directions
+                      </Button>
+                    </a>
+                  </div>
+                </div>
+              )}
+            </Card>
           );
-        })
+        })()}
+        </div>
       ) : (
         <Card>
           <CardHeader className="pb-3">

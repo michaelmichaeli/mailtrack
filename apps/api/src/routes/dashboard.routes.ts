@@ -25,13 +25,10 @@ export const dashboardRoutes: FastifyPluginAsync = async (app) => {
     });
     const hasOlderData = oldestOrder?.orderDate ? oldestOrder.orderDate < (cutoff ?? now) : false;
 
-    // Fetch orders within time range
+    // Fetch orders within time range (filter by orderDate only)
     const where: any = { userId };
     if (cutoff) {
-      where.OR = [
-        { orderDate: { gte: cutoff } },
-        { updatedAt: { gte: cutoff } },
-      ];
+      where.orderDate = { gte: cutoff };
     }
 
     const orders = await app.prisma.order.findMany({
