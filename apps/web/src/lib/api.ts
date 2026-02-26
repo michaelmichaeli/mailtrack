@@ -155,6 +155,11 @@ class ApiClient {
     return this.request<any>(`/packages/${id}/refresh`, { method: "POST" });
   }
 
+  // Orders
+  async getOrder(id: string) {
+    return this.request<any>(`/orders/${id}`);
+  }
+
   // Email
   async getGmailAuthUrl() {
     return this.request<{ url: string }>("/email/connect/gmail");

@@ -36,8 +36,7 @@ export async function trackPackage(
   const apiKey = process.env.TRACKING_API_KEY;
 
   if (!apiKey || apiKey === "your-17track-api-key") {
-    // Return mock data in development
-    return getMockTrackingResult(trackingNumber, carrier);
+    return null;
   }
 
   try {
@@ -105,38 +104,3 @@ export async function trackPackage(
   }
 }
 
-/**
- * Mock tracking result for development/testing.
- */
-function getMockTrackingResult(trackingNumber: string, carrier: Carrier): CarrierTrackingResult {
-  const now = new Date();
-  const events: CarrierTrackingEvent[] = [
-    {
-      timestamp: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
-      location: "Distribution Center",
-      status: PackageStatus.IN_TRANSIT,
-      description: "Package in transit to destination",
-    },
-    {
-      timestamp: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
-      location: "Origin Facility",
-      status: PackageStatus.SHIPPED,
-      description: "Package picked up by carrier",
-    },
-    {
-      timestamp: new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString(),
-      location: "Seller",
-      status: PackageStatus.PROCESSING,
-      description: "Shipping label created",
-    },
-  ];
-
-  return {
-    trackingNumber,
-    carrier,
-    status: PackageStatus.IN_TRANSIT,
-    estimatedDelivery: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-    lastLocation: "Distribution Center",
-    events,
-  };
-}

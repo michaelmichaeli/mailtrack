@@ -42,7 +42,7 @@ export function PackageCard({ order }: OrderCardProps) {
       : null;
 
   return (
-    <Link href={pkg ? `/packages/${pkg.id}` : "#"}>
+    <Link href={`/orders/${order.id}`}>
       <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer">
         <div className="flex items-start justify-between mb-2">
           <div className="flex items-center gap-2">
