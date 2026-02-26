@@ -14,6 +14,7 @@ import { ArrowLeft, RefreshCw, MapPin, Clock, DollarSign, Store, Package, Shoppi
 import { toast } from "sonner";
 import { useState } from "react";
 import { getCarrierTrackingUrl, getCarrierDisplayName } from "@/lib/carrier-urls";
+import { CopyButton } from "@/components/ui/copy-button";
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -93,7 +94,18 @@ export default function OrderDetailPage() {
       if (!orderItems.includes(item) && !pkgItems.includes(item)) pkgItems.push(item);
     }
   }
-  const allItems = [...orderItems, ...pkgItems];
+  // Merge broken line continuations: if an item starts lowercase or is very short, append to previous
+  const rawItems = [...orderItems, ...pkgItems];
+  const allItems: string[] = [];
+  for (const item of rawItems) {
+    const trimmed = item.trim();
+    if (!trimmed) continue;
+    if (allItems.length > 0 && (trimmed.length < 10 || /^[a-z]/.test(trimmed))) {
+      allItems[allItems.length - 1] += " " + trimmed;
+    } else {
+      allItems.push(trimmed);
+    }
+  }
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -158,8 +170,8 @@ export default function OrderDetailPage() {
           <CardContent className="pt-0">
             <ul className="space-y-1.5">
               {allItems.map((item: string, i: number) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-foreground">
-                  <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary/50 shrink-0" />
+                <li key={i} className="flex items-baseline gap-2 text-sm text-foreground">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary/50 shrink-0 translate-y-[-1px]" />
                   <span className="leading-relaxed">{item}</span>
                 </li>
               ))}
@@ -212,7 +224,10 @@ export default function OrderDetailPage() {
                 <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
                   <div>
                     <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Tracking</p>
-                    <p className="text-sm font-medium font-mono text-foreground mt-0.5">{pkg.trackingNumber}</p>
+                    <p className="text-sm font-medium font-mono text-foreground mt-0.5 flex items-center gap-1">
+                      {pkg.trackingNumber}
+                      <CopyButton value={pkg.trackingNumber} />
+                    </p>
                   </div>
                   <div>
                     <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Carrier</p>
@@ -253,11 +268,91 @@ export default function OrderDetailPage() {
 
                 {/* Tracking timeline */}
                 {pkg.events.length > 0 && (
-                  <div>
-                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-3">Tracking History</p>
+                  <div className="border-t border-border pt-5">
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-4">Tracking History</p>
                     <TrackingTimeline events={pkg.events} />
                   </div>
                 )}
+
+                {/* Location Journey — extracted from events */}
+                {(() => {
+                  const locations = pkg.events
+                    .filter((e: any) => e.location)
+                    .map((e: any) => ({
+                      location: e.location,
+                      timestamp: e.timestamp,
+                      description: e.description,
+                    }));
+                  // Deduplicate by location name
+                  const unique: typeof locations = [];
+                  const seen = new Set<string>();
+                  for (const loc of locations) {
+                    const key = loc.location.toLowerCase();
+                    if (!seen.has(key)) {
+                      seen.add(key);
+                      unique.push(loc);
+                    }
+                  }
+                  if (unique.length === 0 && !pkg.lastLocation) return null;
+
+                  const allLocations = unique.length > 0 ? unique : (pkg.lastLocation ? [{ location: pkg.lastLocation, timestamp: pkg.updatedAt, description: "Last known location" }] : []);
+                  if (allLocations.length === 0) return null;
+
+                  // Build a route for the map
+                  const mapQuery = allLocations.map((l: any) => l.location).join(" to ");
+
+                  return (
+                    <div className="border-t border-border pt-5">
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-1.5">
+                        <MapPin className="h-3.5 w-3.5" /> Location Journey
+                      </p>
+                      <div className="space-y-0">
+                        {allLocations.map((loc: any, idx: number) => (
+                          <div key={idx} className="flex gap-3">
+                            <div className="flex flex-col items-center">
+                              <div className={`h-3 w-3 rounded-full border-2 shrink-0 ${idx === 0 ? "bg-primary border-primary" : "bg-background border-muted-foreground/40"}`} />
+                              {idx < allLocations.length - 1 && (
+                                <div className="w-0.5 flex-1 bg-muted-foreground/20 min-h-[28px]" />
+                              )}
+                            </div>
+                            <div className="pb-4 min-w-0">
+                              <p className="text-sm font-medium text-foreground" dir="auto">{loc.location}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(loc.timestamp).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                                {" · "}
+                                {new Date(loc.timestamp).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Map showing last known location */}
+                      <div className="mt-3 rounded-lg overflow-hidden border border-border">
+                        <iframe
+                          src={`https://maps.google.com/maps?q=${encodeURIComponent(allLocations[0].location)}&output=embed&z=12`}
+                          className="w-full h-44"
+                          style={{ border: 0 }}
+                          allowFullScreen
+                          loading="lazy"
+                          title="Package location"
+                        />
+                        <div className="p-2 bg-muted/30">
+                          <a
+                            href={`https://www.google.com/maps/dir/${allLocations.map((l: any) => encodeURIComponent(l.location)).join("/")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <Button variant="outline" size="sm" className="w-full text-xs gap-1.5">
+                              <Navigation className="h-3 w-3" />
+                              View Full Route on Maps
+                            </Button>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
 
@@ -285,7 +380,10 @@ export default function OrderDetailPage() {
                       </div>
                       <div>
                         <p className="text-[11px] font-medium uppercase tracking-wider text-emerald-600/70 dark:text-emerald-400/70">Pickup Code</p>
-                        <p className="text-lg font-mono font-black text-emerald-700 dark:text-emerald-300 tracking-widest">{pickup.pickupCode}</p>
+                        <p className="text-lg font-mono font-black text-emerald-700 dark:text-emerald-300 tracking-widest flex items-center gap-2">
+                          {pickup.pickupCode}
+                          <CopyButton value={pickup.pickupCode} />
+                        </p>
                       </div>
                     </div>
                   )}
@@ -297,7 +395,10 @@ export default function OrderDetailPage() {
                         <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
                         <div>
                           <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Address</p>
-                          <p className="text-sm font-medium text-foreground mt-0.5 leading-relaxed" dir="auto">{pickup.address}</p>
+                          <p className="text-sm font-medium text-foreground mt-0.5 leading-relaxed flex items-start gap-1" dir="auto">
+                            <span className="flex-1">{pickup.address}</span>
+                            <CopyButton value={pickup.address} className="mt-0.5" />
+                          </p>
                         </div>
                       </div>
                     )}
@@ -317,7 +418,10 @@ export default function OrderDetailPage() {
                       <KeyRound className="h-4 w-4 shrink-0 text-muted-foreground" />
                       <div>
                         <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Verification Code</p>
-                        <p className="text-sm font-mono font-bold text-foreground mt-0.5">{pickup.verificationCode}</p>
+                        <p className="text-sm font-mono font-bold text-foreground mt-0.5 flex items-center gap-1">
+                          {pickup.verificationCode}
+                          <CopyButton value={pickup.verificationCode} />
+                        </p>
                       </div>
                     </div>
                   )}

@@ -6,6 +6,7 @@ import { dashboardRoutes } from "./dashboard.routes.js";
 import { emailRoutes } from "./email.routes.js";
 import { settingsRoutes } from "./settings.routes.js";
 import { webhookRoutes } from "./webhook.routes.js";
+import { ingestRoutes } from "./ingest.routes.js";
 
 export const registerRoutes: FastifyPluginAsync = async (app) => {
   await app.register(authRoutes, { prefix: "/auth" });
@@ -15,4 +16,5 @@ export const registerRoutes: FastifyPluginAsync = async (app) => {
   await app.register(emailRoutes, { prefix: "/email" });
   await app.register(settingsRoutes, { prefix: "/settings" });
   await app.register(webhookRoutes, { prefix: "/webhooks" });
+  await app.register(ingestRoutes, { prefix: "/ingest" });
 };

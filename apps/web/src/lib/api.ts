@@ -171,6 +171,37 @@ class ApiClient {
     });
   }
 
+  async scanText(text: string) {
+    return this.request<{
+      found: Array<{
+        trackingNumber: string;
+        carrier: string;
+        alreadyTracked: boolean;
+        packageId: string | null;
+      }>;
+      total: number;
+    }>("/packages/scan-text", {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    });
+  }
+
+  // Ingest
+  async getIngestKey() {
+    return this.request<{ key: string | null }>("/ingest/key");
+  }
+
+  async generateIngestKey() {
+    return this.request<{ key: string }>("/ingest/generate-key", { method: "POST" });
+  }
+
+  async importCsv(rows: Array<{ orderId?: string; trackingNumber?: string; store?: string; items?: string; date?: string }>) {
+    return this.request<{ success: boolean; imported: number; skipped: number; total: number }>("/ingest/csv", {
+      method: "POST",
+      body: JSON.stringify({ rows }),
+    });
+  }
+
   // Orders
   async getOrder(id: string) {
     return this.request<any>(`/orders/${id}`);
@@ -208,6 +239,23 @@ class ApiClient {
     return this.request<any>("/settings/notifications", {
       method: "PATCH",
       body: JSON.stringify(data),
+    });
+  }
+
+  async getVapidKey() {
+    return this.request<{ publicKey: string }>("/settings/vapid-key");
+  }
+
+  async subscribePush(subscription: PushSubscription) {
+    return this.request<{ success: boolean }>("/settings/notifications/subscribe", {
+      method: "POST",
+      body: JSON.stringify({ subscription: subscription.toJSON() }),
+    });
+  }
+
+  async unsubscribePush() {
+    return this.request<{ success: boolean }>("/settings/notifications/unsubscribe", {
+      method: "POST",
     });
   }
 

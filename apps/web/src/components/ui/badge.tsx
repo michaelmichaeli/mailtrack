@@ -8,14 +8,14 @@ interface BadgeProps {
 }
 
 const statusConfig: Record<string, { color: string; dot: string }> = {
-  ORDERED: { color: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300", dot: "bg-slate-400" },
-  PROCESSING: { color: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300", dot: "bg-slate-400" },
-  SHIPPED: { color: "bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300", dot: "bg-blue-500" },
-  IN_TRANSIT: { color: "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300", dot: "bg-indigo-500" },
-  OUT_FOR_DELIVERY: { color: "bg-violet-50 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300", dot: "bg-violet-500" },
-  DELIVERED: { color: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300", dot: "bg-emerald-500" },
-  EXCEPTION: { color: "bg-amber-50 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300", dot: "bg-amber-500" },
-  RETURNED: { color: "bg-red-50 text-red-700 dark:bg-red-900/50 dark:text-red-300", dot: "bg-red-500" },
+  ORDERED: { color: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300", dot: "bg-slate-400" },
+  PROCESSING: { color: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300", dot: "bg-slate-400" },
+  SHIPPED: { color: "bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300", dot: "bg-blue-500" },
+  IN_TRANSIT: { color: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300", dot: "bg-indigo-500" },
+  OUT_FOR_DELIVERY: { color: "bg-violet-50 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300", dot: "bg-violet-500" },
+  DELIVERED: { color: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300", dot: "bg-emerald-500" },
+  EXCEPTION: { color: "bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300", dot: "bg-amber-500" },
+  RETURNED: { color: "bg-red-50 text-red-700 dark:bg-red-950/60 dark:text-red-300", dot: "bg-red-500" },
 };
 
 const statusLabels: Record<string, string> = {

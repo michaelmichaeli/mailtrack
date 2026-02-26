@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   Package,
@@ -10,12 +10,15 @@ import {
   LogOut,
   Moon,
   Sun,
+  Monitor,
   Mail,
   Menu,
   X,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
+import { api } from "@/lib/api";
+import { useScrollRestore } from "@/lib/use-scroll-restore";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -25,12 +28,30 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
+
+  useScrollRestore();
+
+  const handleSignOut = async () => {
+    try { await api.logout(); } catch {}
+    api.setToken(null);
+    router.push("/login");
+  };
+
+  const cycleTheme = () => {
+    if (theme === "light") setTheme("dark");
+    else if (theme === "dark") setTheme("system");
+    else setTheme("light");
+  };
+
+  const themeLabel = theme === "system" ? "System" : theme === "dark" ? "Dark" : "Light";
+  const ThemeIcon = theme === "dark" ? Moon : theme === "system" ? Monitor : Sun;
 
   const sidebarContent = (
     <>
@@ -78,14 +99,16 @@ export function Sidebar() {
       {/* Bottom actions */}
       <div className="border-t border-border px-3 py-3 space-y-0.5">
         <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          onClick={cycleTheme}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
         >
-          <Sun className="h-[18px] w-[18px] dark:hidden" />
-          <Moon className="hidden h-[18px] w-[18px] dark:block" />
-          Toggle theme
+          <ThemeIcon className="h-[18px] w-[18px]" />
+          Theme: {themeLabel}
         </button>
-        <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+        <button
+          onClick={handleSignOut}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-destructive transition-colors"
+        >
           <LogOut className="h-[18px] w-[18px]" />
           Sign out
         </button>

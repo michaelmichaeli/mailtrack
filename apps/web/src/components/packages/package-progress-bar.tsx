@@ -40,25 +40,25 @@ export function PackageProgressBar({ status, className }: PackageProgressBarProp
             <div key={step.key} className={cn("flex items-center", !isLast && "flex-1")}>
               <div
                 className={cn(
-                  "flex h-6 w-6 items-center justify-center rounded-full border-2 transition-colors shrink-0",
-                  isException && "border-amber-400 bg-amber-50 dark:bg-amber-900/30",
+                  "flex h-5 w-5 items-center justify-center rounded-full border-2 transition-colors shrink-0",
+                  isException && isCurrent && "border-amber-400 bg-amber-50 dark:bg-amber-900/30",
                   !isException && isCompleted && "border-primary bg-primary",
-                  !isException && isCurrent && "border-primary bg-primary/10",
-                  !isException && !isCompleted && !isCurrent && "border-muted bg-card dark:bg-muted"
+                  !isException && isCurrent && "border-primary bg-primary/10 dark:bg-primary/20",
+                  !isException && !isCompleted && !isCurrent && "border-border bg-card"
                 )}
               >
                 {isCompleted && !isException ? (
-                  <Check className="h-3 w-3 text-primary-foreground" />
+                  <Check className="h-2.5 w-2.5 text-primary-foreground" />
                 ) : isCurrent && !isException ? (
-                  <div className="h-2 w-2 rounded-full bg-primary" />
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                 ) : null}
               </div>
               {!isLast && (
-                <div className="flex-1 mx-1">
+                <div className="flex-1 mx-0.5">
                   <div
                     className={cn(
                       "h-0.5 w-full rounded-full transition-colors",
-                      isException && index < 2 ? "bg-amber-300" :
+                      isException && index < 2 ? "bg-amber-300 dark:bg-amber-600" :
                       isCompleted ? "bg-primary" : "bg-border"
                     )}
                   />
@@ -69,15 +69,17 @@ export function PackageProgressBar({ status, className }: PackageProgressBarProp
         })}
       </div>
       {/* Labels row */}
-      <div className="hidden sm:flex justify-between mt-1.5">
+      <div className="hidden sm:flex mt-1.5">
         {steps.map((step, index) => {
           const isCompleted = index < currentIndex;
           const isCurrent = index === currentIndex;
+          const isLast = index === steps.length - 1;
           return (
             <span key={step.key} className={cn(
               "text-[10px] font-medium",
-              index === 0 ? "text-left" : index === steps.length - 1 ? "text-right" : "text-center",
-              isCurrent ? "text-primary" : isCompleted ? "text-foreground" : "text-muted-foreground"
+              !isLast ? "flex-1" : "",
+              index === 0 ? "text-left" : isLast ? "text-right" : "text-center",
+              isCurrent ? "text-primary font-semibold" : isCompleted ? "text-foreground" : "text-muted-foreground"
             )}>
               {step.label}
             </span>

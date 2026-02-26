@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { updateNotificationPreferenceSchema } from "@mailtrack/shared";
+import { getVapidPublicKey } from "../services/notification.service.js";
 
 export const settingsRoutes: FastifyPluginAsync = async (app) => {
   // GET /api/settings/notifications — Get notification preferences
@@ -49,6 +50,46 @@ export const settingsRoutes: FastifyPluginAsync = async (app) => {
       where: { userId },
       update: { pushToken: token },
       create: { userId, pushEnabled: true, emailEnabled: false, pushToken: token },
+    });
+
+    return { success: true };
+  });
+
+  // GET /api/settings/vapid-key — Get the VAPID public key for Web Push subscription
+  app.get("/vapid-key", async () => {
+    return { publicKey: getVapidPublicKey() };
+  });
+
+  // POST /api/settings/notifications/subscribe — Save Web Push subscription
+  app.post("/notifications/subscribe", {
+    preHandler: [app.authenticate],
+  }, async (request) => {
+    const userId = request.user.userId;
+    const { subscription } = request.body as { subscription: any };
+
+    if (!subscription) {
+      return { success: false, error: "Missing subscription" };
+    }
+
+    await app.prisma.notificationPreference.upsert({
+      where: { userId },
+      update: { pushSubscription: JSON.stringify(subscription), pushEnabled: true },
+      create: { userId, pushEnabled: true, emailEnabled: false, pushSubscription: JSON.stringify(subscription) },
+    });
+
+    return { success: true };
+  });
+
+  // POST /api/settings/notifications/unsubscribe — Remove Web Push subscription
+  app.post("/notifications/unsubscribe", {
+    preHandler: [app.authenticate],
+  }, async (request) => {
+    const userId = request.user.userId;
+
+    await app.prisma.notificationPreference.upsert({
+      where: { userId },
+      update: { pushSubscription: null, pushEnabled: false },
+      create: { userId, pushEnabled: false, emailEnabled: false },
     });
 
     return { success: true };

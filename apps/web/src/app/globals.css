@@ -78,3 +78,19 @@
     @apply h-full;
   }
 }
+
+/* All interactive elements get pointer cursor */
+@layer base {
+  button,
+  [role="button"],
+  a,
+  select,
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="submit"],
+  input[type="button"],
+  label[for],
+  summary {
+    cursor: pointer;
+  }
+}

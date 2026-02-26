@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,47 +9,43 @@ import { PackageCard } from "@/components/packages/package-card";
 import { EmptyState } from "@/components/packages/empty-state";
 import { DashboardSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Package, Truck, Clock, CheckCircle2, AlertTriangle, ArrowRight, Satellite } from "lucide-react";
+import { RefreshCw, Package, Truck, Clock, CheckCircle2, AlertTriangle, ArrowRight, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { AddPackageDialog } from "@/components/packages/add-package-dialog";
+import { ScanSmsDialog } from "@/components/packages/scan-sms-dialog";
 
 export default function DashboardPage() {
-  const queryClient = useQueryClient();
   const [isSyncing, setIsSyncing] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
   const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["dashboard"],
     queryFn: () => api.getDashboard(),
     retry: false,
   });
 
-  const handleSync = async () => {
+  const handleFullSync = async () => {
     setIsSyncing(true);
     try {
-      const result = await api.syncEmails();
-      if (result.emailsParsed > 0) {
-        toast.success(`Synced ${result.emailsParsed} emails — ${result.totalOrders} orders, ${result.totalTracking} with tracking`);
-      } else {
-        toast.success("Sync complete — no new shipping emails found");
+      // Step 1: Sync emails
+      const emailResult = await api.syncEmails();
+      // Step 2: Sync tracking data from carriers
+      try {
+        const trackResult = await api.syncAllTracking();
+        toast.success(`Synced ${emailResult.emailsParsed} emails, updated ${trackResult.synced} packages`);
+      } catch {
+        if (emailResult.emailsParsed > 0) {
+          toast.success(`Synced ${emailResult.emailsParsed} emails (tracking sync failed)`);
+        } else {
+          toast.success("No new emails. Tracking sync failed.");
+        }
       }
       refetch();
     } catch {
-      toast.error("Failed to sync emails. Connect your email first.");
+      toast.error("Failed to sync. Connect your email first.");
     } finally {
       setIsSyncing(false);
     }
   };
-
-  const syncTrackingMutation = useMutation({
-    mutationFn: () => api.syncAllTracking(),
-    onSuccess: (data) => {
-      toast.success(`Updated ${data.synced} of ${data.total} packages from carriers`);
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      queryClient.invalidateQueries({ queryKey: ["packages"] });
-    },
-    onError: () => {
-      toast.error("Failed to sync tracking data");
-    },
-  });
 
   if (isLoading) return <DashboardSkeleton />;
 
@@ -58,11 +54,11 @@ export default function DashboardPage() {
   const busy = isSyncing || isRefetching;
 
   const statCards = [
-    { label: "Arriving Today", value: stats?.arrivingToday ?? 0, icon: Clock, color: "text-violet-600 dark:text-violet-400", bg: "bg-violet-50 dark:bg-violet-950/50" },
-    { label: "In Transit", value: stats?.inTransit ?? 0, icon: Truck, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50 dark:bg-indigo-950/50" },
-    { label: "Processing", value: stats?.processing ?? 0, icon: Package, color: "text-slate-600 dark:text-slate-400", bg: "bg-slate-100 dark:bg-slate-800/50" },
-    { label: "Delivered", value: stats?.delivered ?? 0, icon: CheckCircle2, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/50" },
-    { label: "Exceptions", value: stats?.exceptions ?? 0, icon: AlertTriangle, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/50" },
+    { label: "Arriving Today", value: stats?.arrivingToday ?? 0, icon: Clock, color: "text-violet-600 dark:text-violet-400", bg: "bg-violet-50 dark:bg-violet-950/50", href: "/packages?status=OUT_FOR_DELIVERY" },
+    { label: "In Transit", value: stats?.inTransit ?? 0, icon: Truck, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50 dark:bg-indigo-950/50", href: "/packages?status=IN_TRANSIT" },
+    { label: "Processing", value: stats?.processing ?? 0, icon: Package, color: "text-slate-600 dark:text-slate-400", bg: "bg-slate-100 dark:bg-slate-800/50", href: "/packages?status=PROCESSING" },
+    { label: "Delivered", value: stats?.delivered ?? 0, icon: CheckCircle2, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/50", href: "/packages?status=DELIVERED" },
+    { label: "Exceptions", value: stats?.exceptions ?? 0, icon: AlertTriangle, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/50", href: "/packages?status=EXCEPTION" },
   ];
 
   return (
@@ -75,14 +71,15 @@ export default function DashboardPage() {
         </div>
         <div className="flex items-center gap-2">
           <AddPackageDialog />
-          <Button onClick={() => syncTrackingMutation.mutate()} variant="outline" size="sm" disabled={busy || syncTrackingMutation.isPending}>
-            <Satellite className={`h-4 w-4 ${syncTrackingMutation.isPending ? "animate-pulse" : ""}`} />
-            {syncTrackingMutation.isPending ? "Syncing…" : "Sync tracking"}
+          <Button onClick={() => setScanOpen(true)} variant="outline" size="sm">
+            <MessageSquare className="h-4 w-4" />
+            Scan Messages
           </Button>
-          <Button onClick={handleSync} variant="outline" size="sm" disabled={busy}>
+          <Button onClick={handleFullSync} variant="outline" size="sm" disabled={busy}>
             <RefreshCw className={`h-4 w-4 ${busy ? "animate-spin" : ""}`} />
-            {isSyncing ? "Syncing…" : "Sync emails"}
+            {isSyncing ? "Syncing…" : "Sync All"}
           </Button>
+          <ScanSmsDialog open={scanOpen} onOpenChange={setScanOpen} />
         </div>
       </div>
 
@@ -100,19 +97,21 @@ export default function DashboardPage() {
             {statCards.map((s) => {
               const Icon = s.icon;
               return (
-                <Card key={s.label} className="overflow-hidden">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${s.bg} shrink-0`}>
-                        <Icon className={`h-5 w-5 ${s.color}`} />
+                <Link key={s.label} href={s.href}>
+                  <Card className="overflow-hidden hover:shadow-md hover:border-primary/20 transition-all group">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${s.bg} shrink-0`}>
+                          <Icon className={`h-5 w-5 ${s.color}`} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-2xl font-bold text-foreground leading-none">{s.value}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 whitespace-nowrap">{s.label}</p>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-2xl font-bold text-foreground leading-none">{s.value}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5 whitespace-nowrap">{s.label}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </Link>
               );
             })}
           </div>

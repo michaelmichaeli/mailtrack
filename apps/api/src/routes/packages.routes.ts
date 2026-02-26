@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { searchParamsSchema } from "@mailtrack/shared";
 import { trackPackage } from "../services/tracking.service.js";
+import { notifyStatusChange } from "../services/notification.service.js";
 
 export const packageRoutes: FastifyPluginAsync = async (app) => {
   // GET /api/packages — List orders with their packages (search/filter)
@@ -199,6 +200,57 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
     return { success: true, synced, errors, total: packages.length };
   });
 
+  // POST /api/packages/scan-text — Extract tracking numbers from pasted text (SMS, etc.)
+  app.post("/scan-text", {
+    preHandler: [app.authenticate],
+  }, async (request, reply) => {
+    const userId = request.user.userId;
+    const { text } = request.body as { text: string };
+
+    if (!text?.trim()) {
+      return reply.status(400).send({ error: "Text is required" });
+    }
+
+    const { extractTrackingNumbers, detectCarrier } = await import("../lib/carrier-detect.js");
+    const found = extractTrackingNumbers(text);
+
+    // Also try broader patterns for common SMS formats
+    const smsPatterns = [
+      /(?:tracking|shipment|parcel|package|delivery)\s*(?:#|number|no\.?|:)?\s*[:.]?\s*([A-Z0-9]{8,30})/gi,
+      /(?:track(?:ing)?|מעקב|משלוח)\s*[:.]?\s*([A-Z0-9]{8,30})/gi,
+    ];
+
+    const seen = new Set(found.map((f) => f.trackingNumber));
+    for (const pattern of smsPatterns) {
+      let match;
+      while ((match = pattern.exec(text)) !== null) {
+        const tn = match[1].toUpperCase();
+        if (!seen.has(tn) && tn.length >= 8) {
+          // Filter out common false positives (all digits < 10 chars, etc.)
+          if (/^\d{8,9}$/.test(tn)) continue;
+          seen.add(tn);
+          found.push({ trackingNumber: tn, carrier: detectCarrier(tn) });
+        }
+      }
+    }
+
+    // Check which are already tracked
+    const results = [];
+    for (const item of found) {
+      const existing = await app.prisma.package.findFirst({
+        where: { trackingNumber: item.trackingNumber, order: { userId } },
+      });
+      results.push({
+        trackingNumber: item.trackingNumber,
+        carrier: item.carrier,
+        alreadyTracked: !!existing,
+        packageId: existing?.id ?? null,
+      });
+    }
+
+    return { found: results, total: results.length };
+  });
+
   // POST /api/packages/add — Manually add a package by tracking number
   app.post("/add", {
     preHandler: [app.authenticate],
@@ -264,8 +316,15 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
   });
 };
 
-/** Merge carrier result into DB: update status, upsert events */
+/** Merge carrier result into DB: update status, upsert events, send notifications */
 async function syncPackageFromResult(prisma: any, packageId: string, result: any) {
+  // Get current package to detect status change
+  const currentPkg = await prisma.package.findUnique({
+    where: { id: packageId },
+    include: { order: { select: { userId: true } } },
+  });
+  const oldStatus = currentPkg?.status;
+
   // Update package status and location
   await prisma.package.update({
     where: { id: packageId },
@@ -275,6 +334,22 @@ async function syncPackageFromResult(prisma: any, packageId: string, result: any
       ...(result.lastLocation ? { lastLocation: result.lastLocation } : {}),
     },
   });
+
+  // Send push notification if status changed
+  if (currentPkg && oldStatus !== result.status) {
+    try {
+      await notifyStatusChange(
+        prisma,
+        currentPkg.order.userId,
+        currentPkg.trackingNumber,
+        oldStatus,
+        result.status,
+        packageId
+      );
+    } catch (e) {
+      console.error("[notify] Error sending notification:", e);
+    }
+  }
 
   // Upsert events — deduplicate by timestamp (within 2 seconds)
   for (const event of result.events) {

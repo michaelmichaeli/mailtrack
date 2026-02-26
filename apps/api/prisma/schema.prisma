@@ -75,6 +75,7 @@ model User {
   email        String       @unique
   avatar       String?
   authProvider  AuthProvider
+  ingestKey    String?      @unique // API key for SMS/webhook auto-forwarding
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
@@ -203,6 +204,7 @@ model NotificationPreference {
   quietHoursStart String? // e.g. "22:00"
   quietHoursEnd   String? // e.g. "08:00"
   pushToken       String? // FCM/APNs token
+  pushSubscription String? // Web Push subscription JSON
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
