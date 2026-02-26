@@ -170,6 +170,7 @@ class ApiClient {
   async syncEmails() {
     return this.request<{ success: boolean; emailsParsed: number; ordersCreated: number }>("/email/sync", {
       method: "POST",
+      body: JSON.stringify({}),
     });
   }
 
