@@ -1,5 +1,5 @@
 import * as cheerio from "cheerio";
-import { extractTrackingNumbers, extractTrackingFromSubject } from "../lib/carrier-detect.js";
+import { extractTrackingNumbers, extractTrackingFromSubject, detectCarrier } from "../lib/carrier-detect.js";
 import type { ParsedEmail } from "@mailtrack/shared";
 import { ShopPlatform, Carrier, PackageStatus } from "@mailtrack/shared";
 
@@ -7,6 +7,7 @@ import { ShopPlatform, Carrier, PackageStatus } from "@mailtrack/shared";
 const MERCHANT_PATTERNS: Array<{ pattern: RegExp; platform: ShopPlatform; name: string }> = [
   { pattern: /amazon\.(com|co\.uk|de|fr|it|es|ca|com\.au|co\.jp)/i, platform: ShopPlatform.AMAZON, name: "Amazon" },
   { pattern: /aliexpress\.com/i, platform: ShopPlatform.ALIEXPRESS, name: "AliExpress" },
+  { pattern: /cainiao\.com/i, platform: ShopPlatform.ALIEXPRESS, name: "AliExpress" },
   { pattern: /ebay\.(com|co\.uk|de|fr)/i, platform: ShopPlatform.EBAY, name: "eBay" },
   { pattern: /etsy\.com/i, platform: ShopPlatform.ETSY, name: "Etsy" },
   { pattern: /shein\.com/i, platform: ShopPlatform.SHEIN, name: "Shein" },
@@ -126,11 +127,22 @@ function parseAliExpressEmail(
   // 6. Extract date
   const orderDate = extractAliExpressDate(textContent);
 
-  // 7. Also try body tracking numbers (but exclude phone numbers)
+  // 7. Also try body tracking numbers
   let tracking = subjectTracking;
   if (!tracking) {
     const bodyTrackingResults = extractTrackingNumbers(fullText);
     tracking = bodyTrackingResults[0] ?? null;
+  }
+  // 8. Fallback: scan for AliExpress-style tracking in body (XX0000000000)
+  if (!tracking) {
+    const aliMatch = fullText.match(/\b([A-Z]{2}\d{9,17}[A-Z]{0,2})\b/);
+    if (aliMatch) {
+      const tn = aliMatch[1].toUpperCase();
+      // Filter out order IDs (all digits after 2 letters, 16+ chars = likely order ID)
+      if (tn.length <= 18 && !/^\d{10,}$/.test(tn)) {
+        tracking = { trackingNumber: tn, carrier: detectCarrier(tn) };
+      }
+    }
   }
 
   const confidence = calculateConfidence({

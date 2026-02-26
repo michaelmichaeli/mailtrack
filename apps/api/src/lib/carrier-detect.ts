@@ -24,12 +24,13 @@ export function detectCarrier(trackingNumber: string): Carrier {
 const PHONE_CONTEXT = /(?:phone|tel|mobile|fax|call|whatsapp|\(\+?\d{1,3}\))\s*/i;
 
 /**
- * Extract tracking number from AliExpress email subject line.
- * Patterns: "Package RS1300705226Y has been delivered", "Package PH8002545065: with local carrier"
+ * Extract tracking number from AliExpress/Cainiao email subject line.
+ * Patterns: "Package RS1300705226Y has been delivered", "Package PH8002545065: with local carrier",
+ *           "Package AP00797874896401 has an update", "Package BR004638448MG: collected by the carrier"
  */
 export function extractTrackingFromSubject(subject: string): { trackingNumber: string; carrier: Carrier } | null {
-  // Match "Package TRACKINGNUM" followed by space, colon, or end-of-string
-  const match = subject.match(/Package\s+([A-Z]{2}\d{9,15}[A-Z]{0,2})[\s:]/i);
+  // Match "Package TRACKINGNUM" — letters+digits combo, followed by space/colon/end
+  const match = subject.match(/Package\s+([A-Z]{2}\d{9,17}[A-Z]{0,2})(?:[\s:]|$)/i);
   if (match) {
     const tn = match[1].toUpperCase();
     return { trackingNumber: tn, carrier: detectCarrier(tn) };

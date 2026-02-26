@@ -23,10 +23,8 @@ export default function DashboardPage() {
     setIsSyncing(true);
     try {
       const result = await api.syncEmails();
-      if (result.ordersCreated > 0) {
-        toast.success(`Found ${result.ordersCreated} new orders from ${result.emailsParsed} emails`);
-      } else if (result.emailsParsed > 0) {
-        toast.success(`Scanned ${result.emailsParsed} emails — no new orders found`);
+      if (result.emailsParsed > 0) {
+        toast.success(`Synced ${result.emailsParsed} emails — ${result.totalOrders} orders, ${result.totalTracking} with tracking`);
       } else {
         toast.success("Sync complete — no new shipping emails found");
       }

@@ -155,9 +155,11 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
   // POST /api/auth/dev-login — Development-only login (no OAuth needed)
   if (process.env.NODE_ENV !== "production") {
     app.post("/dev-login", async (request, reply) => {
+      const body = request.body as { email?: string } | undefined;
+      const email = body?.email || "michaelmichaeli888@gmail.com";
       const user = await findOrCreateUser(app, {
-        email: "dev@mailtrack.local",
-        name: "Dev User",
+        email,
+        name: email === "michaelmichaeli888@gmail.com" ? "Michael Michaeli" : "Dev User",
         avatar: null,
         authProvider: "GOOGLE" as AuthProvider,
       });

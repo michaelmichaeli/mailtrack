@@ -177,7 +177,7 @@ class ApiClient {
   }
 
   async syncEmails(full = true) {
-    return this.request<{ success: boolean; emailsParsed: number; ordersCreated: number }>(
+    return this.request<{ success: boolean; emailsParsed: number; ordersCreated: number; totalOrders: number; totalTracking: number }>(
       `/email/sync${full ? "?full=true" : ""}`,
       { method: "POST", body: JSON.stringify({}) },
     );
