@@ -2,22 +2,28 @@ import { google } from "googleapis";
 import type { FastifyInstance } from "fastify";
 import { decrypt } from "../lib/encryption.js";
 
+const API_URL = process.env.API_URL ?? "http://localhost:3002";
 const SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"];
+
+function getOAuth2Client() {
+  return new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    `${API_URL}/api/email/connect/gmail/callback`
+  );
+}
 
 /**
  * Get Gmail OAuth2 URL for user authorization.
  */
-export function getGmailAuthUrl(): string {
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI
-  );
+export function getGmailAuthUrl(state?: string): string {
+  const oauth2Client = getOAuth2Client();
 
   return oauth2Client.generateAuthUrl({
     access_type: "offline",
     scope: SCOPES,
     prompt: "consent",
+    state,
   });
 }
 
@@ -25,12 +31,7 @@ export function getGmailAuthUrl(): string {
  * Exchange Gmail auth code for tokens.
  */
 export async function exchangeGmailCode(code: string) {
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI
-  );
-
+  const oauth2Client = getOAuth2Client();
   const { tokens } = await oauth2Client.getToken(code);
   return tokens;
 }

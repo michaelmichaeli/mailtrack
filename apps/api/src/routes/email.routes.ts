@@ -1,31 +1,60 @@
 import type { FastifyPluginAsync } from "fastify";
-import { connectEmailSchema, EmailProvider } from "@mailtrack/shared";
+import { EmailProvider } from "@mailtrack/shared";
 import { getGmailAuthUrl, exchangeGmailCode, fetchGmailEmails } from "../services/gmail.service.js";
 import { parseEmail } from "../services/email-parser.service.js";
 import { encrypt, decrypt } from "../lib/encryption.js";
 import { detectCarrier } from "../lib/carrier-detect.js";
 import { logAudit } from "../services/auth.service.js";
 
+const WEB_URL = process.env.WEB_URL ?? "http://localhost:3003";
+
 export const emailRoutes: FastifyPluginAsync = async (app) => {
-  // GET /api/email/connect/gmail — Get Gmail OAuth URL
-  app.get("/connect/gmail", {
-    preHandler: [app.authenticate],
-  }, async () => {
-    return { url: getGmailAuthUrl() };
+  // GET /api/email/connect/gmail — Redirect to Gmail OAuth consent screen
+  app.get("/connect/gmail", async (request, reply) => {
+    const { token } = request.query as { token?: string };
+
+    if (!token) {
+      return reply.redirect(`${WEB_URL}/settings?error=${encodeURIComponent("Authentication required")}`);
+    }
+
+    // Verify the JWT to confirm the user is logged in
+    try {
+      app.jwt.verify(token);
+    } catch {
+      return reply.redirect(`${WEB_URL}/settings?error=${encodeURIComponent("Session expired. Please log in again.")}`);
+    }
+
+    // Pass the JWT as OAuth state so callback can identify the user
+    const url = getGmailAuthUrl(token);
+    return reply.redirect(url);
   });
 
-  // POST /api/email/connect/gmail/callback — Handle Gmail OAuth callback
-  app.post("/connect/gmail/callback", {
-    preHandler: [app.authenticate],
-  }, async (request, reply) => {
-    const userId = request.user.userId;
-    const { authCode } = connectEmailSchema.parse(request.body);
+  // GET /api/email/connect/gmail/callback — Handle Gmail OAuth redirect from Google
+  app.get("/connect/gmail/callback", async (request, reply) => {
+    const { code, error, state } = request.query as { code?: string; error?: string; state?: string };
+
+    if (error || !code) {
+      return reply.redirect(`${WEB_URL}/settings?error=${encodeURIComponent(error ?? "Gmail connection cancelled")}`);
+    }
+
+    if (!state) {
+      return reply.redirect(`${WEB_URL}/settings?error=${encodeURIComponent("Invalid session. Please try again.")}`);
+    }
+
+    // Verify the JWT from state to get userId
+    let userId: string;
+    try {
+      const decoded = app.jwt.verify(state) as { userId: string };
+      userId = decoded.userId;
+    } catch {
+      return reply.redirect(`${WEB_URL}/settings?error=${encodeURIComponent("Session expired. Please log in again.")}`);
+    }
 
     try {
-      const tokens = await exchangeGmailCode(authCode);
+      const tokens = await exchangeGmailCode(code);
 
       if (!tokens.access_token) {
-        return reply.status(400).send({ error: "Failed to get access token" });
+        return reply.redirect(`${WEB_URL}/settings?error=${encodeURIComponent("Failed to get Gmail access token")}`);
       }
 
       // Get user's email from Gmail
@@ -54,10 +83,10 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
 
       await logAudit(app, userId, "EMAIL_CONNECT", `Gmail: ${email}`, request.ip);
 
-      return { success: true, email };
+      return reply.redirect(`${WEB_URL}/settings?success=${encodeURIComponent("Gmail connected: " + email)}`);
     } catch (error: any) {
-      app.log.error(error);
-      return reply.status(500).send({ error: "Failed to connect Gmail", message: error.message });
+      app.log.error(error, "Gmail OAuth callback failed");
+      return reply.redirect(`${WEB_URL}/settings?error=${encodeURIComponent("Failed to connect Gmail. Please try again.")}`);
     }
   });
 

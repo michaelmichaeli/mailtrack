@@ -1,6 +1,8 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,13 +17,20 @@ import {
   Unlink,
   Moon,
   Sun,
+  AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 
-export default function SettingsPage() {
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002";
+
+function SettingsContent() {
   const queryClient = useQueryClient();
   const { theme, setTheme } = useTheme();
+  const searchParams = useSearchParams();
+  const errorParam = searchParams.get("error");
+  const successParam = searchParams.get("success");
 
   const { data: accounts } = useQuery({
     queryKey: ["connected-accounts"],
@@ -33,13 +42,14 @@ export default function SettingsPage() {
     queryFn: () => api.getNotificationPreferences(),
   });
 
-  const connectGmail = async () => {
-    try {
-      const { url } = await api.getGmailAuthUrl();
-      window.location.href = url;
-    } catch {
-      toast.error("Failed to initiate Gmail connection");
+  const connectGmail = () => {
+    const token = localStorage.getItem("mailtrack_token");
+    if (!token) {
+      toast.error("Please log in first");
+      return;
     }
+    // Pass token as query param since browser navigation can't set auth headers
+    window.location.href = `${API_URL}/api/email/connect/gmail?token=${encodeURIComponent(token)}`;
   };
 
   const disconnectEmail = useMutation({
@@ -92,6 +102,20 @@ export default function SettingsPage() {
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-muted-foreground">Manage your account and preferences</p>
       </div>
+
+      {successParam && (
+        <div className="flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
+          <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <span>{successParam}</span>
+        </div>
+      )}
+
+      {errorParam && (
+        <div className="flex items-start gap-2 rounded-lg border border-orange-200 bg-orange-50 p-3 text-sm text-orange-800 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-200">
+          <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <span>{errorParam}</span>
+        </div>
+      )}
 
       {/* Connected Emails */}
       <Card>
@@ -279,5 +303,13 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense>
+      <SettingsContent />
+    </Suspense>
   );
 }
