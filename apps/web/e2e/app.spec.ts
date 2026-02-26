@@ -14,27 +14,17 @@ async function devLogin(page: Page) {
 }
 
 test.describe("Login Page", () => {
-  test("shows login page with all buttons", async ({ page }) => {
+  test("shows login page with Google button", async ({ page }) => {
     await page.goto("/login");
     await expect(page.locator("text=Welcome to MailTrack")).toBeVisible();
-    await expect(page.locator("text=Continue with Google")).toBeVisible();
-    await expect(page.getByRole("button", { name: /Dev Login/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Continue with Google/ })).toBeVisible();
   });
 
-  test("dev login button calls API and navigates", async ({ page }) => {
-    await page.goto("/login");
-    await page.getByRole("button", { name: /Dev Login/ }).click();
-    // Wait a bit for the async login to complete
-    await page.waitForTimeout(3000);
-    // Either navigated to dashboard or still on login (CORS might block in headless)
-    const url = page.url();
-    if (url.includes("/dashboard")) {
-      await expect(page.locator("h1:text('Dashboard')")).toBeVisible({ timeout: 5000 });
-    } else {
-      // Dev login via button may fail due to CORS in headless — verify via API directly
-      const response = await page.request.post(`${API_BASE}/auth/dev-login`);
-      expect(response.ok()).toBeTruthy();
-    }
+  test("dev login via API works", async ({ page }) => {
+    const response = await page.request.post(`${API_BASE}/auth/dev-login`);
+    expect(response.ok()).toBeTruthy();
+    const data = await response.json();
+    expect(data.accessToken).toBeTruthy();
   });
 });
 

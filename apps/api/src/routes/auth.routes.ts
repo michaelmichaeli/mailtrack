@@ -16,7 +16,29 @@ const WEB_URL = process.env.WEB_URL ?? "http://localhost:3003";
 
 export const authRoutes: FastifyPluginAsync = async (app) => {
   // GET /api/auth/google — Redirect to Google OAuth consent screen
-  app.get("/google", async (_request, reply) => {
+  // In dev mode without credentials, auto-login as dev user
+  app.get("/google", async (request, reply) => {
+    const hasCredentials = process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_ID !== "your-google-client-id";
+
+    if (!hasCredentials && process.env.NODE_ENV !== "production") {
+      // Dev fallback: create user and redirect with token
+      const user = await findOrCreateUser(app, {
+        email: "dev@mailtrack.local",
+        name: "Dev User",
+        avatar: null,
+        authProvider: "GOOGLE" as AuthProvider,
+      });
+      const tokens = await generateTokens(app, user.id);
+      reply.setCookie("refreshToken", tokens.refreshToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        path: "/api/auth",
+        maxAge: 30 * 24 * 60 * 60,
+      });
+      return reply.redirect(`${WEB_URL}/auth/callback?token=${tokens.accessToken}`);
+    }
+
     try {
       const url = getGoogleAuthUrl();
       return reply.redirect(url);
