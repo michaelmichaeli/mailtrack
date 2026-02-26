@@ -25,10 +25,11 @@ const PHONE_CONTEXT = /(?:phone|tel|mobile|fax|call|whatsapp|\(\+?\d{1,3}\))\s*/
 
 /**
  * Extract tracking number from AliExpress email subject line.
- * Patterns: "Package RS1300705226Y has been delivered", "Package AE039583535 has been shipped"
+ * Patterns: "Package RS1300705226Y has been delivered", "Package PH8002545065: with local carrier"
  */
 export function extractTrackingFromSubject(subject: string): { trackingNumber: string; carrier: Carrier } | null {
-  const match = subject.match(/Package\s+([A-Z]{2}\d{9,13}[A-Z]?)\s+/i);
+  // Match "Package TRACKINGNUM" followed by space, colon, or end-of-string
+  const match = subject.match(/Package\s+([A-Z]{2}\d{9,15}[A-Z]{0,2})[\s:]/i);
   if (match) {
     const tn = match[1].toUpperCase();
     return { trackingNumber: tn, carrier: detectCarrier(tn) };

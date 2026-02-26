@@ -61,7 +61,7 @@ export async function fetchGmailEmails(
 
   // Build search query — broad match for shipping/order related emails
   let query =
-    'subject:(order OR shipping OR tracking OR delivered OR dispatched OR shipment OR "out for delivery" OR "order confirmed" OR "has shipped")';
+    'subject:(order OR shipping OR tracking OR delivered OR dispatched OR shipment OR "out for delivery" OR "order confirmed" OR "has shipped" OR pickup OR parcel OR package OR "ready for collection" OR "awaiting collection")';
 
   if (since) {
     const afterDate = Math.floor(since.getTime() / 1000);
@@ -72,7 +72,7 @@ export async function fetchGmailEmails(
   const listResponse = await gmail.users.messages.list({
     userId: "me",
     q: query,
-    maxResults: 50,
+    maxResults: 100,
   });
 
   const messages = listResponse.data.messages ?? [];

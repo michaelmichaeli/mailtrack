@@ -33,14 +33,18 @@ const PRICE_PATTERNS: RegExp[] = [
 // Status detection from subject/body
 const STATUS_PATTERNS: Array<{ pattern: RegExp; status: PackageStatus }> = [
   { pattern: /has been delivered|successfully delivered|package delivered/i, status: PackageStatus.DELIVERED },
+  { pattern: /ready for pickup|waiting to be picked up|awaiting collection/i, status: PackageStatus.OUT_FOR_DELIVERY },
   { pattern: /out for delivery/i, status: PackageStatus.OUT_FOR_DELIVERY },
-  { pattern: /in your country|collected by local carrier/i, status: PackageStatus.OUT_FOR_DELIVERY },
-  { pattern: /order shipped|has shipped|has been shipped/i, status: PackageStatus.SHIPPED },
-  { pattern: /in global transit|in transit/i, status: PackageStatus.IN_TRANSIT },
-  { pattern: /delivery update|packages have delivery updates/i, status: PackageStatus.IN_TRANSIT },
+  { pattern: /in your country|with local carrier|collected by local carrier/i, status: PackageStatus.OUT_FOR_DELIVERY },
+  { pattern: /has cleared customs|clearing customs/i, status: PackageStatus.IN_TRANSIT },
+  { pattern: /left the departure region|in global transit|in transit/i, status: PackageStatus.IN_TRANSIT },
+  { pattern: /has an update|have delivery updates/i, status: PackageStatus.IN_TRANSIT },
+  { pattern: /collected by the carrier/i, status: PackageStatus.SHIPPED },
+  { pattern: /order shipped|has shipped|has been shipped|dispatched/i, status: PackageStatus.SHIPPED },
+  { pattern: /ready to ship/i, status: PackageStatus.PROCESSING },
+  { pattern: /delivery update/i, status: PackageStatus.IN_TRANSIT },
   { pattern: /awaiting confirmation|marked as completed/i, status: PackageStatus.DELIVERED },
   { pattern: /order confirmed|order placed/i, status: PackageStatus.ORDERED },
-  { pattern: /dispatched/i, status: PackageStatus.SHIPPED },
 ];
 
 /**

@@ -19,12 +19,17 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
       where.OR = [
         { merchant: { contains: params.query, mode: "insensitive" } },
         { externalOrderId: { contains: params.query, mode: "insensitive" } },
+        { items: { contains: params.query, mode: "insensitive" } },
         { packages: { some: { trackingNumber: { contains: params.query, mode: "insensitive" } } } },
         { packages: { some: { items: { contains: params.query, mode: "insensitive" } } } },
       ];
     }
     if (params.status) {
-      where.packages = { some: { status: params.status } };
+      // Match order-level OR package-level status
+      where.AND = [
+        ...(where.AND ?? []),
+        { OR: [{ status: params.status }, { packages: { some: { status: params.status } } }] },
+      ];
     }
     if (params.dateFrom || params.dateTo) {
       where.createdAt = {};

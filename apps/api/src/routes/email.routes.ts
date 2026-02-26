@@ -28,6 +28,45 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
     return reply.redirect(url);
   });
 
+  // GET /api/email/debug-emails — Fetch and show raw parsed emails (dev only)
+  app.get("/debug-emails", {
+    preHandler: [app.authenticate],
+  }, async (request) => {
+    const userId = request.user.userId;
+    const connectedEmails = await app.prisma.connectedEmail.findMany({ where: { userId } });
+    const results: any[] = [];
+
+    for (const connEmail of connectedEmails) {
+      if (connEmail.provider !== EmailProvider.GMAIL) continue;
+      const accessToken = decrypt(connEmail.accessToken);
+      const refreshToken = connEmail.refreshToken ? decrypt(connEmail.refreshToken) : null;
+      const emails = await fetchGmailEmails(accessToken, refreshToken);
+
+      for (const email of emails) {
+        const parsed = parseEmail(email.html, email.from, email.subject);
+        results.push({
+          gmailId: email.id,
+          subject: email.subject,
+          from: email.from,
+          date: email.date,
+          parsed: {
+            orderId: parsed.orderId,
+            merchant: parsed.merchant,
+            platform: parsed.platform,
+            trackingNumber: parsed.trackingNumber,
+            carrier: parsed.carrier,
+            status: parsed.status,
+            items: parsed.items,
+            totalAmount: parsed.totalAmount,
+            confidence: parsed.confidence,
+          },
+        });
+      }
+    }
+
+    return { total: results.length, emails: results };
+  });
+
   // POST /api/email/sync — Trigger email sync
   app.post("/sync", {
     preHandler: [app.authenticate],
@@ -66,14 +105,31 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
         // Skip very low confidence — but keep anything plausible
         if (parsed.confidence < 0.2) continue;
 
-        // Find existing order by externalOrderId or Gmail message ID
+        const STATUS_ORDER = ["ORDERED", "PROCESSING", "SHIPPED", "IN_TRANSIT", "OUT_FOR_DELIVERY", "DELIVERED"];
+
+        // --- Order resolution: find the right order to attach this email to ---
         const externalId = parsed.orderId ?? `gmail-${email.id}`;
-        const existingOrder = await app.prisma.order.findFirst({
+
+        // 1. Try by externalOrderId first
+        let existingOrder = await app.prisma.order.findFirst({
           where: { userId, externalOrderId: externalId },
         });
 
+        // 2. If we have a tracking number, check if a package with it already exists
+        //    and merge into that order (avoids duplicates from shipped + delivered emails)
+        let existingPkg: any = null;
+        if (parsed.trackingNumber) {
+          existingPkg = await app.prisma.package.findFirst({
+            where: { trackingNumber: parsed.trackingNumber },
+            include: { order: true },
+          });
+          if (existingPkg && !existingOrder) {
+            // Merge into the order that owns this tracking number
+            existingOrder = existingPkg.order;
+          }
+        }
+
         let order;
-        const STATUS_ORDER = ["ORDERED", "PROCESSING", "SHIPPED", "IN_TRANSIT", "OUT_FOR_DELIVERY", "DELIVERED"];
         if (existingOrder) {
           // Update existing order with new data (later emails may have more info)
           const updateData: Record<string, any> = {};
@@ -101,6 +157,10 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
           if (parsed.orderDate && !existingOrder.orderDate) {
             updateData.orderDate = new Date(parsed.orderDate);
           }
+          // If the existing order has a gmail- ID but we now have a real order ID, upgrade it
+          if (parsed.orderId && existingOrder.externalOrderId.startsWith("gmail-")) {
+            updateData.externalOrderId = parsed.orderId;
+          }
           if (Object.keys(updateData).length > 0) {
             order = await app.prisma.order.update({
               where: { id: existingOrder.id },
@@ -126,13 +186,16 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
           totalOrders++;
         }
 
-        // Create package if tracking number found
+        // Create or update package if tracking number found
         if (parsed.trackingNumber) {
-          const existing = await app.prisma.package.findFirst({
-            where: { trackingNumber: parsed.trackingNumber },
-          });
+          if (!existingPkg) {
+            // Re-check in case another email in this batch already created it
+            existingPkg = await app.prisma.package.findFirst({
+              where: { trackingNumber: parsed.trackingNumber },
+            });
+          }
 
-          if (!existing) {
+          if (!existingPkg) {
             await app.prisma.package.create({
               data: {
                 orderId: order.id,
@@ -145,15 +208,46 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
           } else if (parsed.status) {
             // Update package status if we have newer info
             const statusOrder = ["ORDERED", "PROCESSING", "SHIPPED", "IN_TRANSIT", "OUT_FOR_DELIVERY", "DELIVERED"];
-            const currentIdx = statusOrder.indexOf(existing.status);
+            const currentIdx = statusOrder.indexOf(existingPkg.status);
             const newIdx = statusOrder.indexOf(parsed.status);
             if (newIdx > currentIdx) {
               await app.prisma.package.update({
-                where: { id: existing.id },
+                where: { id: existingPkg.id },
                 data: { status: parsed.status as any },
               });
             }
+            // Merge items into existing package
+            if (parsed.items.length > 0 && !existingPkg.items) {
+              await app.prisma.package.update({
+                where: { id: existingPkg.id },
+                data: { items: JSON.stringify(parsed.items) },
+              });
+            }
           }
+        }
+      }
+
+      // Clean up orphaned gmail- orders that have no packages and duplicate a real order's data
+      // (e.g., "delivered" email created gmail-xxx order, but tracking was merged into real order)
+      const orphanedGmailOrders = await app.prisma.order.findMany({
+        where: {
+          userId,
+          externalOrderId: { startsWith: "gmail-" },
+          packages: { none: {} },
+        },
+      });
+      for (const orphan of orphanedGmailOrders) {
+        // Delete if there's a "real" order with same items/merchant
+        const realOrder = await app.prisma.order.findFirst({
+          where: {
+            userId,
+            id: { not: orphan.id },
+            merchant: orphan.merchant,
+            NOT: { externalOrderId: { startsWith: "gmail-" } },
+          },
+        });
+        if (realOrder) {
+          await app.prisma.order.delete({ where: { id: orphan.id } });
         }
       }
 
