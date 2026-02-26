@@ -1,13 +1,30 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Mail, Package, ArrowRight } from "lucide-react";
+import { api } from "@/lib/api";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
   const handleGoogleLogin = () => {
-    // In production, this initiates Google OAuth flow
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"}/api/auth/google`;
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"}/api/auth/google`;
+  };
+
+  const handleDevLogin = async () => {
+    setLoading(true);
+    try {
+      await api.devLogin();
+      router.push("/dashboard");
+    } catch (e) {
+      console.error("Dev login failed:", e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -52,6 +69,25 @@ export default function LoginPage() {
               <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
             </svg>
             Continue with Apple
+          </Button>
+
+          <div className="relative py-2">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">Development</span>
+            </div>
+          </div>
+
+          <Button
+            className="w-full"
+            size="lg"
+            variant="secondary"
+            onClick={handleDevLogin}
+            disabled={loading}
+          >
+            {loading ? "Signing in..." : "Dev Login (No OAuth)"}
           </Button>
 
           <p className="text-center text-xs text-muted-foreground pt-2">

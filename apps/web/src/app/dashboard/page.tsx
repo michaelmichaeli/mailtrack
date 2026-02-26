@@ -11,9 +11,10 @@ import { RefreshCw, Package, Truck, Clock, CheckCircle, AlertTriangle } from "lu
 import { toast } from "sonner";
 
 export default function DashboardPage() {
-  const { data, isLoading, refetch, isRefetching } = useQuery({
+  const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["dashboard"],
     queryFn: () => api.getDashboard(),
+    retry: false,
   });
 
   const handleSync = async () => {

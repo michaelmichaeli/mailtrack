@@ -11,6 +11,42 @@ import {
 } from "../services/auth.service.js";
 
 export const authRoutes: FastifyPluginAsync = async (app) => {
+  // POST /api/auth/dev-login — Development-only login (no OAuth needed)
+  if (process.env.NODE_ENV !== "production") {
+    app.post("/dev-login", async (request, reply) => {
+      const user = await findOrCreateUser(app, {
+        email: "dev@mailtrack.local",
+        name: "Dev User",
+        avatar: null,
+        authProvider: "GOOGLE" as AuthProvider,
+      });
+
+      const tokens = await generateTokens(app, user.id);
+
+      reply.setCookie("refreshToken", tokens.refreshToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        path: "/api/auth",
+        maxAge: 30 * 24 * 60 * 60,
+      });
+
+      return {
+        accessToken: tokens.accessToken,
+        expiresIn: tokens.expiresIn,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          avatar: user.avatar,
+          authProvider: user.authProvider,
+          createdAt: user.createdAt.toISOString(),
+          updatedAt: user.updatedAt.toISOString(),
+        },
+      };
+    });
+  }
+
   // POST /api/auth/login — Social login (Google/Apple)
   app.post("/login", async (request, reply) => {
     const body = loginSchema.parse(request.body);

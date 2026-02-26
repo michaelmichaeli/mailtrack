@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002/api";
 
 interface FetchOptions extends RequestInit {
   token?: string;
@@ -7,22 +7,39 @@ interface FetchOptions extends RequestInit {
 class ApiClient {
   private baseUrl: string;
   private token: string | null = null;
+  private tokenLoaded = false;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
   }
 
+  private loadToken(): string | null {
+    if (!this.tokenLoaded && typeof window !== "undefined") {
+      this.token = localStorage.getItem("mailtrack_token");
+      this.tokenLoaded = true;
+    }
+    return this.token;
+  }
+
   setToken(token: string | null) {
     this.token = token;
+    this.tokenLoaded = true;
+    if (typeof window !== "undefined") {
+      if (token) {
+        localStorage.setItem("mailtrack_token", token);
+      } else {
+        localStorage.removeItem("mailtrack_token");
+      }
+    }
   }
 
   getToken() {
-    return this.token;
+    return this.loadToken();
   }
 
   private async request<T>(path: string, options: FetchOptions = {}): Promise<T> {
     const { token, ...fetchOptions } = options;
-    const authToken = token ?? this.token;
+    const authToken = token ?? this.loadToken();
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -39,6 +56,39 @@ class ApiClient {
       credentials: "include",
     });
 
+    if (response.status === 401) {
+      // Try to refresh token
+      try {
+        const refreshResult = await fetch(`${this.baseUrl}/auth/refresh`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (refreshResult.ok) {
+          const data = await refreshResult.json();
+          this.setToken(data.accessToken);
+          // Retry original request with new token
+          headers["Authorization"] = `Bearer ${data.accessToken}`;
+          const retryResponse = await fetch(`${this.baseUrl}${path}`, {
+            ...fetchOptions,
+            headers,
+            credentials: "include",
+          });
+          if (retryResponse.ok) {
+            return retryResponse.json();
+          }
+        }
+      } catch {
+        // Refresh failed
+      }
+      // If refresh also failed, clear token and redirect to login
+      this.setToken(null);
+      if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
+        window.location.href = "/login";
+      }
+      throw new Error("Unauthorized");
+    }
+
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: "Request failed" }));
       throw new Error(error.message ?? `HTTP ${response.status}`);
@@ -48,6 +98,15 @@ class ApiClient {
   }
 
   // Auth
+  // Auth
+  async devLogin() {
+    const result = await this.request<{ accessToken: string; expiresIn: number; user: any }>("/auth/dev-login", {
+      method: "POST",
+    });
+    this.setToken(result.accessToken);
+    return result;
+  }
+
   async login(provider: string, idToken: string) {
     return this.request<{ accessToken: string; expiresIn: number; user: any }>("/auth/login", {
       method: "POST",

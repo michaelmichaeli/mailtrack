@@ -26,7 +26,9 @@ export async function buildApp() {
   // CORS
   await app.register(cors, {
     origin: [
-      process.env.WEB_URL ?? "http://localhost:3000",
+      process.env.WEB_URL ?? "http://localhost:3003",
+      "http://localhost:3000",
+      "http://localhost:3003",
       /\.mailtrack\.app$/,
     ],
     credentials: true,
