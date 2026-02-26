@@ -7,10 +7,14 @@ const TAG_LENGTH = 16;
 function getKey(): Buffer {
   const key = process.env.ENCRYPTION_KEY;
   if (!key || key === "change-me-32-byte-hex-key-for-aes256") {
-    // In development, use a deterministic key
     return crypto.scryptSync("dev-encryption-key", "salt", 32);
   }
-  return Buffer.from(key, "hex");
+  // If it's a valid 64-char hex string (32 bytes), use directly
+  if (/^[0-9a-f]{64}$/i.test(key)) {
+    return Buffer.from(key, "hex");
+  }
+  // Otherwise derive a 32-byte key from whatever string was provided
+  return crypto.scryptSync(key, "mailtrack-salt", 32);
 }
 
 export function encrypt(text: string): string {
