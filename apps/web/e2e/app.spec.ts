@@ -19,7 +19,7 @@ test.describe("Login Page", () => {
     await expect(page.locator("text=Welcome to MailTrack")).toBeVisible();
     await expect(page.locator("text=Continue with Google")).toBeVisible();
     await expect(page.locator("text=Continue with Apple")).toBeVisible();
-    await expect(page.getByRole("button", { name: /Dev Login/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Sign In/ })).toBeVisible();
   });
 
   test("dev login button calls API and navigates", async ({ page }) => {
@@ -27,7 +27,7 @@ test.describe("Login Page", () => {
     // Listen for console errors to debug
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
-    await page.getByRole("button", { name: /Dev Login/ }).click();
+    await page.getByRole("button", { name: /Sign In/ }).click();
     // Wait a bit for the async login to complete
     await page.waitForTimeout(3000);
     // Either navigated to dashboard or still on login (CORS might block in headless)
