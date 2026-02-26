@@ -28,45 +28,6 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
     return reply.redirect(url);
   });
 
-  // GET /api/email/debug-emails — Fetch and show raw parsed emails (dev only)
-  app.get("/debug-emails", {
-    preHandler: [app.authenticate],
-  }, async (request) => {
-    const userId = request.user.userId;
-    const connectedEmails = await app.prisma.connectedEmail.findMany({ where: { userId } });
-    const results: any[] = [];
-
-    for (const connEmail of connectedEmails) {
-      if (connEmail.provider !== EmailProvider.GMAIL) continue;
-      const accessToken = decrypt(connEmail.accessToken);
-      const refreshToken = connEmail.refreshToken ? decrypt(connEmail.refreshToken) : null;
-      const emails = await fetchGmailEmails(accessToken, refreshToken);
-
-      for (const email of emails) {
-        const parsed = parseEmail(email.html, email.from, email.subject);
-        results.push({
-          gmailId: email.id,
-          subject: email.subject,
-          from: email.from,
-          date: email.date,
-          parsed: {
-            orderId: parsed.orderId,
-            merchant: parsed.merchant,
-            platform: parsed.platform,
-            trackingNumber: parsed.trackingNumber,
-            carrier: parsed.carrier,
-            status: parsed.status,
-            items: parsed.items,
-            totalAmount: parsed.totalAmount,
-            confidence: parsed.confidence,
-          },
-        });
-      }
-    }
-
-    return { total: results.length, emails: results };
-  });
-
   // POST /api/email/sync — Trigger email sync
   app.post("/sync", {
     preHandler: [app.authenticate],
@@ -195,8 +156,10 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
             });
           }
 
+          let packageId: string;
+
           if (!existingPkg) {
-            await app.prisma.package.create({
+            const newPkg = await app.prisma.package.create({
               data: {
                 orderId: order.id,
                 trackingNumber: parsed.trackingNumber,
@@ -205,22 +168,62 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
                 items: parsed.items.length > 0 ? JSON.stringify(parsed.items) : null,
               },
             });
-          } else if (parsed.status) {
-            // Update package status if we have newer info
-            const statusOrder = ["ORDERED", "PROCESSING", "SHIPPED", "IN_TRANSIT", "OUT_FOR_DELIVERY", "DELIVERED"];
-            const currentIdx = statusOrder.indexOf(existingPkg.status);
-            const newIdx = statusOrder.indexOf(parsed.status);
-            if (newIdx > currentIdx) {
-              await app.prisma.package.update({
-                where: { id: existingPkg.id },
-                data: { status: parsed.status as any },
-              });
+            packageId = newPkg.id;
+          } else {
+            packageId = existingPkg.id;
+            if (parsed.status) {
+              // Update package status if we have newer info
+              const statusOrder = ["ORDERED", "PROCESSING", "SHIPPED", "IN_TRANSIT", "OUT_FOR_DELIVERY", "DELIVERED"];
+              const currentIdx = statusOrder.indexOf(existingPkg.status);
+              const newIdx = statusOrder.indexOf(parsed.status);
+              if (newIdx > currentIdx) {
+                await app.prisma.package.update({
+                  where: { id: existingPkg.id },
+                  data: { status: parsed.status as any },
+                });
+              }
             }
             // Merge items into existing package
             if (parsed.items.length > 0 && !existingPkg.items) {
               await app.prisma.package.update({
                 where: { id: existingPkg.id },
                 data: { items: JSON.stringify(parsed.items) },
+              });
+            }
+          }
+
+          // Create tracking event from this email (each email = a status update)
+          if (parsed.status) {
+            const eventDate = new Date(email.date);
+            const statusDescriptions: Record<string, string> = {
+              ORDERED: "Order placed",
+              PROCESSING: "Package is being prepared for shipment",
+              SHIPPED: "Package has been shipped",
+              IN_TRANSIT: "Package is in transit",
+              OUT_FOR_DELIVERY: "Package is ready for pickup / out for delivery",
+              DELIVERED: "Package has been delivered",
+            };
+            const desc = statusDescriptions[parsed.status] ?? parsed.status;
+            // Avoid duplicate events (same package, same status, within 1 hour)
+            const existingEvent = await app.prisma.trackingEvent.findFirst({
+              where: {
+                packageId,
+                status: parsed.status as any,
+                timestamp: {
+                  gte: new Date(eventDate.getTime() - 3600000),
+                  lte: new Date(eventDate.getTime() + 3600000),
+                },
+              },
+            });
+            if (!existingEvent) {
+              await app.prisma.trackingEvent.create({
+                data: {
+                  packageId,
+                  timestamp: eventDate,
+                  status: parsed.status as any,
+                  description: desc,
+                  location: null,
+                },
               });
             }
           }
@@ -395,6 +398,45 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
           packages: { none: {} },
         },
       });
+
+      // --- Phase 5: Consolidate "awaiting confirmation" orders from same checkout ---
+      // AliExpress sends separate "awaiting confirmation" emails per item in a checkout.
+      // These create many orders with sequential IDs (same 10-digit prefix), no items, no tracking.
+      // Group them into one order per checkout batch.
+      const emptyOrders = await app.prisma.order.findMany({
+        where: {
+          userId,
+          packages: { none: {} },
+          NOT: { externalOrderId: { startsWith: "gmail-" } },
+        },
+        orderBy: { externalOrderId: "asc" },
+      });
+
+      // Group by first 10 chars of externalOrderId
+      const prefixGroups = new Map<string, typeof emptyOrders>();
+      for (const o of emptyOrders) {
+        const prefix = o.externalOrderId.substring(0, 10);
+        const list = prefixGroups.get(prefix) ?? [];
+        list.push(o);
+        prefixGroups.set(prefix, list);
+      }
+
+      for (const [, group] of prefixGroups) {
+        if (group.length <= 1) continue;
+        // Keep the first order, delete the rest
+        const [keep, ...rest] = group;
+        // Update the kept order to indicate it represents multiple items
+        const allIds = group.map(o => o.externalOrderId);
+        await app.prisma.order.update({
+          where: { id: keep.id },
+          data: {
+            items: JSON.stringify([`${group.length} items from order batch ${allIds[0].substring(0, 10)}...`]),
+          },
+        });
+        for (const dup of rest) {
+          await app.prisma.order.delete({ where: { id: dup.id } });
+        }
+      }
 
       // Update last sync time
       await app.prisma.connectedEmail.update({

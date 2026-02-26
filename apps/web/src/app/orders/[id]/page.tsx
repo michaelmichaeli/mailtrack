@@ -34,8 +34,12 @@ export default function OrderDetailPage() {
       setRefreshingPkgId(pkgId);
       return api.refreshPackage(pkgId);
     },
-    onSuccess: () => {
-      toast.success("Tracking info refreshed");
+    onSuccess: (data: any) => {
+      if (data?.updated) {
+        toast.success("Tracking info updated from carrier");
+      } else {
+        toast.success("Tracking is up to date (based on email data)");
+      }
       queryClient.invalidateQueries({ queryKey: ["order", id] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       setRefreshingPkgId(null);

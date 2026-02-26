@@ -36,6 +36,7 @@ export async function trackPackage(
   const apiKey = process.env.TRACKING_API_KEY;
 
   if (!apiKey || apiKey === "your-17track-api-key") {
+    // Without API key, return existing data from DB (events from email parsing)
     return null;
   }
 
