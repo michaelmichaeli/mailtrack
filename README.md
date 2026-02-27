@@ -56,6 +56,123 @@ npm run db:push
 npm run dev
 ```
 
+## Deployment
+
+### Option 1: Railway (Recommended)
+
+The easiest way to deploy — Railway supports monorepos, Postgres, and Redis as add-ons.
+
+1. **Push to GitHub**
+   ```bash
+   git push origin main
+   ```
+
+2. **Create a Railway project** at [railway.app](https://railway.app)
+   - Click **"New Project"** → **"Deploy from GitHub Repo"**
+   - Select the `michaelmichaeli/mailtrack` repository
+
+3. **Add databases** (click "+ New" in the project)
+   - Add **PostgreSQL** — Railway provides a managed instance
+   - Add **Redis** — Railway provides a managed instance
+
+4. **Deploy the API service**
+   - Click "+ New" → "GitHub Repo" → select this repo
+   - Settings:
+     - **Root Directory**: `/` (root)
+     - **Builder**: Dockerfile
+     - **Dockerfile Path**: `Dockerfile`
+     - **Target**: `api`
+   - Add environment variables (Settings → Variables):
+     ```
+     DATABASE_URL        → copy from Railway Postgres service
+     REDIS_URL           → copy from Railway Redis service
+     JWT_SECRET          → generate: openssl rand -hex 32
+     JWT_REFRESH_SECRET  → generate: openssl rand -hex 32
+     ENCRYPTION_KEY      → generate: openssl rand -hex 16
+     PORT                → 3001
+     HOST                → 0.0.0.0
+     NODE_ENV            → production
+     GOOGLE_CLIENT_ID    → from Google Cloud Console
+     GOOGLE_CLIENT_SECRET → from Google Cloud Console
+     WEB_URL             → https://your-web-service.up.railway.app
+     API_URL             → https://your-api-service.up.railway.app
+     ```
+   - Generate a **domain** in Settings → Networking
+
+5. **Deploy the Web service**
+   - Click "+ New" → "GitHub Repo" → select this repo again
+   - Settings:
+     - **Root Directory**: `/` (root)
+     - **Builder**: Dockerfile
+     - **Dockerfile Path**: `Dockerfile`
+     - **Target**: `web`
+     - **Build Args**: `NEXT_PUBLIC_API_URL=https://your-api-domain.up.railway.app/api`
+   - Variables:
+     ```
+     PORT → 3000
+     NODE_ENV → production
+     ```
+   - Generate a **domain** in Settings → Networking
+
+6. **Update Google OAuth** redirect URIs in [Google Cloud Console](https://console.cloud.google.com/apis/credentials):
+   - Add `https://your-api-domain.up.railway.app/api/auth/google/callback`
+
+### Option 2: Docker Compose (Self-hosted VPS)
+
+Deploy on any VPS (DigitalOcean, Hetzner, AWS EC2, etc.):
+
+```bash
+# Clone the repo
+git clone https://github.com/michaelmichaeli/mailtrack.git
+cd mailtrack
+
+# Create production env file
+cp .env.production.example .env
+# Edit .env with your values (secrets, domains, Google OAuth)
+
+# Build and start
+docker compose up -d --build
+
+# The app will be available at:
+# - API: http://your-server:3001
+# - Web: http://your-server:3000
+```
+
+For HTTPS, put Nginx or Caddy in front:
+```bash
+# Example with Caddy (auto-HTTPS)
+caddy reverse-proxy --from yourdomain.com --to localhost:3000
+```
+
+### Option 3: Vercel (Web) + Railway (API)
+
+For the best Next.js performance, deploy the web app on Vercel:
+
+1. Import `michaelmichaeli/mailtrack` on [vercel.com](https://vercel.com)
+   - **Root Directory**: `apps/web`
+   - **Framework**: Next.js
+   - **Environment Variable**: `NEXT_PUBLIC_API_URL=https://your-api.up.railway.app/api`
+
+2. Deploy the API + databases on Railway (follow Option 1, steps 3-4)
+
+### Environment Variables Reference
+
+See [`.env.production.example`](.env.production.example) for all required variables.
+
+| Variable | Required | Description |
+|---|---|---|
+| `DATABASE_URL` | ✅ | PostgreSQL connection string |
+| `REDIS_URL` | ✅ | Redis connection string |
+| `JWT_SECRET` | ✅ | JWT signing secret (min 32 chars) |
+| `JWT_REFRESH_SECRET` | ✅ | Refresh token secret |
+| `ENCRYPTION_KEY` | ✅ | AES encryption key for OAuth tokens |
+| `GOOGLE_CLIENT_ID` | ✅ | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | ✅ | Google OAuth client secret |
+| `WEB_URL` | ✅ | Public URL of the web app |
+| `API_URL` | ✅ | Public URL of the API |
+| `NEXT_PUBLIC_API_URL` | ✅ | API URL for the browser (build-time) |
+| `VAPID_*` | Optional | Web Push notification keys |
+
 ## Project Structure
 
 ```
@@ -67,6 +184,8 @@ mailtrack/
 ├── packages/
 │   ├── shared/       # Shared types, schemas, constants
 │   └── ui/           # Shared UI components
+├── Dockerfile        # Multi-stage build (api + web targets)
+├── docker-compose.yml
 ├── turbo.json
 └── package.json
 ```
