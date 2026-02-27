@@ -108,6 +108,16 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
     };
   });
 
+  // GET /api/packages/sync-status — Poll sync progress
+  app.get("/sync-status", {
+    preHandler: [app.authenticate],
+  }, async (request) => {
+    const userId = request.user.userId;
+    const job = syncJobs.get(userId);
+    if (!job) return { status: "idle", synced: 0, errors: 0, total: 0 };
+    return job;
+  });
+
   // GET /api/packages/:id — Get package detail
   app.get("/:id", {
     preHandler: [app.authenticate],
@@ -186,13 +196,22 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
     return { success: true, updated: !!result };
   });
 
-  // POST /api/packages/sync-all — Refresh all packages via 17track batch + Cainiao fallback
+  // Sync progress tracking (in-memory, per-user)
+  const syncJobs = new Map<string, { status: "running" | "done" | "error"; synced: number; errors: number; total: number; message?: string }>();
+
+  // POST /api/packages/sync-all — Start background sync, return immediately
   app.post("/sync-all", {
     preHandler: [app.authenticate],
   }, async (request) => {
     const userId = request.user.userId;
+
+    // If already running for this user, return current status
+    const existing = syncJobs.get(userId);
+    if (existing?.status === "running") {
+      return { success: true, status: "running", ...existing };
+    }
+
     const { clearRateLimits } = await import("../services/tracking.service.js");
-    const { track17Batch, convert17TrackResult, closeBrowser } = await import("../services/tracking17.service.js");
     clearRateLimits();
 
     const packages = await app.prisma.package.findMany({
@@ -200,76 +219,87 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
       select: { id: true, trackingNumber: true, carrier: true, status: true },
     });
 
-    let synced = 0;
-    let errors = 0;
+    // Initialize progress
+    syncJobs.set(userId, { status: "running", synced: 0, errors: 0, total: packages.length });
 
-    // Process in batches of 5 via 17track (browser-based, more reliable)
-    const batchSize = 5;
-    for (let i = 0; i < packages.length; i += batchSize) {
-      const batch = packages.slice(i, i + batchSize);
-      const trackingNumbers = batch.map((p) => p.trackingNumber);
+    // Run sync in background (don't await)
+    (async () => {
+      const job = syncJobs.get(userId)!;
+      const { track17Batch, convert17TrackResult, closeBrowser } = await import("../services/tracking17.service.js");
 
-      try {
-        console.log(`[sync-all] 17track batch ${Math.floor(i / batchSize) + 1}: ${trackingNumbers.join(", ")}`);
-        const results = await track17Batch(trackingNumbers);
+      const batchSize = 5;
+      for (let i = 0; i < packages.length; i += batchSize) {
+        const batch = packages.slice(i, i + batchSize);
+        const trackingNumbers = batch.map((p) => p.trackingNumber);
 
-        for (const pkg of batch) {
-          const shipment = results.get(pkg.trackingNumber);
-          if (shipment?.shipment) {
-            const result = convert17TrackResult(shipment, pkg.carrier as any);
-            await syncPackageFromResult(app.prisma, pkg.id, result);
-            synced++;
-            console.log(`[sync-all] ✓ ${pkg.trackingNumber}: ${result.events.length} events`);
-          } else {
-            // Fallback to direct tracking for missed numbers
-            try {
-              const fallback = await trackPackage(pkg.trackingNumber, pkg.carrier as any, true);
-              if (fallback) {
-                await syncPackageFromResult(app.prisma, pkg.id, fallback);
-                synced++;
-                console.log(`[sync-all] ✓ ${pkg.trackingNumber} (fallback): ${fallback.events.length} events`);
+        try {
+          console.log(`[sync-all] 17track batch ${Math.floor(i / batchSize) + 1}: ${trackingNumbers.join(", ")}`);
+          const results = await track17Batch(trackingNumbers);
+
+          for (const pkg of batch) {
+            const shipment = results.get(pkg.trackingNumber);
+            if (shipment?.shipment) {
+              const result = convert17TrackResult(shipment, pkg.carrier as any);
+              await syncPackageFromResult(app.prisma, pkg.id, result);
+              job.synced++;
+              console.log(`[sync-all] ✓ ${pkg.trackingNumber}: ${result.events.length} events`);
+            } else {
+              try {
+                const fallback = await trackPackage(pkg.trackingNumber, pkg.carrier as any, true);
+                if (fallback) {
+                  await syncPackageFromResult(app.prisma, pkg.id, fallback);
+                  job.synced++;
+                  console.log(`[sync-all] ✓ ${pkg.trackingNumber} (fallback): ${fallback.events.length} events`);
+                }
+              } catch (e) {
+                console.error(`[sync-all] Fallback failed for ${pkg.trackingNumber}:`, e);
               }
-            } catch (e) {
-              console.error(`[sync-all] Fallback failed for ${pkg.trackingNumber}:`, e);
+            }
+          }
+        } catch (e: any) {
+          job.errors++;
+          console.error(`[sync-all] Batch error:`, e?.message);
+        }
+
+        if (i + batchSize < packages.length) {
+          await new Promise((r) => setTimeout(r, 2000));
+        }
+      }
+
+      try { await closeBrowser(); } catch {}
+
+      // Enrich pickup locations
+      try {
+        const { enrichPickupLocation } = await import("../services/places.service.js");
+        const pkgsWithPickup = await app.prisma.package.findMany({
+          where: { order: { userId }, pickupLocation: { not: null } },
+          select: { id: true, pickupLocation: true, trackingNumber: true },
+        });
+        for (const p of pkgsWithPickup) {
+          const pickup = typeof p.pickupLocation === "string" ? JSON.parse(p.pickupLocation) : p.pickupLocation;
+          if (pickup && !pickup.hours && (pickup.name || pickup.address)) {
+            const enriched = await enrichPickupLocation(pickup);
+            if (enriched?.hours) {
+              await app.prisma.package.update({ where: { id: p.id }, data: { pickupLocation: JSON.stringify(enriched) } });
+              console.log(`[sync-all] Enriched pickup for ${p.trackingNumber}: ${enriched.name}`);
             }
           }
         }
       } catch (e: any) {
-        errors++;
-        console.error(`[sync-all] Batch error:`, e?.message);
+        console.error("[sync-all] Pickup enrichment error:", e?.message);
       }
 
-      // Small delay between batches
-      if (i + batchSize < packages.length) {
-        await new Promise((r) => setTimeout(r, 2000));
-      }
-    }
+      job.status = "done";
+      console.log(`[sync-all] Complete: ${job.synced} synced, ${job.errors} errors, ${job.total} total`);
+      // Clean up after 5 minutes
+      setTimeout(() => syncJobs.delete(userId), 5 * 60 * 1000);
+    })().catch((e) => {
+      const job = syncJobs.get(userId);
+      if (job) { job.status = "error"; job.message = e?.message; }
+      console.error("[sync-all] Fatal error:", e);
+    });
 
-    // Clean up browser
-    try { await closeBrowser(); } catch {}
-
-    // Enrich pickup locations missing hours via Google Places API
-    try {
-      const { enrichPickupLocation } = await import("../services/places.service.js");
-      const pkgsWithPickup = await app.prisma.package.findMany({
-        where: { order: { userId }, pickupLocation: { not: null } },
-        select: { id: true, pickupLocation: true, trackingNumber: true },
-      });
-      for (const p of pkgsWithPickup) {
-        const pickup = typeof p.pickupLocation === "string" ? JSON.parse(p.pickupLocation) : p.pickupLocation;
-        if (pickup && !pickup.hours && (pickup.name || pickup.address)) {
-          const enriched = await enrichPickupLocation(pickup);
-          if (enriched && enriched.hours) {
-            await app.prisma.package.update({ where: { id: p.id }, data: { pickupLocation: JSON.stringify(enriched) } });
-            console.log(`[sync-all] Enriched pickup for ${p.trackingNumber}: ${enriched.name}`);
-          }
-        }
-      }
-    } catch (e: any) {
-      console.error("[sync-all] Pickup enrichment error:", e?.message);
-    }
-
-    return { success: true, synced, errors, total: packages.length };
+    return { success: true, status: "running", synced: 0, errors: 0, total: packages.length };
   });
 
   // POST /api/packages/scan-text — Extract tracking numbers from pasted text (SMS, etc.)

@@ -46,24 +46,43 @@ function DashboardContent() {
     retry: false,
   });
 
+  const [syncProgress, setSyncProgress] = useState<string | null>(null);
+
   const handleFullSync = async () => {
     setIsSyncing(true);
     try {
       const emailResult = await api.syncEmails();
-      try {
-        const trackResult = await api.syncAllTracking();
-        toast.success(`Synced ${emailResult.emailsParsed} emails, updated ${trackResult.synced} packages`);
-      } catch {
-        if (emailResult.emailsParsed > 0) {
-          toast.success(`Synced ${emailResult.emailsParsed} emails (tracking sync failed)`);
-        } else {
-          toast.success("No new emails. Tracking sync failed.");
+      toast.success(`Synced ${emailResult.emailsParsed} emails`);
+
+      // Start background tracking sync
+      await api.syncAllTracking();
+      setSyncProgress("Starting tracking sync…");
+
+      // Poll for progress
+      const poll = setInterval(async () => {
+        try {
+          const status = await api.getSyncStatus();
+          if (status.status === "running") {
+            setSyncProgress(`Syncing packages… ${status.synced}/${status.total}`);
+          } else {
+            clearInterval(poll);
+            setSyncProgress(null);
+            setIsSyncing(false);
+            if (status.status === "done") {
+              toast.success(`Updated ${status.synced} of ${status.total} packages`);
+            } else {
+              toast.error("Tracking sync failed");
+            }
+            refetch();
+          }
+        } catch {
+          clearInterval(poll);
+          setSyncProgress(null);
+          setIsSyncing(false);
         }
-      }
-      refetch();
+      }, 3000);
     } catch {
       toast.error("Failed to sync. Connect your email first.");
-    } finally {
       setIsSyncing(false);
     }
   };
@@ -100,7 +119,7 @@ function DashboardContent() {
           </Button>
           <Button onClick={handleFullSync} variant="outline" size="sm" disabled={busy} className="cursor-pointer">
             <RefreshCw className={`h-4 w-4 ${busy ? "animate-spin" : ""}`} />
-            {isSyncing ? "Syncing…" : "Sync All"}
+            {syncProgress || (isSyncing ? "Syncing…" : "Sync All")}
           </Button>
           <ScanSmsDialog open={scanOpen} onOpenChange={setScanOpen} />
         </div>

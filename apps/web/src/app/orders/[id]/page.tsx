@@ -50,14 +50,23 @@ export default function OrderDetailPage() {
     },
   });
 
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
   const deleteMutation = useMutation({
-    mutationFn: () => api.deleteOrder(id),
+    mutationFn: async () => {
+      const result = await api.deleteOrder(id);
+      return result;
+    },
     onSuccess: () => {
       toast.success("Order deleted");
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      router.push("/dashboard");
+      queryClient.invalidateQueries({ queryKey: ["packages"] });
+      router.push("/packages");
     },
-    onError: () => toast.error("Failed to delete order"),
+    onError: (err: any) => {
+      toast.error(err?.message ?? "Failed to delete order");
+      setConfirmDelete(false);
+    },
   });
 
   if (isLoading) {
@@ -146,19 +155,38 @@ export default function OrderDetailPage() {
             )}
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="shrink-0 text-muted-foreground hover:text-destructive cursor-pointer"
-          onClick={() => {
-            if (confirm("Delete this order and all its tracking data?")) {
-              deleteMutation.mutate();
-            }
-          }}
-          disabled={deleteMutation.isPending}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        {confirmDelete ? (
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-xs text-destructive font-medium">Delete?</span>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="h-7 px-2 text-xs cursor-pointer"
+              onClick={() => deleteMutation.mutate()}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Deleting…" : "Yes"}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs cursor-pointer"
+              onClick={() => setConfirmDelete(false)}
+              disabled={deleteMutation.isPending}
+            >
+              No
+            </Button>
+          </div>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="shrink-0 text-muted-foreground hover:text-destructive cursor-pointer"
+            onClick={() => setConfirmDelete(true)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       {/* Order info grid */}

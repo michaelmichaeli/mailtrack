@@ -115,6 +115,24 @@ export async function track17Batch(
   try {
     const page = await ctx.newPage();
 
+    // Block ads, trackers, and unnecessary resources to speed up loading
+    await page.route("**/*", (route) => {
+      const url = route.request().url();
+      const type = route.request().resourceType();
+      if (
+        type === "image" || type === "media" || type === "font" ||
+        url.includes("google-analytics") || url.includes("googlesyndication") ||
+        url.includes("doubleclick") || url.includes("adnxs") ||
+        url.includes("facebook") || url.includes("oneadtag") ||
+        url.includes("smaato") || url.includes("aidemsrv") ||
+        url.includes("adsense") || url.includes("adservice") ||
+        url.includes("tracker") || url.includes("rtb")
+      ) {
+        return route.abort();
+      }
+      return route.continue();
+    });
+
     // Intercept REST API responses
     page.on("response", async (response) => {
       if (!response.url().includes("track/restapi")) return;
@@ -134,21 +152,18 @@ export async function track17Batch(
 
     const nums = trackingNumbers.join(",");
     await page.goto(`https://t.17track.net/en#nums=${nums}`, {
-      timeout: 30000,
+      timeout: 20000,
       waitUntil: "domcontentloaded",
     });
 
-    // Wait for API responses - 17track polls multiple times
-    // Wait until we get results or timeout
-    const maxWait = 25000;
+    // Wait for API responses with shorter timeout
+    const maxWait = 20000;
     const startTime = Date.now();
     while (Date.now() - startTime < maxWait) {
-      await page.waitForTimeout(2000);
-      // Check if we got results for all numbers
+      await page.waitForTimeout(1500);
       const found = trackingNumbers.filter((n) => results.has(n)).length;
       if (found >= trackingNumbers.length) break;
-      // After 15s if we have at least some, stop waiting
-      if (Date.now() - startTime > 15000 && found > 0) break;
+      if (Date.now() - startTime > 12000 && found > 0) break;
     }
 
     await page.close();

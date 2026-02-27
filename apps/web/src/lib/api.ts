@@ -166,7 +166,11 @@ class ApiClient {
   }
 
   async syncAllTracking() {
-    return this.request<{ synced: number; errors: number; total: number }>("/packages/sync-all", { method: "POST" });
+    return this.request<{ success: boolean; status: string; synced: number; errors: number; total: number }>("/packages/sync-all", { method: "POST" });
+  }
+
+  async getSyncStatus() {
+    return this.request<{ status: string; synced: number; errors: number; total: number }>("/packages/sync-status");
   }
 
   async addPackage(data: { trackingNumber: string; carrier?: string; description?: string }) {
