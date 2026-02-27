@@ -463,25 +463,65 @@ export default function OrderDetailPage() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   {pickup.address && (
                     <div className="flex items-start gap-2.5">
                       <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Address</p>
-                        <p className="text-sm font-medium text-foreground mt-0.5 leading-relaxed flex items-start gap-1" dir="auto">
-                          <span className="flex-1">{pickup.address}</span>
+                        <p className="text-sm font-medium text-foreground mt-0.5 leading-relaxed flex items-start gap-1 break-words overflow-hidden" dir="auto">
+                          <span className="flex-1 break-words">{pickup.address}</span>
                           <CopyButton value={pickup.address} className="mt-0.5" />
                         </p>
                       </div>
                     </div>
                   )}
-                  {pickup.hours && (
+
+                  {pickup.phone && (
+                    <div className="flex items-start gap-2.5">
+                      <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                      <div>
+                        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Phone</p>
+                        <p className="text-sm font-medium text-foreground mt-0.5">
+                          <a href={`tel:${pickup.phone}`} className="hover:underline">{pickup.phone}</a>
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {(pickup.weekdayText || pickup.hours) && (
                     <div className="flex items-start gap-2.5">
                       <Clock className="h-4 w-4 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                      <div>
-                        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Opening Hours</p>
-                        <p className="text-sm font-medium text-foreground mt-0.5 leading-relaxed" dir="auto">{pickup.hours}</p>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Opening Hours</p>
+                          {pickup.openNow != null && (
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                              pickup.openNow
+                                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300"
+                                : "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300"
+                            }`}>
+                              {pickup.openNow ? "Open now" : "Closed"}
+                            </span>
+                          )}
+                        </div>
+                        {pickup.weekdayText ? (
+                          <div className="mt-1 space-y-0.5">
+                            {pickup.weekdayText.map((line: string, i: number) => {
+                              const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+                              const isToday = line.startsWith(today);
+                              return (
+                                <p key={i} className={`text-xs leading-relaxed ${
+                                  isToday ? "font-bold text-emerald-700 dark:text-emerald-300" : "text-muted-foreground"
+                                }`}>
+                                  {line}
+                                </p>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <p className="text-sm font-medium text-foreground mt-0.5 leading-relaxed whitespace-pre-line" dir="auto">{pickup.hours}</p>
+                        )}
                       </div>
                     </div>
                   )}

@@ -33,9 +33,25 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
       ];
     }
     if (params.dateFrom || params.dateTo) {
-      where.orderDate = {};
-      if (params.dateFrom) where.orderDate.gte = new Date(params.dateFrom);
-      if (params.dateTo) where.orderDate.lte = new Date(params.dateTo);
+      // Filter on orderDate OR createdAt (many gmail-parsed orders lack orderDate)
+      const dateFilter: any = {};
+      if (params.dateFrom) dateFilter.gte = new Date(params.dateFrom);
+      if (params.dateTo) dateFilter.lte = new Date(params.dateTo);
+      where.OR = [
+        ...(where.OR ?? []),
+        { orderDate: dateFilter },
+        { orderDate: null, createdAt: dateFilter },
+      ].length ? undefined : undefined;
+      // Use AND to combine with existing filters
+      where.AND = [
+        ...(where.AND ?? []),
+        {
+          OR: [
+            { orderDate: dateFilter },
+            { orderDate: null, createdAt: dateFilter },
+          ],
+        },
+      ];
     }
 
     const [items, total] = await Promise.all([
@@ -43,7 +59,7 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
         where,
         include: {
           packages: {
-            include: { events: { orderBy: { timestamp: "desc" }, take: 1 } },
+            include: { events: { orderBy: { timestamp: "asc" }, take: 1, select: { timestamp: true } } },
           },
         },
         orderBy: { updatedAt: "desc" },
@@ -56,12 +72,15 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
     return {
       items: items.map((o: Record<string, any>) => {
         const pkg = o.packages[0];
+        // Derive effective date: orderDate → earliest tracking event → createdAt
+        const earliestEventTime = pkg?.events?.[0]?.timestamp || null;
+        const effectiveDate = o.orderDate || earliestEventTime || o.createdAt;
         return {
           id: o.id,
           externalOrderId: o.externalOrderId,
           shopPlatform: o.shopPlatform,
           merchant: o.merchant,
-          orderDate: o.orderDate?.toISOString() ?? null,
+          orderDate: (effectiveDate || o.createdAt).toISOString(),
           totalAmount: o.totalAmount,
           currency: o.currency,
           items: o.items,
@@ -158,7 +177,7 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(404).send({ error: "Package not found" });
     }
 
-    const result = await trackPackage(pkg.trackingNumber, pkg.carrier as any);
+    const result = await trackPackage(pkg.trackingNumber, pkg.carrier as any, true);
 
     if (result) {
       await syncPackageFromResult(app.prisma, id, result);
@@ -167,11 +186,14 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
     return { success: true, updated: !!result };
   });
 
-  // POST /api/packages/sync-all — Refresh all non-delivered packages from Cainiao
+  // POST /api/packages/sync-all — Refresh all packages via 17track batch + Cainiao fallback
   app.post("/sync-all", {
     preHandler: [app.authenticate],
   }, async (request) => {
     const userId = request.user.userId;
+    const { clearRateLimits } = await import("../services/tracking.service.js");
+    const { track17Batch, convert17TrackResult, closeBrowser } = await import("../services/tracking17.service.js");
+    clearRateLimits();
 
     const packages = await app.prisma.package.findMany({
       where: { order: { userId } },
@@ -181,20 +203,70 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
     let synced = 0;
     let errors = 0;
 
-    // Process sequentially with 1.5s delay to avoid rate limiting
-    for (const pkg of packages) {
+    // Process in batches of 5 via 17track (browser-based, more reliable)
+    const batchSize = 5;
+    for (let i = 0; i < packages.length; i += batchSize) {
+      const batch = packages.slice(i, i + batchSize);
+      const trackingNumbers = batch.map((p) => p.trackingNumber);
+
       try {
-        const result = await trackPackage(pkg.trackingNumber, pkg.carrier as any);
-        if (result) {
-          await syncPackageFromResult(app.prisma, pkg.id, result);
-          synced++;
+        console.log(`[sync-all] 17track batch ${Math.floor(i / batchSize) + 1}: ${trackingNumbers.join(", ")}`);
+        const results = await track17Batch(trackingNumbers);
+
+        for (const pkg of batch) {
+          const shipment = results.get(pkg.trackingNumber);
+          if (shipment?.shipment) {
+            const result = convert17TrackResult(shipment, pkg.carrier as any);
+            await syncPackageFromResult(app.prisma, pkg.id, result);
+            synced++;
+            console.log(`[sync-all] ✓ ${pkg.trackingNumber}: ${result.events.length} events`);
+          } else {
+            // Fallback to direct tracking for missed numbers
+            try {
+              const fallback = await trackPackage(pkg.trackingNumber, pkg.carrier as any, true);
+              if (fallback) {
+                await syncPackageFromResult(app.prisma, pkg.id, fallback);
+                synced++;
+                console.log(`[sync-all] ✓ ${pkg.trackingNumber} (fallback): ${fallback.events.length} events`);
+              }
+            } catch (e) {
+              console.error(`[sync-all] Fallback failed for ${pkg.trackingNumber}:`, e);
+            }
+          }
         }
-      } catch (e) {
+      } catch (e: any) {
         errors++;
-        console.error(`[sync-all] Error syncing ${pkg.trackingNumber}:`, e);
+        console.error(`[sync-all] Batch error:`, e?.message);
       }
-      // Delay between requests to avoid Cainiao rate limiting
-      await new Promise((r) => setTimeout(r, 1500));
+
+      // Small delay between batches
+      if (i + batchSize < packages.length) {
+        await new Promise((r) => setTimeout(r, 2000));
+      }
+    }
+
+    // Clean up browser
+    try { await closeBrowser(); } catch {}
+
+    // Enrich pickup locations missing hours via Google Places API
+    try {
+      const { enrichPickupLocation } = await import("../services/places.service.js");
+      const pkgsWithPickup = await app.prisma.package.findMany({
+        where: { order: { userId }, pickupLocation: { not: null } },
+        select: { id: true, pickupLocation: true, trackingNumber: true },
+      });
+      for (const p of pkgsWithPickup) {
+        const pickup = typeof p.pickupLocation === "string" ? JSON.parse(p.pickupLocation) : p.pickupLocation;
+        if (pickup && !pickup.hours && (pickup.name || pickup.address)) {
+          const enriched = await enrichPickupLocation(pickup);
+          if (enriched && enriched.hours) {
+            await app.prisma.package.update({ where: { id: p.id }, data: { pickupLocation: JSON.stringify(enriched) } });
+            console.log(`[sync-all] Enriched pickup for ${p.trackingNumber}: ${enriched.name}`);
+          }
+        }
+      }
+    } catch (e: any) {
+      console.error("[sync-all] Pickup enrichment error:", e?.message);
     }
 
     return { success: true, synced, errors, total: packages.length };
@@ -325,14 +397,25 @@ async function syncPackageFromResult(prisma: any, packageId: string, result: any
   });
   const oldStatus = currentPkg?.status;
 
-  // Update package status and location
+  // Update package status, location, pickup info, and estimated delivery
+  const updateData: any = {
+    status: result.status as any,
+    ...(result.estimatedDelivery ? { estimatedDelivery: new Date(result.estimatedDelivery) } : {}),
+    ...(result.lastLocation ? { lastLocation: result.lastLocation } : {}),
+  };
+  // Save pickup location if available from carrier — enrich with Google Places data
+  if (result.pickupLocation && (result.pickupLocation.address || result.pickupLocation.pickupCode)) {
+    try {
+      const { enrichPickupLocation } = await import("../services/places.service.js");
+      const enriched = await enrichPickupLocation(result.pickupLocation);
+      updateData.pickupLocation = JSON.stringify(enriched);
+    } catch {
+      updateData.pickupLocation = JSON.stringify(result.pickupLocation);
+    }
+  }
   await prisma.package.update({
     where: { id: packageId },
-    data: {
-      status: result.status as any,
-      ...(result.estimatedDelivery ? { estimatedDelivery: new Date(result.estimatedDelivery) } : {}),
-      ...(result.lastLocation ? { lastLocation: result.lastLocation } : {}),
-    },
+    data: updateData,
   });
 
   // Send push notification if status changed
@@ -351,7 +434,7 @@ async function syncPackageFromResult(prisma: any, packageId: string, result: any
     }
   }
 
-  // Upsert events — deduplicate by timestamp (within 2 seconds)
+  // Upsert events — deduplicate by timestamp (within 2 seconds) or upgrade generic email events
   for (const event of result.events) {
     const eventTime = new Date(event.timestamp);
     const windowStart = new Date(eventTime.getTime() - 2000);
@@ -366,15 +449,42 @@ async function syncPackageFromResult(prisma: any, packageId: string, result: any
     });
 
     if (!exists) {
-      await prisma.trackingEvent.create({
-        data: {
+      // Check if there's a generic email-sourced event at a similar time (within 6 hours)
+      // that we can upgrade with richer carrier data
+      const genericWindow = 6 * 60 * 60 * 1000;
+      const genericEvent = await prisma.trackingEvent.findFirst({
+        where: {
           packageId,
-          timestamp: eventTime,
-          location: event.location,
           status: event.status as any,
-          description: event.description,
+          location: null,
+          timestamp: {
+            gte: new Date(eventTime.getTime() - genericWindow),
+            lte: new Date(eventTime.getTime() + genericWindow),
+          },
         },
       });
+
+      if (genericEvent && event.location) {
+        // Upgrade the generic event with richer data
+        await prisma.trackingEvent.update({
+          where: { id: genericEvent.id },
+          data: {
+            timestamp: eventTime,
+            location: event.location,
+            description: event.description,
+          },
+        });
+      } else {
+        await prisma.trackingEvent.create({
+          data: {
+            packageId,
+            timestamp: eventTime,
+            location: event.location,
+            status: event.status as any,
+            description: event.description,
+          },
+        });
+      }
     }
   }
 }

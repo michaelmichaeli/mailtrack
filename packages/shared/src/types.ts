@@ -104,6 +104,14 @@ export interface CarrierTrackingResult {
   estimatedDelivery: string | null;
   lastLocation: string | null;
   events: CarrierTrackingEvent[];
+  pickupLocation?: {
+    name?: string | null;
+    address?: string | null;
+    hours?: string | null;
+    pickupCode?: string | null;
+  } | null;
+  originCountry?: string | null;
+  destCountry?: string | null;
 }
 
 export interface CarrierTrackingEvent {

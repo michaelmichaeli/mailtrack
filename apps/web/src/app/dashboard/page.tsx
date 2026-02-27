@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { PackageCard } from "@/components/packages/package-card";
@@ -23,10 +24,22 @@ const TIME_PERIODS = [
   { value: "all", label: "All time" },
 ];
 
-export default function DashboardPage() {
+function DashboardContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const initialPeriod = searchParams.get("period") ?? "30d";
   const [isSyncing, setIsSyncing] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
-  const [period, setPeriod] = useState("30d");
+  const [period, setPeriod] = useState(initialPeriod);
+
+  // Persist period to URL
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (period && period !== "30d") params.set("period", period);
+    const qs = params.toString();
+    router.replace(qs ? `?${qs}` : "/dashboard", { scroll: false });
+  }, [period, router]);
+
   const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["dashboard", period],
     queryFn: () => api.getDashboard(period),
@@ -195,5 +208,13 @@ export default function DashboardPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense>
+      <DashboardContent />
+    </Suspense>
   );
 }

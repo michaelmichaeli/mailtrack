@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect, Suspense } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { PackageCard } from "@/components/packages/package-card";
 import { EmptyState } from "@/components/packages/empty-state";
@@ -33,11 +33,24 @@ const TIME_PERIODS = [
 
 function PackagesContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const initialStatus = searchParams.get("status") ?? "";
-  const [query, setQuery] = useState("");
+  const initialPeriod = searchParams.get("period") ?? "30d";
+  const initialQuery = searchParams.get("q") ?? "";
+  const [query, setQuery] = useState(initialQuery);
   const [status, setStatus] = useState(initialStatus);
-  const [period, setPeriod] = useState("30d");
+  const [period, setPeriod] = useState(initialPeriod);
   const observerRef = useRef<HTMLDivElement>(null);
+
+  // Sync filters to URL search params so they survive refresh
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    if (status) params.set("status", status);
+    if (period && period !== "30d") params.set("period", period);
+    const qs = params.toString();
+    router.replace(qs ? `?${qs}` : "/packages", { scroll: false });
+  }, [query, status, period, router]);
 
   const {
     data,
@@ -158,10 +171,14 @@ function PackagesContent() {
             ))}
           </div>
 
-          {/* Infinite scroll trigger */}
-          <div ref={observerRef} className="flex justify-center py-4">
+          {/* Infinite scroll trigger with loading skeletons */}
+          <div ref={observerRef} className="py-2">
             {isFetchingNextPage && (
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 grid-catalog mt-1">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <PackageCardSkeleton key={`loading-${i}`} />
+                ))}
+              </div>
             )}
           </div>
         </>

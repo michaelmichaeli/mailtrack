@@ -1,11 +1,12 @@
 import type { CarrierTrackingResult, CarrierTrackingEvent } from "@mailtrack/shared";
 import { PackageStatus, Carrier } from "@mailtrack/shared";
+import { track17Single } from "./tracking17.service.js";
 
 const CAINIAO_API = "https://global.cainiao.com/global/detail.json";
 
 // Rate limit: track last fetch time per tracking number
 const lastFetchMap = new Map<string, number>();
-const RATE_LIMIT_MS = 5 * 60 * 1000; // 5 minutes between fetches per tracking number
+const RATE_LIMIT_MS = 2 * 60 * 1000; // 2 minutes between fetches per tracking number
 
 // Cainiao status → our status
 const CAINIAO_STATUS_MAP: Record<string, PackageStatus> = {
@@ -72,25 +73,58 @@ function cleanDescription(desc: string): string {
  * Track a package using Cainiao's public API (no API key required).
  * Works for AliExpress Standard, Cainiao, and most China-origin packages.
  */
+/** Clear rate limit cache (e.g. before a manual full sync) */
+export function clearRateLimits() {
+  lastFetchMap.clear();
+}
+
 export async function trackPackage(
   trackingNumber: string,
-  carrier: Carrier
+  carrier: Carrier,
+  skipRateLimit = false
 ): Promise<CarrierTrackingResult | null> {
   // Rate limiting per tracking number
-  const lastFetch = lastFetchMap.get(trackingNumber);
-  if (lastFetch && Date.now() - lastFetch < RATE_LIMIT_MS) {
-    console.log(`[tracking] Rate limited: ${trackingNumber} (fetched ${Math.round((Date.now() - lastFetch) / 1000)}s ago)`);
-    return null;
+  if (!skipRateLimit) {
+    const lastFetch = lastFetchMap.get(trackingNumber);
+    if (lastFetch && Date.now() - lastFetch < RATE_LIMIT_MS) {
+      console.log(`[tracking] Rate limited: ${trackingNumber} (fetched ${Math.round((Date.now() - lastFetch) / 1000)}s ago)`);
+      return null;
+    }
   }
 
+  // Try 17track first (works for 2000+ carriers via browser scraping)
+  try {
+    console.log(`[tracking] Trying 17track for ${trackingNumber}...`);
+    const result17 = await track17Single(trackingNumber, carrier);
+    if (result17 && result17.events.length > 0) {
+      console.log(`[tracking] 17track: ${result17.events.length} events for ${trackingNumber}`);
+      lastFetchMap.set(trackingNumber, Date.now());
+      return result17;
+    }
+    console.log(`[tracking] 17track: no data for ${trackingNumber}, trying Cainiao...`);
+  } catch (error: any) {
+    console.error(`[tracking] 17track error for ${trackingNumber}:`, error?.message);
+  }
+
+  // Fallback to Cainiao direct API
+  return trackPackageCainiao(trackingNumber, carrier);
+}
+
+/** Track via Cainiao direct API (fallback) */
+async function trackPackageCainiao(
+  trackingNumber: string,
+  carrier: Carrier,
+): Promise<CarrierTrackingResult | null> {
   try {
     const url = `${CAINIAO_API}?mailNos=${encodeURIComponent(trackingNumber)}&lang=en-US`;
     const response = await fetch(url, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-        Accept: "application/json",
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        Accept: "application/json, text/javascript, */*; q=0.01",
+        "Accept-Language": "en-US,en;q=0.9",
+        Referer: "https://global.cainiao.com/detail.htm",
       },
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!response.ok) {
@@ -105,8 +139,15 @@ export async function trackPackage(
     }
 
     const data: any = await response.json();
+
+    // Detect Cainiao rate-limit / captcha response
+    if (data?.ret?.[0] === "FAIL_SYS_USER_VALIDATE") {
+      console.error(`[tracking] Cainiao captcha/rate-limit for ${trackingNumber}`);
+      return null;
+    }
+
     if (!data?.success || !data?.module?.[0]) {
-      console.error(`[tracking] Cainiao: no data for ${trackingNumber}`);
+      console.error(`[tracking] Cainiao: no data for ${trackingNumber}`, data?.ret);
       return null;
     }
 
@@ -135,13 +176,39 @@ export async function trackPackage(
     // Determine last known location from latest event with a location
     const lastLocation = events.find((e) => e.location)?.location ?? null;
 
+    // Extract pickup info from Cainiao data
+    let pickupLocation: any = null;
+    const pickupEvent = detailList.find((e: any) =>
+      e.actionCode?.includes("PICKUP") || e.actionCode?.includes("INFORM_BUYER") ||
+      e.actionCode?.includes("SIGNED") || e.actionCode === "GTMS_STA_SIGNED_DELIVER"
+    );
+    if (module.pickupInfo || module.cpInfo) {
+      const info = module.pickupInfo || module.cpInfo;
+      pickupLocation = {
+        address: info.address || info.cpAddress || null,
+        hours: info.openTime || info.workTime || null,
+        pickupCode: info.pickupCode || info.cpCode || null,
+        name: info.cpName || info.stationName || null,
+      };
+    }
+
+    // Extract estimated delivery from Cainiao
+    const estimatedDelivery = module.estimatedDeliveryDate
+      ? new Date(module.estimatedDeliveryDate).toISOString()
+      : module.latestDeliveryDate
+      ? new Date(module.latestDeliveryDate).toISOString()
+      : null;
+
     return {
       trackingNumber,
       carrier,
       status: overallStatus,
-      estimatedDelivery: null,
+      estimatedDelivery,
       lastLocation,
       events,
+      pickupLocation,
+      originCountry: module.originCountry ?? null,
+      destCountry: module.destCountry ?? null,
     };
   } catch (error: any) {
     console.error(`[tracking] Error fetching ${trackingNumber}:`, error?.message ?? error);
