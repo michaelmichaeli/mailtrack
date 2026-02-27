@@ -106,7 +106,7 @@ export default function OnboardingPage() {
           {step === "connect-shops" && (
             <>
               {syncResult && (
-                <div className="rounded-lg bg-green-50 dark:bg-green-900/20 p-4 text-center mb-4">
+                <div className="rounded-lg p-4 text-center mb-4" style={{ backgroundColor: '#f0fdf4' }}>
                   <Check className="h-8 w-8 text-green-500 mx-auto mb-2" />
                   <p className="text-sm font-medium">
                     Found {syncResult.ordersCreated} orders from {syncResult.emailsParsed} emails

@@ -14,17 +14,17 @@ interface TrackingTimelineProps {
   events: TrackingEvent[];
 }
 
-const statusColors: Record<string, { dot: string; ring: string; badge: string }> = {
-  DELIVERED:        { dot: "bg-emerald-500", ring: "ring-emerald-500/20", badge: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
-  OUT_FOR_DELIVERY: { dot: "bg-violet-500",  ring: "ring-violet-500/20",  badge: "bg-violet-500/15 text-violet-600 dark:text-violet-400" },
-  IN_TRANSIT:       { dot: "bg-indigo-500",  ring: "ring-indigo-500/20",  badge: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400" },
-  SHIPPED:          { dot: "bg-blue-500",    ring: "ring-blue-500/20",    badge: "bg-blue-500/15 text-blue-600 dark:text-blue-400" },
-  PROCESSING:       { dot: "bg-slate-400",   ring: "ring-slate-400/20",   badge: "bg-slate-500/15 text-slate-600 dark:text-slate-400" },
-  EXCEPTION:        { dot: "bg-amber-500",   ring: "ring-amber-500/20",   badge: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
-  RETURNED:         { dot: "bg-red-500",     ring: "ring-red-500/20",     badge: "bg-red-500/15 text-red-600 dark:text-red-400" },
+const statusColors: Record<string, { dot: string; ring: string; badgeStyle: { backgroundColor: string; color: string } }> = {
+  DELIVERED:        { dot: "bg-emerald-500", ring: "ring-emerald-500/20", badgeStyle: { backgroundColor: '#d1fae5', color: '#047857' } },
+  OUT_FOR_DELIVERY: { dot: "bg-violet-500",  ring: "ring-violet-500/20",  badgeStyle: { backgroundColor: '#ede9fe', color: '#6d28d9' } },
+  IN_TRANSIT:       { dot: "bg-indigo-500",  ring: "ring-indigo-500/20",  badgeStyle: { backgroundColor: '#e0e7ff', color: '#4338ca' } },
+  SHIPPED:          { dot: "bg-blue-500",    ring: "ring-blue-500/20",    badgeStyle: { backgroundColor: '#dbeafe', color: '#1d4ed8' } },
+  PROCESSING:       { dot: "bg-slate-400",   ring: "ring-slate-400/20",   badgeStyle: { backgroundColor: '#f1f5f9', color: '#334155' } },
+  EXCEPTION:        { dot: "bg-amber-500",   ring: "ring-amber-500/20",   badgeStyle: { backgroundColor: '#fef3c7', color: '#92400e' } },
+  RETURNED:         { dot: "bg-red-500",     ring: "ring-red-500/20",     badgeStyle: { backgroundColor: '#fee2e2', color: '#b91c1c' } },
 };
 
-const defaultColors = { dot: "bg-muted-foreground", ring: "ring-muted-foreground/20", badge: "bg-muted text-muted-foreground" };
+const defaultColors = { dot: "bg-muted-foreground", ring: "ring-muted-foreground/20", badgeStyle: { backgroundColor: '#f1f5f9', color: '#64748b' } };
 
 function formatStatus(s: string): string {
   return s.toLowerCase().replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
@@ -32,7 +32,7 @@ function formatStatus(s: string): string {
 
 function TimelineRow({ event, isFirst, isLast, colors }: {
   event: TrackingEvent; isFirst: boolean; isLast: boolean;
-  colors: { dot: string; ring: string; badge: string };
+  colors: { dot: string; ring: string; badgeStyle: { backgroundColor: string; color: string } };
 }) {
   const dt = new Date(event.timestamp);
   return (
@@ -60,7 +60,7 @@ function TimelineRow({ event, isFirst, isLast, colors }: {
           {event.description}
         </p>
         <div className="flex flex-wrap items-center gap-2 mt-1">
-          <span className={cn("inline-block rounded-full px-2 py-px text-[10px] font-medium", colors.badge)}>
+          <span className="inline-block rounded-full px-2 py-px text-[10px] font-medium" style={colors.badgeStyle}>
             {formatStatus(event.status)}
           </span>
           {event.location && (

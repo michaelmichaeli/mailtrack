@@ -148,7 +148,7 @@ export function ScanSmsDialog({ open, onOpenChange }: ScanSmsDialogProps) {
                       </div>
                     </div>
                     {r.alreadyTracked || r.added ? (
-                      <Badge variant="outline" className="shrink-0 gap-1 text-green-600 border-green-200 dark:border-green-800">
+                      <Badge variant="outline" className="shrink-0 gap-1" style={{ color: '#047857', borderColor: '#16a34a' }}>
                         <Check className="h-3 w-3" />
                         {r.added ? "Added" : "Tracked"}
                       </Badge>

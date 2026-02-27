@@ -166,14 +166,14 @@ function SettingsContent() {
       </div>
 
       {successParam && (
-        <div className="flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+        <div className="flex items-start gap-2 rounded-lg border p-3 text-sm" style={{ borderColor: '#16a34a', backgroundColor: '#f0fdf4', color: '#166534' }}>
           <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" />
           <span>{successParam}</span>
         </div>
       )}
 
       {errorParam && (
-        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+        <div className="flex items-start gap-2 rounded-lg border p-3 text-sm" style={{ borderColor: '#f59e0b', backgroundColor: '#fffbeb', color: '#92400e' }}>
           <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
           <span>{errorParam}</span>
         </div>
@@ -649,7 +649,7 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
         </div>
 
         {isSubscribed && (
-          <div className="rounded-lg border border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/20 p-3 text-xs text-green-700 dark:text-green-300">
+          <div className="rounded-lg border p-3 text-xs" style={{ borderColor: '#16a34a', backgroundColor: '#f0fdf4', color: '#166534' }}>
             <p className="flex items-center gap-1.5">
               <CheckCircle2 className="h-3.5 w-3.5" />
               Push notifications are active. You&apos;ll be notified when any tracked package changes status (shipped, in transit, delivered, etc.)
@@ -725,14 +725,14 @@ function StoreImportSection() {
           ))}
         </div>
 
-        <div className="rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20 p-3 text-xs text-blue-700 dark:text-blue-300 space-y-1">
+        <div className="rounded-lg border p-3 text-xs space-y-1" style={{ borderColor: '#3b82f6', backgroundColor: '#eff6ff', color: '#1e40af' }}>
           <p className="font-medium flex items-center gap-1.5">
             <CheckCircle2 className="h-3.5 w-3.5" /> How it works
           </p>
           <p>Connect your Gmail above → we scan for order confirmations and shipping notifications → tracking starts automatically. No store login needed.</p>
         </div>
 
-        <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20 p-3 text-xs text-amber-700 dark:text-amber-300 space-y-1">
+        <div className="rounded-lg border p-3 text-xs space-y-1" style={{ borderColor: '#f59e0b', backgroundColor: '#fffbeb', color: '#92400e' }}>
           <p className="font-medium flex items-center gap-1.5">
             <AlertCircle className="h-3.5 w-3.5" /> Why not connect stores directly?
           </p>

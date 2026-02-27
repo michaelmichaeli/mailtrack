@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { getCarrierTrackingUrl, getCarrierDisplayName } from "@/lib/carrier-urls";
 import { CopyButton } from "@/components/ui/copy-button";
+import { PageTransition, FadeIn } from "@/components/ui/motion";
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -462,28 +463,28 @@ export default function OrderDetailPage() {
           if (!pickup) return null;
 
           return (
-            <Card className="overflow-hidden border-emerald-200 dark:border-emerald-800/50">
-              <div className="bg-emerald-50 dark:bg-emerald-950/30 px-5 py-4 border-b border-emerald-200 dark:border-emerald-800/50">
+            <Card className="overflow-hidden shadow-sm" style={{ borderColor: '#047857' }}>
+              <div className="px-5 py-4 border-b" style={{ backgroundColor: '#047857', borderColor: '#065f46' }}>
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500">
-                    <Navigation className="h-4 w-4 text-white" />
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
+                    <Navigation className="h-4 w-4" style={{ color: '#ffffff' }} />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200">📦 Ready for Pickup</p>
-                    <p className="text-xs text-emerald-600/80 dark:text-emerald-400/70">Your package is waiting at the location below</p>
+                    <p className="text-sm font-bold" style={{ color: '#ffffff' }}>📦 Ready for Pickup</p>
+                    <p className="text-xs" style={{ color: '#d1fae5' }}>Your package is waiting at the location below</p>
                   </div>
                 </div>
               </div>
 
               <CardContent className="p-5 space-y-4">
                 {pickup.pickupCode && (
-                  <div className="flex items-center gap-3 p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/50 shrink-0">
-                      <KeyRound className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                  <div className="flex items-center gap-3 p-3.5 rounded-xl bg-muted border border-border">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl shrink-0" style={{ backgroundColor: '#047857' }}>
+                      <KeyRound className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <p className="text-[11px] font-medium uppercase tracking-wider text-emerald-600/70 dark:text-emerald-400/70">Pickup Code</p>
-                      <p className="text-lg font-mono font-black text-emerald-700 dark:text-emerald-300 tracking-widest flex items-center gap-2">
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Pickup Code</p>
+                      <p className="text-lg font-mono font-black text-foreground tracking-widest flex items-center gap-2">
                         {pickup.pickupCode}
                         <CopyButton value={pickup.pickupCode} />
                       </p>
@@ -494,7 +495,7 @@ export default function OrderDetailPage() {
                 <div className="grid grid-cols-1 gap-4">
                   {pickup.address && (
                     <div className="flex items-start gap-2.5">
-                      <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                      <MapPin className="h-4 w-4 mt-0.5 shrink-0" style={{ color: '#047857' }} />
                       <div className="min-w-0 flex-1">
                         <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Address</p>
                         <p className="text-sm font-medium text-foreground mt-0.5 leading-relaxed flex items-start gap-1 break-words overflow-hidden" dir="auto">
@@ -507,7 +508,7 @@ export default function OrderDetailPage() {
 
                   {pickup.phone && (
                     <div className="flex items-start gap-2.5">
-                      <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                      <MapPin className="h-4 w-4 mt-0.5 shrink-0" style={{ color: '#047857' }} />
                       <div>
                         <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Phone</p>
                         <p className="text-sm font-medium text-foreground mt-0.5">
@@ -519,16 +520,16 @@ export default function OrderDetailPage() {
 
                   {(pickup.weekdayText || pickup.hours) && (
                     <div className="flex items-start gap-2.5">
-                      <Clock className="h-4 w-4 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                      <Clock className="h-4 w-4 mt-0.5 shrink-0" style={{ color: '#047857' }} />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Opening Hours</p>
                           {pickup.openNow != null && (
-                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={
                               pickup.openNow
-                                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300"
-                                : "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300"
-                            }`}>
+                                ? { backgroundColor: '#047857', color: '#ffffff' }
+                                : { backgroundColor: '#b91c1c', color: '#ffffff' }
+                            }>
                               {pickup.openNow ? "Open now" : "Closed"}
                             </span>
                           )}
@@ -540,7 +541,7 @@ export default function OrderDetailPage() {
                               const isToday = line.startsWith(today);
                               return (
                                 <p key={i} className={`text-xs leading-relaxed ${
-                                  isToday ? "font-bold text-emerald-700 dark:text-emerald-300" : "text-muted-foreground"
+                                  isToday ? "font-bold text-foreground" : "text-secondary-foreground"
                                 }`}>
                                   {line}
                                 </p>
@@ -570,7 +571,7 @@ export default function OrderDetailPage() {
               </CardContent>
 
               {pickup.address && (
-                <div className="border-t border-emerald-200 dark:border-emerald-800/50">
+                <div className="border-t border-border">
                   <iframe
                     src={`https://maps.google.com/maps?q=${encodeURIComponent(pickup.address)}&output=embed&z=15`}
                     className="w-full h-56"
@@ -585,7 +586,7 @@ export default function OrderDetailPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <Button variant="outline" size="sm" className="w-full text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/30">
+                      <Button variant="outline" size="sm" className="w-full font-medium">
                         <Navigation className="h-3.5 w-3.5" />
                         Get Directions
                       </Button>

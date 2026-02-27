@@ -62,7 +62,7 @@ export function PackageCard({ order }: OrderCardProps) {
 
   return (
     <Link href={`/orders/${order.id}`}>
-      <Card className="flex flex-col h-full p-4 hover:shadow-md hover:border-primary/20 transition-all cursor-pointer group">
+      <Card className="flex flex-col h-full p-4 hover:shadow-lg hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group">
         {/* Row 1: Merchant + badge */}
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -110,11 +110,11 @@ export function PackageCard({ order }: OrderCardProps) {
 
         {/* Pickup location banner */}
         {pickup && (
-          <div className="flex items-start gap-2 mb-3 px-2.5 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40">
-            <Navigation className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-2 mb-3 px-2.5 py-2 rounded-lg border" style={{ backgroundColor: '#047857', borderColor: '#065f46' }}>
+            <Navigation className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: '#ffffff' }} />
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300">Ready for pickup</p>
-              <p className="text-[11px] text-emerald-600/80 dark:text-emerald-400/70 truncate">{pickup.address}</p>
+              <p className="text-xs font-medium" style={{ color: '#ffffff' }}>Ready for pickup</p>
+              <p className="text-[11px] truncate" style={{ color: '#d1fae5' }}>{pickup.address}</p>
             </div>
           </div>
         )}

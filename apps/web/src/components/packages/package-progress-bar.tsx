@@ -41,7 +41,7 @@ export function PackageProgressBar({ status, className }: PackageProgressBarProp
               <div
                 className={cn(
                   "flex h-5 w-5 items-center justify-center rounded-full border-2 transition-colors shrink-0",
-                  isException && isCurrent && "border-amber-400 bg-amber-50 dark:bg-amber-900/30",
+                  isException && isCurrent && "border-[#f59e0b]",
                   !isException && isCompleted && "border-primary bg-primary",
                   !isException && isCurrent && "border-primary bg-primary/10 dark:bg-primary/20",
                   !isException && !isCompleted && !isCurrent && "border-border bg-card"
@@ -58,7 +58,7 @@ export function PackageProgressBar({ status, className }: PackageProgressBarProp
                   <div
                     className={cn(
                       "h-0.5 w-full rounded-full transition-colors",
-                      isException && index < 2 ? "bg-amber-300 dark:bg-amber-600" :
+                      isException && index < 2 ? "bg-[#fcd34d]" :
                       isCompleted ? "bg-primary" : "bg-border"
                     )}
                   />
