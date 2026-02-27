@@ -273,7 +273,7 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
       where: { trackingNumber: tn, order: { userId } },
     });
     if (existing) {
-      return reply.status(409).send({ error: "Package already tracked", packageId: existing.id, orderId: existing.orderId });
+      return { success: true, alreadyExists: true, orderId: existing.orderId, packageId: existing.id };
     }
 
     // Auto-detect carrier if not provided

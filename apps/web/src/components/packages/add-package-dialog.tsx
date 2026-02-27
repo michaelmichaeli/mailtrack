@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { Package, Search, Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 const CARRIERS = [
   { value: "", label: "Auto-detect" },
@@ -46,6 +48,7 @@ export function AddPackageDialog() {
   const [carrier, setCarrier] = useState("");
   const [description, setDescription] = useState("");
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -54,13 +57,19 @@ export function AddPackageDialog() {
         carrier: carrier || undefined,
         description: description || undefined,
       }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["packages"] });
       setOpen(false);
       setTrackingNumber("");
       setCarrier("");
       setDescription("");
+      if (data.alreadyExists) {
+        toast.info("Package is already being tracked");
+      } else {
+        toast.success("Package added successfully");
+      }
+      router.push(`/orders/${data.orderId}`);
     },
   });
 
