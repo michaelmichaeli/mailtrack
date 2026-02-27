@@ -317,9 +317,9 @@ function ScanMessagesSection() {
   const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002";
   const webhookUrl = `${API_BASE}/api/ingest/sms`;
 
-  useState(() => {
+  useEffect(() => {
     api.getIngestKey().then((r) => { setIngestKey(r.key); setLoading(false); }).catch(() => setLoading(false));
-  });
+  }, []);
 
   const handleGenerate = async () => {
     setGenerating(true);
@@ -500,15 +500,18 @@ function ScanMessagesSection() {
 
 function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs: any; updateNotifications: any }) {
   const [pushState, setPushState] = useState<"idle" | "subscribing" | "unsubscribing">("idle");
-  const [pushSupported, setPushSupported] = useState(true);
+  const [pushSupported, setPushSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  // Check if browser supports push and if already subscribed
-  useState(() => {
-    if (typeof window === "undefined" || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+  // Check if browser supports push and if already subscribed (client-only)
+  useEffect(() => {
+    setMounted(true);
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       setPushSupported(false);
       return;
     }
+    setPushSupported(true);
     navigator.serviceWorker.getRegistration().then((reg) => {
       if (reg) {
         reg.pushManager.getSubscription().then((sub) => {
@@ -516,7 +519,7 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
         });
       }
     });
-  });
+  }, []);
 
   const handleSubscribe = async () => {
     setPushState("subscribing");
@@ -602,14 +605,16 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
           <div>
             <p className="text-sm font-medium text-foreground">Push notifications</p>
             <p className="text-xs text-muted-foreground">
-              {!pushSupported
+              {!mounted
+                ? "Checking browser support…"
+                : !pushSupported
                 ? "Not supported in this browser"
                 : isSubscribed
                 ? "Enabled — you'll get notified on status changes"
                 : "Get browser notifications when packages update"}
             </p>
           </div>
-          {pushSupported && (
+          {mounted && pushSupported && (
             <Button
               variant={isSubscribed ? "outline" : "default"}
               size="sm"
