@@ -3,7 +3,7 @@ RUN apk add --no-cache openssl
 
 FROM base AS builder
 WORKDIR /app
-COPY package.json turbo.json ./
+COPY package.json turbo.json tsconfig.json ./
 COPY apps/api/package.json ./apps/api/
 COPY packages/shared/package.json ./packages/shared/
 RUN npm install --ignore-scripts && npx prisma --version
