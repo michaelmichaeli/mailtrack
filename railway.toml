@@ -1,7 +1,6 @@
 [build]
 builder = "DOCKERFILE"
-dockerfilePath = "Dockerfile"
-dockerTarget = "api"
+dockerfilePath = "Dockerfile.api"
 
 [deploy]
 startCommand = "sh -c 'npx prisma db push --schema=apps/api/prisma/schema.prisma --skip-generate && node apps/api/dist/server.js'"
