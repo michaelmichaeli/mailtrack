@@ -118,6 +118,14 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
           if (parsed.orderDate && !existingOrder.orderDate) {
             updateData.orderDate = new Date(parsed.orderDate);
           }
+          // Upgrade merchant if currently unknown
+          if (parsed.merchant && (!existingOrder.merchant || existingOrder.merchant === "Unknown")) {
+            updateData.merchant = parsed.merchant;
+          }
+          // Upgrade platform if currently unknown
+          if (parsed.platform && parsed.platform !== "UNKNOWN" && existingOrder.shopPlatform === "UNKNOWN") {
+            updateData.shopPlatform = parsed.platform;
+          }
           // If the existing order has a gmail- ID but we now have a real order ID, upgrade it
           if (parsed.orderId && existingOrder.externalOrderId.startsWith("gmail-")) {
             updateData.externalOrderId = parsed.orderId;
@@ -209,7 +217,6 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
             packageId = existingPkg.id;
             const updateData: any = {};
             if (parsed.status) {
-              // Update package status if we have newer info
               const statusOrder = ["ORDERED", "PROCESSING", "SHIPPED", "IN_TRANSIT", "OUT_FOR_DELIVERY", "DELIVERED"];
               const currentIdx = statusOrder.indexOf(existingPkg.status);
               const newIdx = statusOrder.indexOf(parsed.status);
@@ -217,13 +224,24 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
                 updateData.status = parsed.status;
               }
             }
-            // Merge items into existing package
-            if (parsed.items.length > 0 && !existingPkg.items) {
-              updateData.items = JSON.stringify(parsed.items);
+            // Merge items: append new items not already present
+            if (parsed.items.length > 0) {
+              const existing: string[] = existingPkg.items ? JSON.parse(existingPkg.items) : [];
+              const merged = [...existing];
+              for (const item of parsed.items) {
+                if (!merged.some(e => e === item)) merged.push(item);
+              }
+              if (merged.length > existing.length) {
+                updateData.items = JSON.stringify(merged);
+              }
             }
-            // Save pickup location if we have it and package doesn't
-            if (parsed.pickupLocation && !existingPkg.pickupLocation) {
+            // Update pickup location if we have newer/better data
+            if (parsed.pickupLocation) {
               updateData.pickupLocation = JSON.stringify(parsed.pickupLocation);
+            }
+            // Update carrier if currently UNKNOWN and we now have a match
+            if (existingPkg.carrier === "UNKNOWN" && parsed.carrier && parsed.carrier !== "UNKNOWN") {
+              updateData.carrier = parsed.carrier;
             }
             if (Object.keys(updateData).length > 0) {
               await app.prisma.package.update({
