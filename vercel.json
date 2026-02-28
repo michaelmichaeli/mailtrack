@@ -1,0 +1,7 @@
+{
+  "buildCommand": "npx turbo build --filter=@mailtrack/web",
+  "outputDirectory": "apps/web/.next",
+  "installCommand": "npm ci",
+  "framework": "nextjs",
+  "rewrites": []
+}
