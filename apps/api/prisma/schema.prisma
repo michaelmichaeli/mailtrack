@@ -85,6 +85,7 @@ model User {
   notificationPreference NotificationPreference?
   refreshTokens   RefreshToken[]
   auditLogs       AuditLog[]
+  notifications   Notification[]
 
   @@map("users")
 }
@@ -224,4 +225,22 @@ model AuditLog {
   @@index([userId])
   @@index([action])
   @@map("audit_logs")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String   // STATUS_CHANGE, NEW_ORDER, DELIVERY, EXCEPTION
+  title     String
+  body      String
+  icon      String?  // emoji or icon name
+  orderId   String?  // link to order
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([createdAt])
+  @@map("notifications")
 }

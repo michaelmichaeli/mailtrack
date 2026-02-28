@@ -268,6 +268,42 @@ class ApiClient {
     });
   }
 
+  // Notifications
+  async getNotifications(params?: { page?: number; limit?: number; unreadOnly?: boolean }) {
+    const query = new URLSearchParams();
+    if (params?.page) query.set("page", String(params.page));
+    if (params?.limit) query.set("limit", String(params.limit));
+    if (params?.unreadOnly) query.set("unreadOnly", "true");
+    const qs = query.toString();
+    return this.request<{
+      items: Array<{
+        id: string; type: string; title: string; body: string;
+        icon: string | null; orderId: string | null; read: boolean; createdAt: string;
+      }>;
+      total: number; unreadCount: number; page: number; limit: number;
+    }>(`/notifications${qs ? `?${qs}` : ""}`);
+  }
+
+  async getUnreadCount() {
+    return this.request<{ unreadCount: number }>("/notifications/unread-count");
+  }
+
+  async markNotificationRead(id: string) {
+    return this.request<{ success: boolean }>(`/notifications/${id}/read`, { method: "PATCH" });
+  }
+
+  async markAllNotificationsRead() {
+    return this.request<{ success: boolean; updated: number }>("/notifications/mark-all-read", { method: "POST" });
+  }
+
+  async deleteNotification(id: string) {
+    return this.request<{ success: boolean }>(`/notifications/${id}`, { method: "DELETE" });
+  }
+
+  async clearAllNotifications() {
+    return this.request<{ success: boolean; deleted: number }>("/notifications", { method: "DELETE" });
+  }
+
   async getConnectedAccounts() {
     return this.request<any>("/settings/connected-accounts");
   }
