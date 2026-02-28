@@ -162,7 +162,7 @@ export function NotificationBell() {
       <button
         ref={bellRef}
         onClick={() => setOpen(!open)}
-        className="relative flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+        className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-card border border-border shadow-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
         aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
       >
         <Bell className="h-[18px] w-[18px]" />
@@ -192,8 +192,8 @@ export function NotificationBell() {
             transition={{ duration: 0.15 }}
             className="absolute z-50 bg-card border border-border rounded-xl shadow-xl overflow-hidden"
             style={{
-              left: "calc(100% + 12px)",
-              bottom: 0,
+              right: 0,
+              top: "calc(100% + 8px)",
               width: "360px",
               maxHeight: "480px",
             }}

@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   Package,
-  LayoutDashboard,
   Settings,
   LogOut,
   Moon,
@@ -22,7 +21,6 @@ import { useScrollRestore } from "@/lib/use-scroll-restore";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/packages", label: "Orders", icon: Package },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
@@ -136,6 +134,11 @@ export function Sidebar() {
       >
         <Menu className="h-5 w-5" />
       </button>
+
+      {/* Floating notification bell — top right, visible on all screens */}
+      <div className="fixed top-4 right-4 z-40">
+        <NotificationBell />
+      </div>
 
       {/* Mobile overlay */}
       {mobileOpen && (

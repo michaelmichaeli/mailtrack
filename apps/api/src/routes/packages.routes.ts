@@ -421,9 +421,16 @@ async function syncPackageFromResult(prisma: any, packageId: string, result: any
   // Get current package to detect status change
   const currentPkg = await prisma.package.findUnique({
     where: { id: packageId },
-    include: { order: { select: { userId: true } } },
+    include: { order: { select: { id: true, userId: true } } },
   });
   const oldStatus = currentPkg?.status;
+
+  // Never downgrade from terminal statuses (DELIVERED, RETURNED)
+  const TERMINAL = ["DELIVERED", "RETURNED"];
+  if (TERMINAL.includes(oldStatus) && !TERMINAL.includes(result.status)) {
+    // Still upsert events but don't change status
+    result.status = oldStatus;
+  }
 
   // Update package status, location, pickup info, and estimated delivery
   const updateData: any = {
@@ -445,6 +452,14 @@ async function syncPackageFromResult(prisma: any, packageId: string, result: any
     where: { id: packageId },
     data: updateData,
   });
+
+  // Keep order status in sync with package status
+  if (currentPkg) {
+    await prisma.order.update({
+      where: { id: currentPkg.order.id },
+      data: { status: result.status as any },
+    });
+  }
 
   // Send push notification if status changed
   if (currentPkg && oldStatus !== result.status) {

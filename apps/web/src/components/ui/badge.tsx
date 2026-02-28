@@ -9,6 +9,7 @@ interface BadgeProps {
   status?: string;
   className?: string;
   children?: React.ReactNode;
+  style?: React.CSSProperties;
 }
 
 const statusConfig: Record<string, { bg: string; text: string; dot: string; darkBg: string; darkText: string }> = {
@@ -33,7 +34,7 @@ const statusLabels: Record<string, string> = {
   RETURNED: "Returned",
 };
 
-export function Badge({ variant = "default", status, className, children }: BadgeProps) {
+export function Badge({ variant = "default", status, className, children, style }: BadgeProps) {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -67,6 +68,7 @@ export function Badge({ variant = "default", status, className, children }: Badg
         variant === "default" && "bg-primary text-primary-foreground",
         className
       )}
+      style={style}
     >
       {children}
     </span>

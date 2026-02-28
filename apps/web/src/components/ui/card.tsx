@@ -3,11 +3,12 @@ import { cn } from "@/lib/utils";
 interface CardProps {
   className?: string;
   children: React.ReactNode;
+  style?: React.CSSProperties;
 }
 
-export function Card({ className, children }: CardProps) {
+export function Card({ className, children, style }: CardProps) {
   return (
-    <div className={cn("rounded-xl border border-border bg-card text-card-foreground shadow-sm", className)}>
+    <div className={cn("rounded-xl border border-border bg-card text-card-foreground shadow-sm", className)} style={style}>
       {children}
     </div>
   );

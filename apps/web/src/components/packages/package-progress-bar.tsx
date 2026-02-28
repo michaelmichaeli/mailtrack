@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Check } from "lucide-react";
+import { Check, AlertTriangle, RotateCcw } from "lucide-react";
 
 const steps = [
   { key: "ORDERED", label: "Ordered" },
@@ -24,8 +24,43 @@ interface PackageProgressBarProps {
 }
 
 export function PackageProgressBar({ status, className }: PackageProgressBarProps) {
-  const currentIndex = statusIndex[status] ?? 0;
-  const isException = status === "EXCEPTION" || status === "RETURNED";
+  const isException = status === "EXCEPTION";
+  const isReturned = status === "RETURNED";
+  const isSpecial = isException || isReturned;
+  const currentIndex = isSpecial ? -1 : (statusIndex[status] ?? 0);
+
+  // For exception/returned, show a special bar
+  if (isSpecial) {
+    return (
+      <div className={cn("w-full", className)}>
+        <div className="flex items-center justify-center gap-3 py-2">
+          <div
+            className="flex h-8 w-8 items-center justify-center rounded-full shrink-0"
+            style={{ backgroundColor: isReturned ? "rgba(239,68,68,0.15)" : "rgba(245,158,11,0.15)" }}
+          >
+            {isReturned ? (
+              <RotateCcw className="h-4 w-4" style={{ color: "#ef4444" }} />
+            ) : (
+              <AlertTriangle className="h-4 w-4" style={{ color: "#f59e0b" }} />
+            )}
+          </div>
+          <div className="flex-1 h-1 rounded-full" style={{ backgroundColor: isReturned ? "rgba(239,68,68,0.3)" : "rgba(245,158,11,0.3)" }}>
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: "100%",
+                backgroundColor: isReturned ? "#ef4444" : "#f59e0b",
+                opacity: 0.6,
+              }}
+            />
+          </div>
+          <span className="text-xs font-semibold" style={{ color: isReturned ? "#ef4444" : "#f59e0b" }}>
+            {isReturned ? "Returned" : "Exception"}
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("w-full", className)}>
@@ -41,15 +76,14 @@ export function PackageProgressBar({ status, className }: PackageProgressBarProp
               <div
                 className={cn(
                   "flex h-5 w-5 items-center justify-center rounded-full border-2 transition-colors shrink-0",
-                  isException && isCurrent && "border-[#f59e0b]",
-                  !isException && isCompleted && "border-primary bg-primary",
-                  !isException && isCurrent && "border-primary bg-primary/10 dark:bg-primary/20",
-                  !isException && !isCompleted && !isCurrent && "border-border bg-card"
+                  isCompleted && "border-primary bg-primary",
+                  isCurrent && "border-primary bg-primary/10 dark:bg-primary/20",
+                  !isCompleted && !isCurrent && "border-border bg-card"
                 )}
               >
-                {isCompleted && !isException ? (
+                {isCompleted ? (
                   <Check className="h-2.5 w-2.5 text-primary-foreground" />
-                ) : isCurrent && !isException ? (
+                ) : isCurrent ? (
                   <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                 ) : null}
               </div>
@@ -58,7 +92,6 @@ export function PackageProgressBar({ status, className }: PackageProgressBarProp
                   <div
                     className={cn(
                       "h-0.5 w-full rounded-full transition-colors",
-                      isException && index < 2 ? "bg-[#fcd34d]" :
                       isCompleted ? "bg-primary" : "bg-border"
                     )}
                   />
