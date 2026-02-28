@@ -17,12 +17,17 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
       where.merchant = { contains: params.merchant, mode: "insensitive" };
     }
     if (params.query) {
-      where.OR = [
-        { merchant: { contains: params.query, mode: "insensitive" } },
-        { externalOrderId: { contains: params.query, mode: "insensitive" } },
-        { items: { contains: params.query, mode: "insensitive" } },
-        { packages: { some: { trackingNumber: { contains: params.query, mode: "insensitive" } } } },
-        { packages: { some: { items: { contains: params.query, mode: "insensitive" } } } },
+      where.AND = [
+        ...(where.AND ?? []),
+        {
+          OR: [
+            { merchant: { contains: params.query, mode: "insensitive" } },
+            { externalOrderId: { contains: params.query, mode: "insensitive" } },
+            { items: { contains: params.query, mode: "insensitive" } },
+            { packages: { some: { trackingNumber: { contains: params.query, mode: "insensitive" } } } },
+            { packages: { some: { items: { contains: params.query, mode: "insensitive" } } } },
+          ],
+        },
       ];
     }
     if (params.status) {
@@ -33,16 +38,9 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
       ];
     }
     if (params.dateFrom || params.dateTo) {
-      // Filter on orderDate OR createdAt (many gmail-parsed orders lack orderDate)
       const dateFilter: any = {};
       if (params.dateFrom) dateFilter.gte = new Date(params.dateFrom);
       if (params.dateTo) dateFilter.lte = new Date(params.dateTo);
-      where.OR = [
-        ...(where.OR ?? []),
-        { orderDate: dateFilter },
-        { orderDate: null, createdAt: dateFilter },
-      ].length ? undefined : undefined;
-      // Use AND to combine with existing filters
       where.AND = [
         ...(where.AND ?? []),
         {

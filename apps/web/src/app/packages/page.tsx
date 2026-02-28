@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect, Suspense } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo, Suspense } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useSearchParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
@@ -13,6 +13,15 @@ import { PackageCardSkeleton } from "@/components/ui/skeleton";
 import { PageTransition, StaggerContainer, StaggerItem, FadeIn } from "@/components/ui/motion";
 import { Input } from "@/components/ui/input";
 import { Search, Loader2, Calendar, LayoutGrid, Table2, Columns3, Clock } from "lucide-react";
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debouncedValue;
+}
 
 const STATUS_OPTIONS = [
   { value: "", label: "All statuses" },
@@ -56,17 +65,18 @@ function PackagesContent() {
   const [period, setPeriod] = useState(initialPeriod);
   const [view, setView] = useState<ViewMode>(initialView);
   const observerRef = useRef<HTMLDivElement>(null);
+  const debouncedQuery = useDebounce(query, 300);
 
   // Sync filters to URL search params so they survive refresh
   useEffect(() => {
     const params = new URLSearchParams();
-    if (query) params.set("q", query);
+    if (debouncedQuery) params.set("q", debouncedQuery);
     if (status) params.set("status", status);
     if (period && period !== "30d") params.set("period", period);
     if (view && view !== "grid") params.set("view", view);
     const qs = params.toString();
     router.replace(qs ? `?${qs}` : "/packages", { scroll: false });
-  }, [query, status, period, view, router]);
+  }, [debouncedQuery, status, period, view, router]);
 
   const {
     data,
@@ -75,10 +85,10 @@ function PackagesContent() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["packages", query, status, period, view],
+    queryKey: ["packages", debouncedQuery, status, period, view],
     queryFn: ({ pageParam = 1 }) => {
       const params: Record<string, string> = { page: String(pageParam), limit: view === "kanban" || view === "timeline" ? "50" : "12" };
-      if (query) params.query = query;
+      if (debouncedQuery) params.query = debouncedQuery;
       if (status) params.status = status;
       if (period !== "all") {
         const days = TIME_PERIODS.find((p) => p.value === period)?.days ?? 30;
