@@ -43,7 +43,7 @@ function LoginForm() {
           </div>
           <CardTitle className="text-2xl font-bold tracking-tight">Welcome to MailTrack</CardTitle>
           <CardDescription className="text-sm">
-            Track all your packages from every store in one place
+            Every package, every store, one dashboard.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 pt-2">

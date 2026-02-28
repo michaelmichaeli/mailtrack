@@ -55,7 +55,7 @@ export default function OnboardingPage() {
           </div>
           <CardTitle className="text-2xl">Set up MailTrack</CardTitle>
           <CardDescription>
-            {step === "connect-email" && "Connect your email to start tracking packages"}
+            {step === "connect-email" && "Connect your email to start tracking — every package, every store, one dashboard."}
             {step === "syncing" && "Scanning your emails for orders and tracking info..."}
             {step === "connect-shops" && "Optionally connect your shop accounts for better accuracy"}
             {step === "complete" && "You're all set!"}

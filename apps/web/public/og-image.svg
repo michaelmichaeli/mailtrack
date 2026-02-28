@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#312e81"/>
+      <stop offset="50%" style="stop-color:#1e1b4b"/>
+      <stop offset="100%" style="stop-color:#0f172a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <!-- Logo icon -->
+  <rect x="80" y="215" width="80" height="80" rx="18" fill="#6366F1"/>
+  <path d="M100 238h40v24H100z" stroke="#fff" stroke-width="2.5" fill="none"/>
+  <path d="M100 238l20 15 20-15" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="120" cy="274" r="3" fill="#fff"/>
+  <line x1="120" y1="262" x2="120" y2="271" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+  <!-- Title -->
+  <text x="185" y="248" font-family="system-ui,-apple-system,sans-serif" font-size="52" font-weight="800" fill="#ffffff" letter-spacing="-1">MailTrack</text>
+  <!-- Subtitle -->
+  <text x="185" y="288" font-family="system-ui,-apple-system,sans-serif" font-size="22" fill="#a5b4fc">Universal Package Tracking Dashboard</text>
+  <!-- Feature pills -->
+  <rect x="80" y="360" width="200" height="44" rx="22" fill="#6366F1" opacity="0.2"/>
+  <text x="120" y="388" font-family="system-ui,sans-serif" font-size="16" fill="#c7d2fe">📦 All stores in one</text>
+  <rect x="300" y="360" width="220" height="44" rx="22" fill="#6366F1" opacity="0.2"/>
+  <text x="340" y="388" font-family="system-ui,sans-serif" font-size="16" fill="#c7d2fe">📧 Auto email parsing</text>
+  <rect x="540" y="360" width="220" height="44" rx="22" fill="#6366F1" opacity="0.2"/>
+  <text x="580" y="388" font-family="system-ui,sans-serif" font-size="16" fill="#c7d2fe">🔔 Live tracking alerts</text>
+  <rect x="780" y="360" width="190" height="44" rx="22" fill="#6366F1" opacity="0.2"/>
+  <text x="815" y="388" font-family="system-ui,sans-serif" font-size="16" fill="#c7d2fe">🌙 Dark mode</text>
+  <!-- URL -->
+  <text x="80" y="560" font-family="system-ui,sans-serif" font-size="18" fill="#64748b">mailtrack.app</text>
+</svg>

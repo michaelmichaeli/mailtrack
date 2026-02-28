@@ -1,4 +1,6 @@
-# MailTrack — Universal Package Tracking Aggregator
+# 📦 MailTrack — Every Package, One Dashboard
+
+> Universal package tracking aggregator that auto-syncs with your email, supports 30+ carriers, and gives you real-time delivery updates.
 
 A cross-platform app (web + mobile) that connects to your Gmail/Outlook, parses order-confirmation and shipping emails, enriches with carrier APIs, and displays a unified dashboard of all packages with real-time status, location, and ETA.
 

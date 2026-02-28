@@ -68,7 +68,7 @@ export function Sidebar() {
         </div>
         <div>
           <span className="text-base font-bold text-foreground tracking-tight">MailTrack</span>
-          <p className="text-[10px] text-muted-foreground leading-none">Package Tracker</p>
+          <p className="text-[10px] text-muted-foreground leading-none">Every package. One dashboard.</p>
         </div>
         <button
           onClick={() => setMobileOpen(false)}

@@ -1,13 +1,18 @@
 {
-  "name": "MailTrack",
+  "name": "MailTrack — Package Tracker",
   "short_name": "MailTrack",
-  "description": "Track all your packages from every store in one place",
+  "description": "Track all your packages from every store in one unified dashboard. Auto-syncs with Gmail, supports 30+ carriers.",
   "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#0f172a",
+  "theme_color": "#6366F1",
   "orientation": "portrait-primary",
   "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    },
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
@@ -22,6 +27,5 @@
     }
   ],
   "categories": ["utilities", "shopping"],
-  "screenshots": [],
   "prefer_related_applications": false
 }
