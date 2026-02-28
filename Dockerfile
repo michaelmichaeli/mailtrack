@@ -1,4 +1,4 @@
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 RUN apk add --no-cache openssl
 
 # ──────────────── API ────────────────
@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package.json package-lock.json turbo.json ./
 COPY apps/api/package.json ./apps/api/
 COPY packages/shared/package.json ./packages/shared/
-RUN npm ci
+RUN npm install
 COPY packages/shared ./packages/shared
 COPY apps/api ./apps/api
 RUN npx prisma generate --schema=apps/api/prisma/schema.prisma
@@ -36,12 +36,10 @@ COPY apps/web/package.json ./apps/web/
 COPY packages/shared/package.json ./packages/shared/
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-RUN npm ci
+RUN npm install
 COPY packages/shared ./packages/shared
 COPY apps/web ./apps/web
 RUN npx turbo build --filter=@mailtrack/web
-
-FROM base AS web
 WORKDIR /app
 COPY --from=web-builder /app/node_modules ./node_modules
 COPY --from=web-builder /app/apps/web/.next ./apps/web/.next
