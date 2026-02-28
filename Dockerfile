@@ -40,6 +40,8 @@ RUN npm install
 COPY packages/shared ./packages/shared
 COPY apps/web ./apps/web
 RUN npx turbo build --filter=@mailtrack/web
+
+FROM base AS web
 WORKDIR /app
 COPY --from=web-builder /app/node_modules ./node_modules
 COPY --from=web-builder /app/apps/web/.next ./apps/web/.next
