@@ -471,6 +471,15 @@ async function cleanupBadLocations(prisma: any, packageId: string) {
     });
   }
 
+  // Fix customs events wrongly marked as DELIVERED
+  const customsEvents = await prisma.trackingEvent.findMany({
+    where: { packageId, status: "DELIVERED", description: { contains: "customs" } },
+    select: { id: true },
+  });
+  for (const ce of customsEvents) {
+    await prisma.trackingEvent.update({ where: { id: ce.id }, data: { status: "IN_TRANSIT" } });
+  }
+
   // Deduplicate events: remove near-duplicate events with same status within 6 hours
   await deduplicateEvents(prisma, packageId);
 

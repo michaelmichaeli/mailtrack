@@ -26,7 +26,7 @@ function actionCodeToStatus(actionCode: string, fallback: PackageStatus): Packag
   if (actionCode.includes("DELIVERED") || actionCode.includes("SIGN") || actionCode === "GTMS_STA_SIGNED_DELIVER") return PackageStatus.DELIVERED;
   if (actionCode === "GTMS_STA_SIGNED" || actionCode.includes("PICKUP")) return PackageStatus.OUT_FOR_DELIVERY;
   if (actionCode.includes("GTMS_ACCEPT") || actionCode.includes("DELIVERING")) return PackageStatus.OUT_FOR_DELIVERY;
-  if (actionCode.includes("CC_IM") || actionCode.includes("CC_EX") || actionCode.includes("CC_HO")) return PackageStatus.IN_TRANSIT;
+  if (actionCode.startsWith("CC_")) return PackageStatus.IN_TRANSIT;
   if (actionCode.includes("LH_") || actionCode.includes("SC_")) return PackageStatus.IN_TRANSIT;
   if (actionCode.includes("GWMS_")) return PackageStatus.PROCESSING;
   if (actionCode.includes("INFORM_BUYER")) return PackageStatus.OUT_FOR_DELIVERY;
