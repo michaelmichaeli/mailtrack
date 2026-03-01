@@ -33,29 +33,24 @@ function actionCodeToStatus(actionCode: string, fallback: PackageStatus): Packag
   return fallback;
 }
 
-// Extract location from Cainiao event description, e.g. "[IL,תל אביב - יפו,מחוז תל אביב 5339001]"
-// Also tries to extract from description text when no bracket pattern found
+// Extract location from Cainiao event description, e.g. "[תל אביב - יפו]" or "[Shatian Town]"
 function extractLocation(desc: string, standerdDesc: string, group?: any): string | null {
+  // Look for bracketed locations in standardized description first, then raw desc
   const combined = `${standerdDesc} ${desc}`;
-  // Pattern 1: bracketed location [country, city, region]
   const match = combined.match(/\[([^\]]+)\]/);
   if (match) {
     let inner = match[1]
-      .replace(/^IL,?\s*/, "")        // strip country code
+      .replace(/^[A-Z]{2},?\s*/, "")   // strip country code (IL, CN, etc.)
       .replace(/\d{5,7}/g, "")        // strip zip codes
       .replace(/,\s*,/g, ",")         // clean up double commas
       .replace(/^[,\s]+|[,\s]+$/g, "") // trim edges
       .trim();
-    if (!inner || inner.length < 2) return null; // "IL" alone → no location
+    if (!inner || inner.length < 2) return null;
     return inner;
   }
-  // Pattern 2: location phrases in description
-  const locMatch = combined.match(/(?:at|in|from|arrived? (?:at|in))\s+([A-Z][a-zA-Z\s\-,]+?)(?:\.|$|,\s*[a-z])/i);
-  if (locMatch && locMatch[1].length > 3 && locMatch[1].length < 50) {
-    const loc = locMatch[1].trim().replace(/[.,]$/, "");
-    if (!/^(the|warehouse|customs|sorting|transit|destination|origin|departure)\b/i.test(loc)) {
-      return loc;
-    }
+  // Use group node description as location hint (e.g. country)
+  if (group?.nodeDesc && /^[A-Z]/.test(group.nodeDesc) && !["Delivered", "Shipped", "Ordered"].includes(group.nodeDesc)) {
+    return null; // Group names are status labels, not locations
   }
   return null;
 }
