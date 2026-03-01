@@ -191,6 +191,9 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
       await syncPackageFromResult(app.prisma, id, result);
     }
 
+    // Always clean up bad locations on existing events
+    await cleanupBadLocations(app.prisma, id);
+
     return { success: true, updated: !!result };
   });
 
@@ -270,6 +273,8 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
                 console.log(`[sync-all] ✓ ${pkg.trackingNumber} (cainiao): ${fallback.events.length} events`);
               }
             }
+            // Always clean up bad locations
+            await cleanupBadLocations(app.prisma, pkg.id);
           } catch (e: any) {
             job.errors++;
             console.error(`[sync-all] Error syncing ${pkg.trackingNumber}:`, e?.message);
@@ -432,6 +437,40 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
     return { success: true, orderId: order.id, packageId: pkg.id };
   });
 };
+
+// Known-bad location patterns (extracted from descriptions, not real places)
+const BAD_LOCATION_PATTERNS = /\b(customs|warehouse|designated location|transit|sorting center|departed|arrived|received|collected|carrier)\b/i;
+
+/** Clean up events with bad locations that were incorrectly extracted from descriptions */
+async function cleanupBadLocations(prisma: any, packageId: string) {
+  const events = await prisma.trackingEvent.findMany({
+    where: { packageId, location: { not: null } },
+    select: { id: true, location: true },
+  });
+
+  let cleaned = 0;
+  for (const event of events) {
+    if (event.location && BAD_LOCATION_PATTERNS.test(event.location) && !/\[/.test(event.location)) {
+      await prisma.trackingEvent.update({
+        where: { id: event.id },
+        data: { location: null },
+      });
+      cleaned++;
+    }
+  }
+
+  if (cleaned > 0) {
+    // Recalculate lastLocation from remaining valid events
+    const latestWithLocation = await prisma.trackingEvent.findFirst({
+      where: { packageId, location: { not: null } },
+      orderBy: { timestamp: "desc" },
+    });
+    await prisma.package.update({
+      where: { id: packageId },
+      data: { lastLocation: latestWithLocation?.location ?? null },
+    });
+  }
+}
 
 /** Merge carrier result into DB: update status, upsert events, send notifications */
 async function syncPackageFromResult(prisma: any, packageId: string, result: any) {
