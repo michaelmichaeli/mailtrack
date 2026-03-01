@@ -1,6 +1,5 @@
 import type { CarrierTrackingResult, CarrierTrackingEvent } from "@mailtrack/shared";
 import { PackageStatus, Carrier } from "@mailtrack/shared";
-import { track17Single } from "./tracking17.service.js";
 
 const CAINIAO_API = "https://global.cainiao.com/global/detail.json";
 
@@ -95,6 +94,7 @@ export async function trackPackage(
   // Try 17track first (works for 2000+ carriers via browser scraping)
   try {
     console.log(`[tracking] Trying 17track for ${trackingNumber}...`);
+    const { track17Single } = await import("./tracking17.service.js");
     const result17 = await track17Single(trackingNumber, carrier);
     if (result17 && result17.events.length > 0) {
       console.log(`[tracking] 17track: ${result17.events.length} events for ${trackingNumber}`);

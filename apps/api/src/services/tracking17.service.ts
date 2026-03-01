@@ -2,14 +2,15 @@
  * 17track.net scraper service using Playwright.
  * 17track aggregates 2000+ carriers and provides rich tracking data.
  * Uses headless browser to intercept their REST API responses (which require signed requests).
+ * Playwright is optional — not available in production Docker containers.
  */
-import { chromium } from "playwright";
 import { PackageStatus, Carrier } from "@mailtrack/shared";
 import type { CarrierTrackingResult, CarrierTrackingEvent } from "@mailtrack/shared";
 
 let browser: any = null;
 
 async function getBrowser(): Promise<any> {
+  const { chromium } = await import("playwright");
   if (!browser || !browser.isConnected()) {
     browser = await chromium.launch({ headless: true });
   }
