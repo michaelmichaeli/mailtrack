@@ -173,10 +173,6 @@ async function trackPackageCainiao(
 
     // Extract pickup info from Cainiao data
     let pickupLocation: any = null;
-    const pickupEvent = detailList.find((e: any) =>
-      e.actionCode?.includes("PICKUP") || e.actionCode?.includes("INFORM_BUYER") ||
-      e.actionCode?.includes("SIGNED") || e.actionCode === "GTMS_STA_SIGNED_DELIVER"
-    );
     if (module.pickupInfo || module.cpInfo) {
       const info = module.pickupInfo || module.cpInfo;
       pickupLocation = {
@@ -185,6 +181,22 @@ async function trackPackageCainiao(
         pickupCode: info.pickupCode || info.cpCode || null,
         name: info.cpName || info.stationName || null,
       };
+    }
+    // Fallback: extract pickup info from events if API didn't return it
+    if (!pickupLocation) {
+      const pickupEvent = detailList.find((e: any) =>
+        e.actionCode === "GTMS_STA_SIGNED" || e.actionCode === "GTMS_STA_SIGNED_DELIVER"
+      );
+      if (pickupEvent) {
+        const pickupDesc = pickupEvent.standerdDesc || pickupEvent.desc || "";
+        const locMatch = pickupDesc.match(/\[([^\]]+)\]/);
+        const location = locMatch ? locMatch[1].replace(/^[A-Z]{2},?\s*/, "").replace(/\d{5,7}/g, "").trim() : null;
+        pickupLocation = {
+          address: location,
+          name: module.destCpInfo?.cpName || null,
+          phone: module.destCpInfo?.phone || null,
+        };
+      }
     }
 
     // Extract estimated delivery from Cainiao

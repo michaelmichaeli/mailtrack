@@ -470,6 +470,55 @@ async function cleanupBadLocations(prisma: any, packageId: string) {
       data: { lastLocation: latestWithLocation?.location ?? null },
     });
   }
+
+  // Deduplicate events: remove near-duplicate events with same status within 6 hours
+  await deduplicateEvents(prisma, packageId);
+}
+
+/** Remove duplicate events — keep the one with richer data (location or longer description) */
+async function deduplicateEvents(prisma: any, packageId: string) {
+  const events = await prisma.trackingEvent.findMany({
+    where: { packageId },
+    orderBy: { timestamp: "asc" },
+  });
+
+  const toDelete: string[] = [];
+  const STATUS_WINDOW = 6 * 60 * 60 * 1000;
+
+  for (let i = 0; i < events.length; i++) {
+    if (toDelete.includes(events[i].id)) continue;
+    for (let j = i + 1; j < events.length; j++) {
+      if (toDelete.includes(events[j].id)) continue;
+      if (events[i].status !== events[j].status) continue;
+      const timeDiff = Math.abs(new Date(events[i].timestamp).getTime() - new Date(events[j].timestamp).getTime());
+      if (timeDiff > STATUS_WINDOW) continue;
+
+      // Same status within time window — keep the one with better data
+      const iHasLoc = !!events[i].location;
+      const jHasLoc = !!events[j].location;
+      const iDescLen = events[i].description?.length ?? 0;
+      const jDescLen = events[j].description?.length ?? 0;
+
+      if (jHasLoc && !iHasLoc) {
+        toDelete.push(events[i].id);
+        break; // i is deleted, move on
+      } else if (iHasLoc && !jHasLoc) {
+        toDelete.push(events[j].id);
+      } else if (jDescLen > iDescLen) {
+        toDelete.push(events[i].id);
+        break;
+      } else {
+        toDelete.push(events[j].id);
+      }
+    }
+  }
+
+  if (toDelete.length > 0) {
+    await prisma.trackingEvent.deleteMany({
+      where: { id: { in: toDelete } },
+    });
+    console.log(`[cleanup] Removed ${toDelete.length} duplicate events for package ${packageId}`);
+  }
 }
 
 /** Merge carrier result into DB: update status, upsert events, send notifications */
@@ -495,7 +544,7 @@ async function syncPackageFromResult(prisma: any, packageId: string, result: any
     ...(result.estimatedDelivery ? { estimatedDelivery: new Date(result.estimatedDelivery) } : {}),
   };
   // Save pickup location if available from carrier — enrich with Google Places data
-  if (result.pickupLocation && (result.pickupLocation.address || result.pickupLocation.pickupCode)) {
+  if (result.pickupLocation && (result.pickupLocation.address || result.pickupLocation.pickupCode || result.pickupLocation.name)) {
     try {
       const { enrichPickupLocation } = await import("../services/places.service.js");
       const enriched = await enrichPickupLocation(result.pickupLocation);
@@ -533,13 +582,14 @@ async function syncPackageFromResult(prisma: any, packageId: string, result: any
     }
   }
 
-  // Upsert events — deduplicate by timestamp (within 2 seconds) or upgrade generic email events
+  // Upsert events — deduplicate by timestamp+description or by status within time window
   for (const event of result.events) {
     const eventTime = new Date(event.timestamp);
     const windowStart = new Date(eventTime.getTime() - 2000);
     const windowEnd = new Date(eventTime.getTime() + 2000);
 
-    const exists = await prisma.trackingEvent.findFirst({
+    // Exact match: same timestamp (within 2s) and same description
+    const exactMatch = await prisma.trackingEvent.findFirst({
       where: {
         packageId,
         timestamp: { gte: windowStart, lte: windowEnd },
@@ -547,40 +597,43 @@ async function syncPackageFromResult(prisma: any, packageId: string, result: any
       },
     });
 
-    if (exists) {
-      // Update location if it changed (e.g. location extraction was fixed)
-      if (event.location !== exists.location) {
+    if (exactMatch) {
+      // Update location if it changed
+      if (event.location !== exactMatch.location) {
         await prisma.trackingEvent.update({
-          where: { id: exists.id },
+          where: { id: exactMatch.id },
           data: { location: event.location },
         });
       }
     } else {
-      // Check if there's a generic email-sourced event at a similar time (within 6 hours)
-      // that we can upgrade with richer carrier data
-      const genericWindow = 6 * 60 * 60 * 1000;
-      const genericEvent = await prisma.trackingEvent.findFirst({
+      // Check for same-status event within 6 hours (likely duplicate from different source)
+      const statusWindow = 6 * 60 * 60 * 1000;
+      const statusMatch = await prisma.trackingEvent.findFirst({
         where: {
           packageId,
           status: event.status as any,
-          location: null,
           timestamp: {
-            gte: new Date(eventTime.getTime() - genericWindow),
-            lte: new Date(eventTime.getTime() + genericWindow),
+            gte: new Date(eventTime.getTime() - statusWindow),
+            lte: new Date(eventTime.getTime() + statusWindow),
           },
         },
       });
 
-      if (genericEvent && event.location) {
-        // Upgrade the generic event with richer data
-        await prisma.trackingEvent.update({
-          where: { id: genericEvent.id },
-          data: {
-            timestamp: eventTime,
-            location: event.location,
-            description: event.description,
-          },
-        });
+      if (statusMatch) {
+        // Upgrade existing event if new one has better data (location or more specific description)
+        const shouldUpgrade = (event.location && !statusMatch.location) ||
+          (event.description.length > (statusMatch.description?.length ?? 0));
+        if (shouldUpgrade) {
+          await prisma.trackingEvent.update({
+            where: { id: statusMatch.id },
+            data: {
+              timestamp: eventTime,
+              location: event.location || statusMatch.location,
+              description: event.description,
+            },
+          });
+        }
+        // Skip creating duplicate — status match within time window is sufficient
       } else {
         await prisma.trackingEvent.create({
           data: {
