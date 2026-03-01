@@ -129,7 +129,19 @@ export function parseEmail(emailHtml: string, fromAddress: string, subject: stri
 
   // Generic parsing for other merchants
   const trackingResults = extractTrackingNumbers(fullText);
-  const primaryTracking = trackingResults[0] ?? null;
+  let primaryTracking = trackingResults[0] ?? null;
+
+  // Fallback: extract tracking from URL params in links
+  if (!primaryTracking) {
+    let tn: string | null = null;
+    $('a[href]').each((_, el) => {
+      if (tn) return;
+      const href = $(el).attr('href') || '';
+      const m = href.match(/track(?:ing)?(?:Number|Num|Id|_number|_id)?[=\/]([A-Z0-9]{8,25})/i);
+      if (m) tn = m[1].toUpperCase();
+    });
+    if (tn) primaryTracking = { trackingNumber: tn, carrier: detectCarrier(tn) };
+  }
   const orderId = extractOrderId(fullText);
   const items = extractItemsFromHtml($);
   const { amount, currency } = extractPrice(fullText);
@@ -491,7 +503,19 @@ function parseIherbEmail(
   }
 
   const trackingResults = extractTrackingNumbers(fullText);
-  const tracking = trackingResults[0] ?? null;
+  let tracking = trackingResults[0] ?? null;
+
+  // iHerb puts tracking in URL params (trackingNumber=GAIH50740763)
+  if (!tracking) {
+    let tn: string | null = null;
+    $('a[href]').each((_, el) => {
+      if (tn) return;
+      const href = $(el).attr('href') || '';
+      const m = href.match(/trackingNumber=([A-Z0-9]{8,25})/i);
+      if (m) tn = m[1].toUpperCase();
+    });
+    if (tn) tracking = { trackingNumber: tn, carrier: detectCarrier(tn) };
+  }
 
   // iHerb items from table
   let items: string[] = [];
