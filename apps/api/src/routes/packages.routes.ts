@@ -459,18 +459,18 @@ async function cleanupBadLocations(prisma: any, packageId: string) {
     }
   }
 
-  // Clear pickup locations that are just city names (no street-level detail)
-  const CITY_ONLY = /^(Jaffa|Tel Aviv-Yafo|תל אביב|תל אביב - יפו|None)$/i;
+  // Clear fabricated pickup locations (those with Google Places-enriched addresses
+  // but no real pickup data from the carrier API)
   const pkgForPickup = await prisma.package.findUnique({ where: { id: packageId }, select: { pickupLocation: true } });
   if (pkgForPickup?.pickupLocation) {
     let pl = pkgForPickup.pickupLocation;
     if (typeof pl === "string") try { pl = JSON.parse(pl); } catch { pl = null; }
-    if (pl && typeof pl === "object") {
-      const name = pl.name || "";
-      const addr = pl.address || "";
-      const isBadPickup = CITY_ONLY.test(name) || CITY_ONLY.test(addr) ||
-        (addr && !/\d/.test(addr) && !name); // address with no street number and no business name
-      if (isBadPickup) {
+    if (pl && typeof pl === "object" && !pl.carrierOnly) {
+      // If it has lat/lng from Google Places but no pickupCode, it was fabricated
+      const hasCoords = pl.lat || pl.lng;
+      const hasPickupCode = pl.pickupCode;
+      if (hasCoords && !hasPickupCode) {
+        // Clear fabricated pickup — will be re-synced with carrier-only data
         await prisma.package.update({ where: { id: packageId }, data: { pickupLocation: null } });
         cleaned++;
       }
@@ -500,34 +500,6 @@ async function cleanupBadLocations(prisma: any, packageId: string) {
 
   // Deduplicate events: remove near-duplicate events with same status within 6 hours
   await deduplicateEvents(prisma, packageId);
-
-  // Extract pickup location from existing events if not yet set
-  const pkg = await prisma.package.findUnique({ where: { id: packageId }, select: { pickupLocation: true } });
-  if (!pkg?.pickupLocation) {
-    const pickupEvent = await prisma.trackingEvent.findFirst({
-      where: {
-        packageId,
-        description: { contains: "pick-up point" },
-      },
-    });
-    // Only use event location if it looks like a real street address (has numbers)
-    if (pickupEvent && pickupEvent.location && /\d/.test(pickupEvent.location)) {
-      const pickupData = { address: pickupEvent.location, name: null as string | null };
-      try {
-        const { enrichPickupLocation } = await import("../services/places.service.js");
-        const enriched = await enrichPickupLocation(pickupData);
-        await prisma.package.update({
-          where: { id: packageId },
-          data: { pickupLocation: JSON.stringify(enriched) },
-        });
-      } catch {
-        await prisma.package.update({
-          where: { id: packageId },
-          data: { pickupLocation: JSON.stringify(pickupData) },
-        });
-      }
-    }
-  }
 }
 
 /** Remove duplicate events — keep the one with richer data (location or longer description) */
@@ -598,17 +570,22 @@ async function syncPackageFromResult(prisma: any, packageId: string, result: any
     lastLocation: result.lastLocation ?? null,
     ...(result.estimatedDelivery ? { estimatedDelivery: new Date(result.estimatedDelivery) } : {}),
   };
-  // Save pickup location if available from carrier — enrich with Google Places data
-  if (result.pickupLocation && (result.pickupLocation.address || result.pickupLocation.pickupCode || result.pickupLocation.name)) {
-    try {
-      const { enrichPickupLocation } = await import("../services/places.service.js");
-      const enriched = await enrichPickupLocation(result.pickupLocation);
-      if (enriched) {
-        updateData.pickupLocation = JSON.stringify(enriched);
-      }
-      // If enrichment returned null (city-only), don't save fake pickup
-    } catch {
+  // Save pickup/carrier info
+  if (result.pickupLocation) {
+    if (result.pickupLocation.carrierOnly) {
+      // Carrier info only — save directly, don't send to Google Places
       updateData.pickupLocation = JSON.stringify(result.pickupLocation);
+    } else if (result.pickupLocation.address || result.pickupLocation.pickupCode) {
+      // Real pickup address — enrich with Google Places
+      try {
+        const { enrichPickupLocation } = await import("../services/places.service.js");
+        const enriched = await enrichPickupLocation(result.pickupLocation);
+        if (enriched) {
+          updateData.pickupLocation = JSON.stringify(enriched);
+        }
+      } catch {
+        updateData.pickupLocation = JSON.stringify(result.pickupLocation);
+      }
     }
   }
   await prisma.package.update({

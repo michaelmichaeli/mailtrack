@@ -173,35 +173,28 @@ async function trackPackageCainiao(
     const lastLocation = israelEvent?.location ?? events.find((e) => e.location)?.location ?? null;
 
     // Extract pickup info from Cainiao data
+    // Only use pickupInfo/cpInfo if it has a real address (not just carrier name)
     let pickupLocation: any = null;
     if (module.pickupInfo || module.cpInfo) {
       const info = module.pickupInfo || module.cpInfo;
-      pickupLocation = {
-        address: info.address || info.cpAddress || null,
-        hours: info.openTime || info.workTime || null,
-        pickupCode: info.pickupCode || info.cpCode || null,
-        name: info.cpName || info.stationName || null,
-      };
-    }
-    // Fallback: extract pickup info from events if API didn't return it
-    if (!pickupLocation) {
-      const pickupEvent = detailList.find((e: any) =>
-        e.actionCode === "GTMS_STA_SIGNED" || e.actionCode === "GTMS_STA_SIGNED_DELIVER"
-      );
-      if (pickupEvent) {
-        const pickupDesc = pickupEvent.standerdDesc || pickupEvent.desc || "";
-        const locMatch = pickupDesc.match(/\[([^\]]+)\]/);
-        const location = locMatch ? locMatch[1].replace(/^[A-Z]{2},?\s*/, "").replace(/\d{5,7}/g, "").trim() : null;
-        // Only use as pickup if we have a specific address (not just a city name)
-        const hasStreetDetail = location && /\d/.test(location); // street addresses contain numbers
-        if (hasStreetDetail) {
-          pickupLocation = {
-            address: location,
-            name: module.destCpInfo?.cpName || null,
-            phone: module.destCpInfo?.phone || null,
-          };
-        }
+      if (info.address || info.cpAddress) {
+        pickupLocation = {
+          address: info.address || info.cpAddress || null,
+          hours: info.openTime || info.workTime || null,
+          pickupCode: info.pickupCode || info.cpCode || null,
+          name: info.cpName || info.stationName || null,
+        };
       }
+    }
+    // If no real pickup address, store carrier info only (no address to avoid fabrication)
+    if (!pickupLocation && module.destCpInfo?.cpName) {
+      const cp = module.destCpInfo;
+      pickupLocation = {
+        name: cp.cpName || null,
+        phone: cp.phone || null,
+        url: cp.url || null,
+        carrierOnly: true, // flag: this is carrier info, not a specific pickup point
+      };
     }
 
     // Extract estimated delivery from Cainiao

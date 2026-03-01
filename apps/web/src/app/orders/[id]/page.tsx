@@ -450,7 +450,7 @@ export default function OrderDetailPage() {
           </CardContent>
         </Card>
 
-        {/* Pickup Location — from any package that has one */}
+        {/* Pickup Location / Carrier Info — from any package that has one */}
         {(() => {
           const pkgWithPickup = order.packages.find((p: any) => p.pickupLocation);
           if (!pkgWithPickup) return null;
@@ -462,6 +462,12 @@ export default function OrderDetailPage() {
           } catch { return null; }
           if (!pickup) return null;
 
+          const isCarrierOnly = pickup.carrierOnly;
+          const headerText = isCarrierOnly ? "Delivery Carrier" : "📦 Ready for Pickup";
+          const subText = isCarrierOnly
+            ? `Handled by ${pickup.name || 'carrier'}`
+            : "Your package is waiting at the location below";
+
           return (
             <Card className="overflow-hidden shadow-sm" style={{ borderColor: '#047857' }}>
               <div className="px-5 py-4 border-b" style={{ backgroundColor: '#047857', borderColor: '#065f46' }}>
@@ -470,8 +476,8 @@ export default function OrderDetailPage() {
                     <Navigation className="h-4 w-4" style={{ color: '#ffffff' }} />
                   </div>
                   <div>
-                    <p className="text-sm font-bold" style={{ color: '#ffffff' }}>📦 Ready for Pickup</p>
-                    <p className="text-xs" style={{ color: '#d1fae5' }}>Your package is waiting at the location below</p>
+                    <p className="text-sm font-bold" style={{ color: '#ffffff' }}>{headerText}</p>
+                    <p className="text-xs" style={{ color: '#d1fae5' }}>{subText}</p>
                   </div>
                 </div>
               </div>
@@ -492,8 +498,18 @@ export default function OrderDetailPage() {
                   </div>
                 )}
 
+                {isCarrierOnly && pickup.name && (
+                  <div className="flex items-start gap-2.5">
+                    <Package className="h-4 w-4 mt-0.5 shrink-0" style={{ color: '#047857' }} />
+                    <div>
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Carrier</p>
+                      <p className="text-sm font-medium text-foreground mt-0.5">{pickup.name}</p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 gap-4">
-                  {pickup.address && (
+                  {pickup.address && !isCarrierOnly && (
                     <div className="flex items-start gap-2.5">
                       <MapPin className="h-4 w-4 mt-0.5 shrink-0" style={{ color: '#047857' }} />
                       <div className="min-w-0 flex-1">
@@ -514,6 +530,19 @@ export default function OrderDetailPage() {
                         <p className="text-sm font-medium text-foreground mt-0.5">
                           <a href={`tel:${pickup.phone}`} className="hover:underline">{pickup.phone}</a>
                         </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {pickup.url && (
+                    <div className="flex items-start gap-2.5">
+                      <Navigation className="h-4 w-4 mt-0.5 shrink-0" style={{ color: '#047857' }} />
+                      <div>
+                        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Track on Carrier Site</p>
+                        <a href={pickup.url} target="_blank" rel="noopener noreferrer"
+                           className="text-sm font-medium mt-0.5 hover:underline" style={{ color: '#047857' }}>
+                          {pickup.url.replace(/^https?:\/\//, '').split('/')[0]}
+                        </a>
                       </div>
                     </div>
                   )}
@@ -570,7 +599,7 @@ export default function OrderDetailPage() {
                 )}
               </CardContent>
 
-              {pickup.address && (
+              {pickup.address && !isCarrierOnly && (
                 <div className="border-t border-border">
                   <iframe
                     src={`https://maps.google.com/maps?q=${encodeURIComponent(pickup.address)}&output=embed&z=15`}
