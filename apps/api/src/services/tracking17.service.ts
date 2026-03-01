@@ -3,13 +3,13 @@
  * 17track aggregates 2000+ carriers and provides rich tracking data.
  * Uses headless browser to intercept their REST API responses (which require signed requests).
  */
-import { chromium, type Browser, type BrowserContext } from "playwright";
+import { chromium } from "playwright";
 import { PackageStatus, Carrier } from "@mailtrack/shared";
 import type { CarrierTrackingResult, CarrierTrackingEvent } from "@mailtrack/shared";
 
-let browser: Browser | null = null;
+let browser: any = null;
 
-async function getBrowser(): Promise<Browser> {
+async function getBrowser(): Promise<any> {
   if (!browser || !browser.isConnected()) {
     browser = await chromium.launch({ headless: true });
   }
@@ -116,7 +116,7 @@ export async function track17Batch(
     const page = await ctx.newPage();
 
     // Block ads, trackers, and unnecessary resources to speed up loading
-    await page.route("**/*", (route) => {
+    await page.route("**/*", (route: any) => {
       const url = route.request().url();
       const type = route.request().resourceType();
       if (
@@ -134,7 +134,7 @@ export async function track17Batch(
     });
 
     // Intercept REST API responses
-    page.on("response", async (response) => {
+    page.on("response", async (response: any) => {
       if (!response.url().includes("track/restapi")) return;
       try {
         const json = await response.json();

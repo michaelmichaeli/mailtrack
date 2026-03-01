@@ -206,7 +206,7 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
     // If already running for this user, return current status
     const existing = syncJobs.get(userId);
     if (existing?.status === "running") {
-      return { success: true, status: "running", ...existing };
+      return { success: true, ...existing, status: "running" };
     }
 
     const { clearRateLimits } = await import("../services/tracking.service.js");
@@ -381,7 +381,7 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
     const detectedCarrier = carrier || detectCarrier(tn);
 
     // Create an order + package for the manual entry
-    const order = await app.prisma.order.create({
+    const order: any = await app.prisma.order.create({
       data: {
         userId,
         shopPlatform: "UNKNOWN",
@@ -392,8 +392,8 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
         packages: {
           create: {
             trackingNumber: tn,
-            carrier: detectedCarrier,
-            status: "PROCESSING",
+            carrier: detectedCarrier as any,
+            status: "PROCESSING" as any,
             items: description ? JSON.stringify([description]) : null,
           },
         },

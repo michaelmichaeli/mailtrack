@@ -127,7 +127,7 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
             updateData.shopPlatform = parsed.platform;
           }
           // If the existing order has a gmail- ID but we now have a real order ID, upgrade it
-          if (parsed.orderId && existingOrder.externalOrderId.startsWith("gmail-")) {
+          if (parsed.orderId && existingOrder.externalOrderId?.startsWith("gmail-")) {
             updateData.externalOrderId = parsed.orderId;
           }
           if (Object.keys(updateData).length > 0) {
@@ -315,7 +315,7 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
       // Group by first 10 chars of externalOrderId
       const prefixGroups = new Map<string, typeof emptyOrders>();
       for (const o of emptyOrders) {
-        const prefix = o.externalOrderId.substring(0, 10);
+        const prefix = o.externalOrderId?.substring(0, 10) ?? "";
         const list = prefixGroups.get(prefix) ?? [];
         list.push(o);
         prefixGroups.set(prefix, list);
@@ -330,7 +330,7 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
         await app.prisma.order.update({
           where: { id: keep.id },
           data: {
-            items: JSON.stringify([`${group.length} items from order batch ${allIds[0].substring(0, 10)}...`]),
+            items: JSON.stringify([`${group.length} items from order batch ${allIds[0]?.substring(0, 10) ?? ""}...`]),
           },
         });
         for (const dup of rest) {

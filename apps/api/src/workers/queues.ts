@@ -8,10 +8,10 @@ const connection = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379", 
 
 // ─── Queue Definitions ───
 
-export const emailSyncQueue = new Queue("sync-email", { connection });
-export const trackPackageQueue = new Queue("track-package", { connection });
-export const enrichOrderQueue = new Queue("enrich-order", { connection });
-export const sendNotificationQueue = new Queue("send-notification", { connection });
+export const emailSyncQueue = new Queue("sync-email", { connection: connection as any });
+export const trackPackageQueue = new Queue("track-package", { connection: connection as any });
+export const enrichOrderQueue = new Queue("enrich-order", { connection: connection as any });
+export const sendNotificationQueue = new Queue("send-notification", { connection: connection as any });
 
 // ─── Email Sync Worker ───
 
@@ -31,7 +31,7 @@ export const emailSyncWorker = new Worker(
     return { success: true, emailsParsed: 0 };
   },
   {
-    connection,
+    connection: connection as any,
     concurrency: 5,
     limiter: { max: 10, duration: 60000 }, // Max 10 jobs per minute
   }
@@ -55,7 +55,7 @@ export const trackPackageWorker = new Worker(
     return { success: true };
   },
   {
-    connection,
+    connection: connection as any,
     concurrency: 10,
     limiter: { max: 30, duration: 60000 },
   }
@@ -77,7 +77,7 @@ export const enrichOrderWorker = new Worker(
     return { success: true };
   },
   {
-    connection,
+    connection: connection as any,
     concurrency: 3,
   }
 );
@@ -99,7 +99,7 @@ export const sendNotificationWorker = new Worker(
     return { success: true };
   },
   {
-    connection,
+    connection: connection as any,
     concurrency: 20,
   }
 );

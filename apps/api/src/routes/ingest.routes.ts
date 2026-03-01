@@ -67,7 +67,7 @@ export const ingestRoutes: FastifyPluginAsync = async (app) => {
       }
 
       // Create order + package
-      const order = await app.prisma.order.create({
+      const order: any = await app.prisma.order.create({
         data: {
           userId: user.id,
           shopPlatform: "UNKNOWN",
@@ -92,7 +92,7 @@ export const ingestRoutes: FastifyPluginAsync = async (app) => {
           await syncPackageFromResult(app.prisma, order.packages[0].id, result);
         }
       } catch (e) {
-        app.log.error(`[ingest/sms] Error fetching tracking for ${item.trackingNumber}:`, e);
+        app.log.error(`[ingest/sms] Error fetching tracking for ${item.trackingNumber}: ${e}`);
       }
 
       results.push({ trackingNumber: item.trackingNumber, carrier: item.carrier, status: "added" });
@@ -141,7 +141,7 @@ export const ingestRoutes: FastifyPluginAsync = async (app) => {
       if (existing) { skipped++; continue; }
 
       const carrier = detectCarrier(tn);
-      const order = await app.prisma.order.create({
+      const order: any = await app.prisma.order.create({
         data: {
           userId,
           shopPlatform: detectShopPlatform(row.store),
@@ -218,7 +218,7 @@ export const ingestRoutes: FastifyPluginAsync = async (app) => {
   });
 };
 
-function detectShopPlatform(store?: string): string {
+function detectShopPlatform(store?: string): any {
   if (!store) return "UNKNOWN";
   const s = store.toUpperCase();
   if (s.includes("AMAZON")) return "AMAZON";
