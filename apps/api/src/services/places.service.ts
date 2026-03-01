@@ -80,11 +80,21 @@ export async function lookupPickupPointDetails(locationName: string): Promise<Pl
 export async function enrichPickupLocation(pickup: any): Promise<any> {
   if (!pickup) return pickup;
 
-  const searchName = pickup.name || pickup.address;
+  // Combine name + address for better search context (avoid false matches like carrier names)
+  const namePart = pickup.name || "";
+  const addressPart = pickup.address || "";
+  const searchName = namePart && addressPart ? `${namePart} ${addressPart}` : namePart || addressPart;
   if (!searchName) return pickup;
 
   const details = await lookupPickupPointDetails(searchName);
   if (!details) return pickup;
+
+  // Validate: if original address contains Hebrew (Israel), reject foreign results
+  const hasHebrew = /[\u0590-\u05FF]/.test(addressPart);
+  if (hasHebrew && details.address && !details.address.includes("Israel") && !/[\u0590-\u05FF]/.test(details.address)) {
+    console.log(`[places] Rejected foreign result "${details.name}" at ${details.address} for Hebrew address "${addressPart}"`);
+    return pickup;
+  }
 
   return {
     ...pickup,
