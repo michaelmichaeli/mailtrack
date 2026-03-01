@@ -5,6 +5,7 @@ import { parseEmail } from "../services/email-parser.service.js";
 import { decrypt } from "../lib/encryption.js";
 import { detectCarrier } from "../lib/carrier-detect.js";
 import { logAudit } from "../services/auth.service.js";
+import { trackPackage, clearRateLimits } from "../services/tracking.service.js";
 
 const WEB_URL = process.env.WEB_URL ?? "http://localhost:3003";
 
@@ -352,6 +353,55 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
     // Get final counts after merge
     const finalCount = await app.prisma.order.count({ where: { userId: (request as any).user.userId } });
     const trackingCount = await app.prisma.package.count({ where: { order: { userId: (request as any).user.userId } } });
+
+    // Background: refresh tracking data for newly synced packages
+    const userId = (request as any).user.userId;
+    setImmediate(async () => {
+      try {
+        const packages = await app.prisma.package.findMany({
+          where: { order: { userId } },
+          select: { id: true, trackingNumber: true, carrier: true },
+        });
+        clearRateLimits();
+        for (const pkg of packages) {
+          try {
+            const result = await trackPackage(pkg.trackingNumber, pkg.carrier as any, true);
+            if (result && result.events.length > 0) {
+              await app.prisma.package.update({
+                where: { id: pkg.id },
+                data: {
+                  status: result.status as any,
+                  lastLocation: result.lastLocation,
+                  estimatedDelivery: result.estimatedDelivery ? new Date(result.estimatedDelivery) : null,
+                  pickupLocation: result.pickupLocation ? JSON.stringify(result.pickupLocation) : undefined,
+                },
+              });
+              for (const event of result.events) {
+                const exists = await app.prisma.trackingEvent.findFirst({
+                  where: { packageId: pkg.id, timestamp: new Date(event.timestamp), status: event.status as any },
+                });
+                if (!exists) {
+                  await app.prisma.trackingEvent.create({
+                    data: {
+                      packageId: pkg.id,
+                      timestamp: new Date(event.timestamp),
+                      location: event.location,
+                      status: event.status as any,
+                      description: event.description,
+                    },
+                  });
+                }
+              }
+            }
+          } catch (err: any) {
+            console.error(`[email-sync] Background tracking refresh failed for ${pkg.trackingNumber}:`, err.message);
+          }
+        }
+        console.log(`[email-sync] Background tracking refresh completed for ${packages.length} packages`);
+      } catch (err: any) {
+        console.error("[email-sync] Background tracking refresh error:", err.message);
+      }
+    });
 
     return {
       success: true,

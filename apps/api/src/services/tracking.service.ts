@@ -53,7 +53,7 @@ function extractLocation(desc: string, standerdDesc: string, group?: any): strin
   const locMatch = combined.match(/(?:at|in|from|arrived? (?:at|in))\s+([A-Z][a-zA-Z\s\-,]+?)(?:\.|$|,\s*[a-z])/i);
   if (locMatch && locMatch[1].length > 3 && locMatch[1].length < 50) {
     const loc = locMatch[1].trim().replace(/[.,]$/, "");
-    if (!/^(the|warehouse|customs|sorting|transit|destination|origin|departure)$/i.test(loc)) {
+    if (!/^(the|warehouse|customs|sorting|transit|destination|origin|departure)\b/i.test(loc)) {
       return loc;
     }
   }
