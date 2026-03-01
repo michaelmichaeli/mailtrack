@@ -76,9 +76,19 @@ export async function lookupPickupPointDetails(locationName: string): Promise<Pl
 
 /**
  * Enrich a pickup location object with Google Places data (hours, exact address, phone).
+ * Returns null if the pickup data is just a city/neighborhood name (not a real pickup point).
  */
 export async function enrichPickupLocation(pickup: any): Promise<any> {
   if (!pickup) return pickup;
+
+  // Reject pickup data that is just a city/neighborhood (no street-level detail)
+  const addr = pickup.address || "";
+  const name = pickup.name || "";
+  const isCityOnly = !addr && !name;
+  const CITY_PATTERNS = /^(תל אביב|tel aviv|jaffa|יפו|jerusalem|ירושלים|haifa|חיפה|herzliya|הרצליה|ramat gan|רמת גן|bnei brak|בני ברק|netanya|נתניה|beer sheva|באר שבע|ashdod|אשדוד|petah tikva|פתח תקווה)/i;
+  if (isCityOnly) return null;
+  // If address is just a city name (no numbers = no street address), skip enrichment
+  if (addr && !/\d/.test(addr) && CITY_PATTERNS.test(addr.replace(/[,\-–]/g, ' '))) return null;
 
   // Combine name + address for better search context (avoid false matches like carrier names)
   const namePart = pickup.name || "";
@@ -94,6 +104,14 @@ export async function enrichPickupLocation(pickup: any): Promise<any> {
   if (hasHebrew && details.address && !details.address.includes("Israel") && !/[\u0590-\u05FF]/.test(details.address)) {
     console.log(`[places] Rejected foreign result "${details.name}" at ${details.address} for Hebrew address "${addressPart}"`);
     return pickup;
+  }
+
+  // Reject if Google returned a city/locality instead of a specific business/point
+  const detailAddr = details.address || "";
+  const detailName = details.name || "";
+  if (CITY_PATTERNS.test(detailName.replace(/[,\-–]/g, ' ')) && !/\d/.test(detailAddr.split(',')[0])) {
+    console.log(`[places] Rejected city-level result "${detailName}" — not a specific pickup point`);
+    return null;
   }
 
   return {

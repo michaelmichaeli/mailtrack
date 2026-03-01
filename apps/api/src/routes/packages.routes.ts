@@ -459,6 +459,24 @@ async function cleanupBadLocations(prisma: any, packageId: string) {
     }
   }
 
+  // Clear pickup locations that are just city names (no street-level detail)
+  const CITY_ONLY = /^(Jaffa|Tel Aviv-Yafo|תל אביב|תל אביב - יפו|None)$/i;
+  const pkgForPickup = await prisma.package.findUnique({ where: { id: packageId }, select: { pickupLocation: true } });
+  if (pkgForPickup?.pickupLocation) {
+    let pl = pkgForPickup.pickupLocation;
+    if (typeof pl === "string") try { pl = JSON.parse(pl); } catch { pl = null; }
+    if (pl && typeof pl === "object") {
+      const name = pl.name || "";
+      const addr = pl.address || "";
+      const isBadPickup = CITY_ONLY.test(name) || CITY_ONLY.test(addr) ||
+        (addr && !/\d/.test(addr) && !name); // address with no street number and no business name
+      if (isBadPickup) {
+        await prisma.package.update({ where: { id: packageId }, data: { pickupLocation: null } });
+        cleaned++;
+      }
+    }
+  }
+
   if (cleaned > 0) {
     // Recalculate lastLocation from remaining valid events
     const latestWithLocation = await prisma.trackingEvent.findFirst({
@@ -492,7 +510,8 @@ async function cleanupBadLocations(prisma: any, packageId: string) {
         description: { contains: "pick-up point" },
       },
     });
-    if (pickupEvent && pickupEvent.location) {
+    // Only use event location if it looks like a real street address (has numbers)
+    if (pickupEvent && pickupEvent.location && /\d/.test(pickupEvent.location)) {
       const pickupData = { address: pickupEvent.location, name: null as string | null };
       try {
         const { enrichPickupLocation } = await import("../services/places.service.js");
@@ -584,7 +603,10 @@ async function syncPackageFromResult(prisma: any, packageId: string, result: any
     try {
       const { enrichPickupLocation } = await import("../services/places.service.js");
       const enriched = await enrichPickupLocation(result.pickupLocation);
-      updateData.pickupLocation = JSON.stringify(enriched);
+      if (enriched) {
+        updateData.pickupLocation = JSON.stringify(enriched);
+      }
+      // If enrichment returned null (city-only), don't save fake pickup
     } catch {
       updateData.pickupLocation = JSON.stringify(result.pickupLocation);
     }

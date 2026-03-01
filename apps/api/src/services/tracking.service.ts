@@ -168,8 +168,9 @@ async function trackPackageCainiao(
         };
       });
 
-    // Determine last known location from latest event with a location
-    const lastLocation = events.find((e) => e.location)?.location ?? null;
+    // Determine last known location: prefer destination-country locations over transit hubs
+    const israelEvent = events.find((e) => e.location && /[\u0590-\u05FF]/.test(e.location));
+    const lastLocation = israelEvent?.location ?? events.find((e) => e.location)?.location ?? null;
 
     // Extract pickup info from Cainiao data
     let pickupLocation: any = null;
@@ -191,11 +192,15 @@ async function trackPackageCainiao(
         const pickupDesc = pickupEvent.standerdDesc || pickupEvent.desc || "";
         const locMatch = pickupDesc.match(/\[([^\]]+)\]/);
         const location = locMatch ? locMatch[1].replace(/^[A-Z]{2},?\s*/, "").replace(/\d{5,7}/g, "").trim() : null;
-        pickupLocation = {
-          address: location,
-          name: module.destCpInfo?.cpName || null,
-          phone: module.destCpInfo?.phone || null,
-        };
+        // Only use as pickup if we have a specific address (not just a city name)
+        const hasStreetDetail = location && /\d/.test(location); // street addresses contain numbers
+        if (hasStreetDetail) {
+          pickupLocation = {
+            address: location,
+            name: module.destCpInfo?.cpName || null,
+            phone: module.destCpInfo?.phone || null,
+          };
+        }
       }
     }
 
