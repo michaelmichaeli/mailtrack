@@ -435,8 +435,8 @@ async function syncPackageFromResult(prisma: any, packageId: string, result: any
   // Update package status, location, pickup info, and estimated delivery
   const updateData: any = {
     status: result.status as any,
+    lastLocation: result.lastLocation ?? null,
     ...(result.estimatedDelivery ? { estimatedDelivery: new Date(result.estimatedDelivery) } : {}),
-    ...(result.lastLocation ? { lastLocation: result.lastLocation } : {}),
   };
   // Save pickup location if available from carrier — enrich with Google Places data
   if (result.pickupLocation && (result.pickupLocation.address || result.pickupLocation.pickupCode)) {
@@ -491,7 +491,15 @@ async function syncPackageFromResult(prisma: any, packageId: string, result: any
       },
     });
 
-    if (!exists) {
+    if (exists) {
+      // Update location if it changed (e.g. location extraction was fixed)
+      if (event.location !== exists.location) {
+        await prisma.trackingEvent.update({
+          where: { id: exists.id },
+          data: { location: event.location },
+        });
+      }
+    } else {
       // Check if there's a generic email-sourced event at a similar time (within 6 hours)
       // that we can upgrade with richer carrier data
       const genericWindow = 6 * 60 * 60 * 1000;
