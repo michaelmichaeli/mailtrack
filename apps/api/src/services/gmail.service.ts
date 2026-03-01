@@ -71,16 +71,21 @@ export async function fetchGmailEmails(
   if (since) {
     const afterDate = Math.floor(since.getTime() / 1000);
     query = `(${query}) after:${afterDate}`;
+  } else {
+    // First sync: limit to last 6 months to avoid OOM on large mailboxes
+    const sixMonthsAgo = Math.floor((Date.now() - 180 * 24 * 60 * 60 * 1000) / 1000);
+    query = `(${query}) after:${sixMonthsAgo}`;
   }
 
-  // Paginate through ALL matching messages
+  // Paginate through matching messages, cap at 500 to prevent OOM
+  const MAX_MESSAGES = 500;
   const allMessageIds: Array<{ id: string }> = [];
   let pageToken: string | undefined;
   do {
     const listResponse = await gmail.users.messages.list({
       userId: "me",
       q: query,
-      maxResults: 500,
+      maxResults: 200,
       pageToken,
     });
     const messages = listResponse.data.messages ?? [];
@@ -88,14 +93,14 @@ export async function fetchGmailEmails(
       if (m.id) allMessageIds.push({ id: m.id });
     }
     pageToken = listResponse.data.nextPageToken ?? undefined;
-  } while (pageToken);
+  } while (pageToken && allMessageIds.length < MAX_MESSAGES);
 
-  console.log(`[gmail] Query matched ${allMessageIds.length} emails`);
+  console.log(`[gmail] Query matched ${allMessageIds.length} emails (capped at ${MAX_MESSAGES})`);
 
   const emails: Array<{ id: string; html: string; from: string; subject: string; date: string }> = [];
 
-  // Fetch each message (batch in groups of 20 to avoid rate limits)
-  const BATCH_SIZE = 20;
+  // Fetch each message (batch in groups of 10 to limit memory)
+  const BATCH_SIZE = 10;
   for (let i = 0; i < allMessageIds.length; i += BATCH_SIZE) {
     const batch = allMessageIds.slice(i, i + BATCH_SIZE);
     const results = await Promise.all(
