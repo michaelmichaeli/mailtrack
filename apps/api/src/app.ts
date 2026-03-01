@@ -30,6 +30,7 @@ export async function buildApp() {
       "http://localhost:3000",
       "http://localhost:3003",
       /\.mailtrack\.app$/,
+      /\.vercel\.app$/,
     ],
     credentials: true,
   });
