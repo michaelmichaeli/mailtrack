@@ -223,40 +223,57 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
     // Run sync in background (don't await)
     (async () => {
       const job = syncJobs.get(userId)!;
-      const { track17Batch, convert17TrackResult, closeBrowser } = await import("../services/tracking17.service.js");
+      let use17track = true;
+      let track17Batch: any, convert17TrackResult: any, closeBrowser: any;
+
+      try {
+        const mod = await import("../services/tracking17.service.js");
+        track17Batch = mod.track17Batch;
+        convert17TrackResult = mod.convert17TrackResult;
+        closeBrowser = mod.closeBrowser;
+      } catch {
+        use17track = false;
+        console.log("[sync-all] 17track unavailable, using Cainiao only");
+      }
 
       const batchSize = 5;
       for (let i = 0; i < packages.length; i += batchSize) {
         const batch = packages.slice(i, i + batchSize);
-        const trackingNumbers = batch.map((p) => p.trackingNumber);
 
-        try {
-          console.log(`[sync-all] 17track batch ${Math.floor(i / batchSize) + 1}: ${trackingNumbers.join(", ")}`);
-          const results = await track17Batch(trackingNumbers);
+        // Try 17track batch first
+        let results17 = new Map();
+        if (use17track) {
+          try {
+            const trackingNumbers = batch.map((p) => p.trackingNumber);
+            console.log(`[sync-all] 17track batch ${Math.floor(i / batchSize) + 1}: ${trackingNumbers.join(", ")}`);
+            results17 = await track17Batch(trackingNumbers);
+          } catch (e: any) {
+            console.log(`[sync-all] 17track batch failed, falling back to Cainiao: ${e?.message}`);
+            use17track = false; // Don't try 17track again
+          }
+        }
 
-          for (const pkg of batch) {
-            const shipment = results.get(pkg.trackingNumber);
+        // Process each package — use 17track result or fallback to Cainiao
+        for (const pkg of batch) {
+          try {
+            const shipment = results17.get(pkg.trackingNumber);
             if (shipment?.shipment) {
               const result = convert17TrackResult(shipment, pkg.carrier as any);
               await syncPackageFromResult(app.prisma, pkg.id, result);
               job.synced++;
               console.log(`[sync-all] ✓ ${pkg.trackingNumber}: ${result.events.length} events`);
             } else {
-              try {
-                const fallback = await trackPackage(pkg.trackingNumber, pkg.carrier as any, true);
-                if (fallback) {
-                  await syncPackageFromResult(app.prisma, pkg.id, fallback);
-                  job.synced++;
-                  console.log(`[sync-all] ✓ ${pkg.trackingNumber} (fallback): ${fallback.events.length} events`);
-                }
-              } catch (e) {
-                console.error(`[sync-all] Fallback failed for ${pkg.trackingNumber}:`, e);
+              const fallback = await trackPackage(pkg.trackingNumber, pkg.carrier as any, true);
+              if (fallback) {
+                await syncPackageFromResult(app.prisma, pkg.id, fallback);
+                job.synced++;
+                console.log(`[sync-all] ✓ ${pkg.trackingNumber} (cainiao): ${fallback.events.length} events`);
               }
             }
+          } catch (e: any) {
+            job.errors++;
+            console.error(`[sync-all] Error syncing ${pkg.trackingNumber}:`, e?.message);
           }
-        } catch (e: any) {
-          job.errors++;
-          console.error(`[sync-all] Batch error:`, e?.message);
         }
 
         if (i + batchSize < packages.length) {
@@ -264,7 +281,7 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
         }
       }
 
-      try { await closeBrowser(); } catch {}
+      if (closeBrowser) { try { await closeBrowser(); } catch {} }
 
       // Enrich pickup locations
       try {
