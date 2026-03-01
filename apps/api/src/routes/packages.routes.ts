@@ -473,6 +473,33 @@ async function cleanupBadLocations(prisma: any, packageId: string) {
 
   // Deduplicate events: remove near-duplicate events with same status within 6 hours
   await deduplicateEvents(prisma, packageId);
+
+  // Extract pickup location from existing events if not yet set
+  const pkg = await prisma.package.findUnique({ where: { id: packageId }, select: { pickupLocation: true } });
+  if (!pkg?.pickupLocation) {
+    const pickupEvent = await prisma.trackingEvent.findFirst({
+      where: {
+        packageId,
+        description: { contains: "pick-up point" },
+      },
+    });
+    if (pickupEvent && pickupEvent.location) {
+      const pickupData = { address: pickupEvent.location, name: null as string | null };
+      try {
+        const { enrichPickupLocation } = await import("../services/places.service.js");
+        const enriched = await enrichPickupLocation(pickupData);
+        await prisma.package.update({
+          where: { id: packageId },
+          data: { pickupLocation: JSON.stringify(enriched) },
+        });
+      } catch {
+        await prisma.package.update({
+          where: { id: packageId },
+          data: { pickupLocation: JSON.stringify(pickupData) },
+        });
+      }
+    }
+  }
 }
 
 /** Remove duplicate events — keep the one with richer data (location or longer description) */
