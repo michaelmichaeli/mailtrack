@@ -355,11 +355,11 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
     const trackingCount = await app.prisma.package.count({ where: { order: { userId: (request as any).user.userId } } });
 
     // Background: refresh tracking data for newly synced packages
-    const userId = (request as any).user.userId;
+    const bgUserId = (request as any).user.userId;
     setImmediate(async () => {
       try {
         const packages = await app.prisma.package.findMany({
-          where: { order: { userId } },
+          where: { order: { userId: bgUserId } },
           select: { id: true, trackingNumber: true, carrier: true },
         });
         clearRateLimits();
