@@ -152,8 +152,8 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     }
   });
 
-  // POST /api/auth/dev-login — Development-only login (no OAuth needed)
-  if (process.env.NODE_ENV !== "production") {
+  // POST /api/auth/dev-login — Quick login without OAuth
+  if (process.env.NODE_ENV !== "production" || process.env.ALLOW_DEV_LOGIN === "true") {
     app.post("/dev-login", async (request, reply) => {
       const body = request.body as { email?: string } | undefined;
       const email = body?.email || "michaelmichaeli888@gmail.com";
