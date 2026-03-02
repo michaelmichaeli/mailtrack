@@ -283,7 +283,7 @@ function PackagesContent() {
 
       {/* Search & Filter */}
       <FadeIn delay={0.1}>
-        <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -304,33 +304,29 @@ function PackagesContent() {
               </button>
             )}
           </div>
-          <div className="relative">
-            <label htmlFor="status-filter" className="absolute -top-5 left-0 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Status</label>
+          <div className="flex gap-2">
             <select
               id="status-filter"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
               aria-label="Filter by status"
               title="Filter packages by delivery status"
-              className="h-10 rounded-lg border border-border bg-background pl-3 pr-8 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat cursor-pointer sm:w-44"
+              className="h-10 rounded-lg border border-border bg-background pl-3 pr-8 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat cursor-pointer w-full sm:w-44"
             >
               {STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                <option key={opt.value} value={opt.value}>{opt.value ? opt.label : "⊘ Status"}</option>
               ))}
             </select>
-          </div>
-          <div className="relative">
-            <label htmlFor="sort-select" className="absolute -top-5 left-0 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Sort by</label>
             <select
               id="sort-select"
               value={sort}
               onChange={(e) => setSort(e.target.value)}
               aria-label="Sort packages"
               title="Change the order packages are displayed"
-              className="h-10 rounded-lg border border-border bg-background pl-3 pr-8 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat cursor-pointer sm:w-52"
+              className="h-10 rounded-lg border border-border bg-background pl-3 pr-8 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat cursor-pointer w-full sm:w-52"
             >
               {SORT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                <option key={opt.value} value={opt.value}>↕ {opt.label}</option>
               ))}
             </select>
           </div>
@@ -341,14 +337,13 @@ function PackagesContent() {
       <FadeIn delay={0.15}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mr-1">Period</span>
-            <Calendar className="h-4 w-4 text-muted-foreground mr-0.5" />
+            <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
             {TIME_PERIODS.map((p) => (
               <button
                 key={p.value}
                 onClick={() => setPeriod(p.value)}
                 title={`Show packages from the last ${p.label}`}
-                className={`px-3 py-1 text-xs font-medium rounded-full transition-all duration-200 cursor-pointer ${
+                className={`px-3 py-1 text-xs font-medium rounded-full transition-all duration-200 cursor-pointer whitespace-nowrap ${
                   period === p.value
                     ? "bg-primary text-primary-foreground shadow-sm scale-105"
                     : "bg-muted text-muted-foreground hover:bg-muted/80 hover:scale-105"
