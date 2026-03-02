@@ -45,31 +45,7 @@ enum PackageStatus {
   RETURNED
 }
 
-enum Carrier {
-  UPS
-  FEDEX
-  USPS
-  DHL
-  DPD
-  ROYAL_MAIL
-  CAINIAO
-  YANWEN
-  ALIEXPRESS_STANDARD
-  ISRAEL_POST
-  FOUR_PX
-  SUNYOU
-  YUNEXPRESS
-  JT_EXPRESS
-  ARAMEX
-  POSTNL
-  LA_POSTE
-  CANADA_POST
-  TNT
-  GLS
-  TEMU_SHIPPING
-  GAASH
-  UNKNOWN
-}
+// Carrier is now a free-form String to support any carrier without schema changes
 
 model User {
   id           String       @id @default(uuid())
@@ -165,7 +141,7 @@ model Package {
   id                String        @id @default(uuid())
   orderId           String
   trackingNumber    String
-  carrier           Carrier
+  carrier           String
   status            PackageStatus @default(ORDERED)
   estimatedDelivery DateTime?
   lastLocation      String?

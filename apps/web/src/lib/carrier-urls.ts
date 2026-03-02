@@ -44,6 +44,8 @@ const CARRIER_DISPLAY_NAMES: Record<string, string> = {
   CANADA_POST: "Canada Post",
   TNT: "TNT",
   GLS: "GLS",
+  TEMU_SHIPPING: "Temu",
+  GAASH: "Gaash",
 };
 
 export function getCarrierDisplayName(carrier: string): string {

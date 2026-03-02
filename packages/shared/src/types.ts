@@ -72,7 +72,7 @@ export interface ParsedEmail {
   platform: ShopPlatform;
   orderId: string | null;
   trackingNumber: string | null;
-  carrier: Carrier | null;
+  carrier: string | null;
   items: string[];
   orderDate: string | null;
   totalAmount: number | null;
@@ -99,7 +99,7 @@ export interface EmailParserResult {
 
 export interface CarrierTrackingResult {
   trackingNumber: string;
-  carrier: Carrier;
+  carrier: string;
   status: PackageStatus;
   estimatedDelivery: string | null;
   lastLocation: string | null;

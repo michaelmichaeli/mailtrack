@@ -4,7 +4,6 @@ import {
   AuthProvider,
   EmailProvider,
   ShopPlatform,
-  Carrier,
 } from "./enums.js";
 
 // ─── User Schemas ───
@@ -103,7 +102,7 @@ export const packageSchema = z.object({
   id: z.string().uuid(),
   orderId: z.string().uuid(),
   trackingNumber: z.string(),
-  carrier: z.nativeEnum(Carrier),
+  carrier: z.string(),
   status: z.nativeEnum(PackageStatus),
   estimatedDelivery: z.string().datetime().nullable(),
   lastLocation: z.string().nullable(),
@@ -115,7 +114,7 @@ export const packageSchema = z.object({
 export const createPackageSchema = z.object({
   orderId: z.string().uuid(),
   trackingNumber: z.string().min(1),
-  carrier: z.nativeEnum(Carrier),
+  carrier: z.string(),
   items: z.string().nullable().optional(),
 });
 
@@ -169,7 +168,7 @@ export const dashboardResponseSchema = z.object({
 export const searchParamsSchema = z.object({
   query: z.string().optional(),
   status: z.nativeEnum(PackageStatus).optional(),
-  carrier: z.nativeEnum(Carrier).optional(),
+  carrier: z.string().optional(),
   merchant: z.string().optional(),
   dateFrom: z.string().datetime().optional(),
   dateTo: z.string().datetime().optional(),

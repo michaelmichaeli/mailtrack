@@ -1,33 +1,18 @@
-import { Carrier, CARRIER_PATTERNS } from "@mailtrack/shared";
+import { CARRIER_PATTERNS } from "@mailtrack/shared";
 
 /**
  * Auto-detect carrier from tracking number format.
- * Checks specific carriers first, then falls back to generic.
+ * Dynamically checks all patterns in CARRIER_PATTERNS — adding a new
+ * carrier is just adding an entry to the patterns map, no code changes needed.
  */
-export function detectCarrier(trackingNumber: string): Carrier {
+export function detectCarrier(trackingNumber: string): string {
   const n = trackingNumber.trim().toUpperCase();
 
-  // Very specific patterns first
-  if (CARRIER_PATTERNS.UPS.test(n)) return Carrier.UPS;
-  if (CARRIER_PATTERNS.USPS.test(n)) return Carrier.USPS;
-  if (CARRIER_PATTERNS.ROYAL_MAIL.test(n)) return Carrier.ROYAL_MAIL;
-  if (CARRIER_PATTERNS.YANWEN.test(n)) return Carrier.YANWEN;
-  if (CARRIER_PATTERNS.CAINIAO.test(n)) return Carrier.CAINIAO;
-  if (CARRIER_PATTERNS.ISRAEL_POST.test(n)) return Carrier.ISRAEL_POST;
-  if (CARRIER_PATTERNS.LA_POSTE.test(n)) return Carrier.LA_POSTE;
-  if (CARRIER_PATTERNS.FOUR_PX.test(n)) return Carrier.FOUR_PX;
-  if (CARRIER_PATTERNS.SUNYOU.test(n)) return Carrier.SUNYOU;
-  if (CARRIER_PATTERNS.YUNEXPRESS.test(n)) return Carrier.YUNEXPRESS;
-  if (CARRIER_PATTERNS.JT_EXPRESS.test(n)) return Carrier.JT_EXPRESS;
-  if (/^\d{12}$/.test(n) || /^\d{15}$/.test(n) || /^\d{20}$/.test(n)) return Carrier.FEDEX;
-  if (/^(JJD|JD)\d{18}$/.test(n) || /^[A-Z]{3}\d{7,20}$/.test(n)) return Carrier.DHL;
-  if (/^\d{14}$/.test(n)) return Carrier.DPD;
-  if (/^(3S|LS)\d{10,13}(NL)?$/i.test(n)) return Carrier.POSTNL;
-  if (CARRIER_PATTERNS.ALIEXPRESS_STANDARD.test(n)) return Carrier.ALIEXPRESS_STANDARD;
-  if (CARRIER_PATTERNS.TEMU_SHIPPING.test(n)) return Carrier.TEMU_SHIPPING;
-  if (CARRIER_PATTERNS.GAASH.test(n)) return Carrier.GAASH;
+  for (const [carrier, pattern] of Object.entries(CARRIER_PATTERNS)) {
+    if (pattern.test(n)) return carrier;
+  }
 
-  return Carrier.UNKNOWN;
+  return "UNKNOWN";
 }
 
 // Words that precede phone numbers — used to filter false positives
@@ -38,7 +23,7 @@ const PHONE_CONTEXT = /(?:phone|tel|mobile|fax|call|whatsapp|\(\+?\d{1,3}\))\s*/
  * Patterns: "Package RS1300705226Y has been delivered", "Package PH8002545065: with local carrier",
  *           "Package AP00797874896401 has an update", "Package BR004638448MG: collected by the carrier"
  */
-export function extractTrackingFromSubject(subject: string): { trackingNumber: string; carrier: Carrier } | null {
+export function extractTrackingFromSubject(subject: string): { trackingNumber: string; carrier: string } | null {
   // Match "Package TRACKINGNUM" — letters+digits combo, followed by space/colon/end
   const match = subject.match(/Package\s+([A-Z]{2}\d{9,17}[A-Z]{0,2})(?:[\s:]|$)/i);
   if (match) {
@@ -51,18 +36,17 @@ export function extractTrackingFromSubject(subject: string): { trackingNumber: s
 /**
  * Extract all tracking numbers from text, filtering out phone numbers and order IDs.
  */
-export function extractTrackingNumbers(text: string): Array<{ trackingNumber: string; carrier: Carrier }> {
-  const results: Array<{ trackingNumber: string; carrier: Carrier }> = [];
+export function extractTrackingNumbers(text: string): Array<{ trackingNumber: string; carrier: string }> {
+  const results: Array<{ trackingNumber: string; carrier: string }> = [];
   const seen = new Set<string>();
 
-  // Check specific carriers first (not ALIEXPRESS_STANDARD — too broad for body text)
-  const specificCarriers = [
-    "UPS", "USPS", "ROYAL_MAIL", "YANWEN", "CAINIAO", "DHL",
-    "ISRAEL_POST", "FOUR_PX", "SUNYOU", "YUNEXPRESS", "JT_EXPRESS",
-    "POSTNL", "LA_POSTE", "TEMU_SHIPPING", "GAASH",
-  ];
+  // Check all known carrier patterns
+  const carrierNames = Object.keys(CARRIER_PATTERNS);
 
-  for (const carrierName of specificCarriers) {
+  for (const carrierName of carrierNames) {
+    // Skip overly broad patterns in body text
+    if (carrierName === "ALIEXPRESS_STANDARD") continue;
+
     const pattern = CARRIER_PATTERNS[carrierName];
     if (!pattern) continue;
     const globalPattern = new RegExp(pattern.source, "gi");
@@ -81,7 +65,7 @@ export function extractTrackingNumbers(text: string): Array<{ trackingNumber: st
       seen.add(trackingNumber);
       results.push({
         trackingNumber,
-        carrier: Carrier[carrierName as keyof typeof Carrier] ?? Carrier.UNKNOWN,
+        carrier: carrierName,
       });
     }
   }

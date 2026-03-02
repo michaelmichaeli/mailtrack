@@ -1,7 +1,7 @@
 import * as cheerio from "cheerio";
 import { extractTrackingNumbers, extractTrackingFromSubject, detectCarrier } from "../lib/carrier-detect.js";
 import type { ParsedEmail } from "@mailtrack/shared";
-import { ShopPlatform, Carrier, PackageStatus } from "@mailtrack/shared";
+import { ShopPlatform, PackageStatus } from "@mailtrack/shared";
 
 // Merchant detection patterns
 const MERCHANT_PATTERNS: Array<{ pattern: RegExp; platform: ShopPlatform; name: string }> = [
@@ -651,7 +651,7 @@ function parseTemuEmail(
   if (!tracking) {
     const tmuMatch = fullText.match(/\bTMU\d{9,15}\b/i);
     if (tmuMatch) {
-      tracking = { trackingNumber: tmuMatch[0].toUpperCase(), carrier: Carrier.TEMU_SHIPPING };
+      tracking = { trackingNumber: tmuMatch[0].toUpperCase(), carrier: "TEMU_SHIPPING" };
     }
   }
 
