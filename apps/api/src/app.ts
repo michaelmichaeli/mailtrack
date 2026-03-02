@@ -51,6 +51,11 @@ export async function buildApp() {
   await app.register(jwtPlugin);
   await app.register(redisPlugin);
 
+  // Accept plain text bodies (for SMS ingestion from iOS Shortcuts)
+  app.addContentTypeParser("text/plain", { parseAs: "string" }, (_req, body, done) => {
+    done(null, body);
+  });
+
   // Routes
   await app.register(registerRoutes, { prefix: "/api" });
 
