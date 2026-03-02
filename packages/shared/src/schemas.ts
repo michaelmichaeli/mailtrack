@@ -173,6 +173,8 @@ export const searchParamsSchema = z.object({
   merchant: z.string().optional(),
   dateFrom: z.string().datetime().optional(),
   dateTo: z.string().datetime().optional(),
+  sortBy: z.enum(["updatedAt", "createdAt", "orderDate", "status", "merchant"]).default("updatedAt"),
+  sortOrder: z.enum(["asc", "desc"]).default("desc"),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
 });

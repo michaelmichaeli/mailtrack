@@ -14,7 +14,7 @@ import { PageTransition, StaggerContainer, StaggerItem, FadeIn, AnimatedNumber }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, Loader2, Calendar, LayoutGrid, Table2, Columns3, Clock, X, RefreshCw, MessageSquare, TrendingUp } from "lucide-react";
+import { Search, Loader2, Calendar, LayoutGrid, Table2, Columns3, Clock, X, RefreshCw, MessageSquare, TrendingUp, ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { AddPackageDialog } from "@/components/packages/add-package-dialog";
 import { ScanSmsDialog } from "@/components/packages/scan-sms-dialog";
@@ -49,6 +49,17 @@ const TIME_PERIODS = [
   { value: "all", label: "All time", days: 0 },
 ];
 
+const SORT_OPTIONS = [
+  { value: "updatedAt:desc", label: "Recently Updated" },
+  { value: "createdAt:desc", label: "Newest First" },
+  { value: "createdAt:asc", label: "Oldest First" },
+  { value: "orderDate:desc", label: "Order Date (Newest)" },
+  { value: "orderDate:asc", label: "Order Date (Oldest)" },
+  { value: "merchant:asc", label: "Merchant (A–Z)" },
+  { value: "merchant:desc", label: "Merchant (Z–A)" },
+  { value: "status:asc", label: "Status (A–Z)" },
+];
+
 const VIEW_MODES = [
   { value: "grid", label: "Grid", icon: LayoutGrid },
   { value: "table", label: "Table", icon: Table2 },
@@ -73,10 +84,12 @@ function PackagesContent() {
   const initialPeriod = searchParams.get("period") ?? "30d";
   const initialQuery = searchParams.get("q") ?? "";
   const initialView = (searchParams.get("view") as ViewMode) || "grid";
+  const initialSort = searchParams.get("sort") ?? "updatedAt:desc";
   const [query, setQuery] = useState(initialQuery);
   const [status, setStatus] = useState(initialStatus);
   const [period, setPeriod] = useState(initialPeriod);
   const [view, setView] = useState<ViewMode>(initialView);
+  const [sort, setSort] = useState(initialSort);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState<string | null>(null);
   const [scanOpen, setScanOpen] = useState(false);
@@ -100,9 +113,10 @@ function PackagesContent() {
     if (status) params.set("status", status);
     if (period && period !== "30d") params.set("period", period);
     if (view && view !== "grid") params.set("view", view);
+    if (sort && sort !== "updatedAt:desc") params.set("sort", sort);
     const qs = params.toString();
     router.replace(qs ? `?${qs}` : "/packages", { scroll: false });
-  }, [debouncedQuery, status, period, view, router]);
+  }, [debouncedQuery, status, period, view, sort, router]);
 
   const {
     data,
@@ -111,11 +125,14 @@ function PackagesContent() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["packages", debouncedQuery, status, period, view],
+    queryKey: ["packages", debouncedQuery, status, period, view, sort],
     queryFn: ({ pageParam = 1 }) => {
       const params: Record<string, string> = { page: String(pageParam), limit: view === "kanban" || view === "timeline" ? "50" : "12" };
       if (debouncedQuery) params.query = debouncedQuery;
       if (status) params.status = status;
+      const [sortBy, sortOrder] = sort.split(":");
+      params.sortBy = sortBy;
+      params.sortOrder = sortOrder;
       // Skip time filter when searching — user wants to find across all dates
       if (period !== "all" && !debouncedQuery) {
         const days = TIME_PERIODS.find((p) => p.value === period)?.days ?? 30;
@@ -289,6 +306,15 @@ function PackagesContent() {
             className="h-10 rounded-lg border border-border bg-background pl-3 pr-8 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat cursor-pointer sm:w-44"
           >
             {STATUS_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            className="h-10 rounded-lg border border-border bg-background pl-3 pr-8 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat cursor-pointer sm:w-52"
+          >
+            {SORT_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </select>

@@ -60,7 +60,7 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
             include: { events: { orderBy: { timestamp: "asc" }, take: 1, select: { timestamp: true } } },
           },
         },
-        orderBy: { updatedAt: "desc" },
+        orderBy: { [params.sortBy]: params.sortOrder },
         skip: (params.page - 1) * params.limit,
         take: params.limit,
       }),
