@@ -210,11 +210,11 @@ function PackagesContent() {
           </div>
           <div className="flex items-center gap-2">
             <AddPackageDialog />
-            <Button onClick={() => setScanOpen(true)} variant="outline" size="sm" className="cursor-pointer">
+            <Button onClick={() => setScanOpen(true)} variant="outline" size="sm" className="cursor-pointer" title="Paste an SMS or tracking notification to extract tracking numbers">
               <MessageSquare className="h-4 w-4" />
               <span className="hidden sm:inline">Scan Messages</span>
             </Button>
-            <Button onClick={handleFullSync} variant="outline" size="sm" disabled={busy} className="cursor-pointer">
+            <Button onClick={handleFullSync} variant="outline" size="sm" disabled={busy} className="cursor-pointer" title="Sync emails from Gmail and update all tracking statuses">
               <RefreshCw className={`h-4 w-4 transition-transform ${busy ? "animate-spin" : ""}`} />
               {syncProgress || (isSyncing ? "Syncing…" : "Sync All")}
             </Button>
@@ -252,6 +252,8 @@ function PackagesContent() {
                       <button
                         key={p.status}
                         onClick={() => toggleStatus(p.status)}
+                        title={isActive ? `Clear ${p.label} filter` : `Show only ${p.label.toLowerCase()} packages`}
+                        aria-pressed={isActive}
                         className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-200 cursor-pointer ${
                           isActive
                             ? "border-primary bg-primary/10 text-foreground shadow-sm scale-105"
@@ -289,35 +291,49 @@ function PackagesContent() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="pl-9 pr-9"
+              aria-label="Search packages"
             />
             {query && (
               <button
                 onClick={() => setQuery("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 aria-label="Clear search"
+                title="Clear search"
               >
                 <X className="h-4 w-4" />
               </button>
             )}
           </div>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="h-10 rounded-lg border border-border bg-background pl-3 pr-8 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat cursor-pointer sm:w-44"
-          >
-            {STATUS_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            className="h-10 rounded-lg border border-border bg-background pl-3 pr-8 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat cursor-pointer sm:w-52"
-          >
-            {SORT_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <label htmlFor="status-filter" className="absolute -top-5 left-0 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Status</label>
+            <select
+              id="status-filter"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              aria-label="Filter by status"
+              title="Filter packages by delivery status"
+              className="h-10 rounded-lg border border-border bg-background pl-3 pr-8 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat cursor-pointer sm:w-44"
+            >
+              {STATUS_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="relative">
+            <label htmlFor="sort-select" className="absolute -top-5 left-0 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Sort by</label>
+            <select
+              id="sort-select"
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              aria-label="Sort packages"
+              title="Change the order packages are displayed"
+              className="h-10 rounded-lg border border-border bg-background pl-3 pr-8 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat cursor-pointer sm:w-52"
+            >
+              {SORT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </FadeIn>
 
@@ -325,11 +341,13 @@ function PackagesContent() {
       <FadeIn delay={0.15}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <Calendar className="h-4 w-4 text-muted-foreground mr-1" />
+            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mr-1">Period</span>
+            <Calendar className="h-4 w-4 text-muted-foreground mr-0.5" />
             {TIME_PERIODS.map((p) => (
               <button
                 key={p.value}
                 onClick={() => setPeriod(p.value)}
+                title={`Show packages from the last ${p.label}`}
                 className={`px-3 py-1 text-xs font-medium rounded-full transition-all duration-200 cursor-pointer ${
                   period === p.value
                     ? "bg-primary text-primary-foreground shadow-sm scale-105"
@@ -346,7 +364,7 @@ function PackagesContent() {
                 {allItems.length} of {totalCount}
               </p>
             )}
-            <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+            <div className="flex items-center gap-1 bg-muted rounded-lg p-1" role="group" aria-label="View mode">
               {VIEW_MODES.map((mode) => {
                 const Icon = mode.icon;
                 return (
@@ -358,7 +376,9 @@ function PackagesContent() {
                         ? "bg-background text-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
-                    title={mode.label}
+                    title={`Switch to ${mode.label.toLowerCase()} view`}
+                    aria-label={`${mode.label} view`}
+                    aria-pressed={view === mode.value}
                   >
                     <Icon className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline">{mode.label}</span>

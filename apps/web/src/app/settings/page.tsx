@@ -365,10 +365,10 @@ function ScanMessagesSection() {
               <code className="flex-1 rounded-md bg-muted px-3 py-2 text-xs font-mono break-all select-all">
                 {ingestKey}
               </code>
-              <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={() => copyToClipboard(ingestKey)}>
+              <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={() => copyToClipboard(ingestKey)} title="Copy API key to clipboard">
                 {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
               </Button>
-              <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={handleGenerate} disabled={generating}>
+              <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={handleGenerate} disabled={generating} title="Regenerate API key">
                 <RefreshCw className={`h-3.5 w-3.5 ${generating ? "animate-spin" : ""}`} />
               </Button>
             </div>
@@ -388,7 +388,7 @@ function ScanMessagesSection() {
               <code className="flex-1 rounded-md bg-muted px-3 py-2 text-xs font-mono break-all select-all">
                 {webhookUrl}?key={ingestKey}
               </code>
-              <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={() => copyToClipboard(`${webhookUrl}?key=${ingestKey}`)}>
+              <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={() => copyToClipboard(`${webhookUrl}?key=${ingestKey}`)} title="Copy webhook URL to clipboard">
                 <Copy className="h-3.5 w-3.5" />
               </Button>
             </div>
