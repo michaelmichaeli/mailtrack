@@ -51,11 +51,13 @@ export const CARRIER_PATTERNS: Record<string, RegExp> = {
   CANADA_POST: /\b\d{16}\b/,
   TNT: /\b\d{9}\b/,
   GLS: /\b\d{11,12}\b/,
+  TEMU_SHIPPING: /\bTMU\d{9,15}\b/i,
+  GAASH: /\bGAASH\d{8,15}\b/i,
 };
 
 // Email search queries for known merchants
 export const GMAIL_SEARCH_QUERY =
-  'from:(amazon OR aliexpress OR ebay OR etsy OR shein OR temu OR walmart OR shopify OR iherb OR "zara.com" OR asos OR "hm.com" OR dhl OR fedex OR ups OR "israel post" OR "דואר ישראל" OR cainiao OR yanwen OR 4px OR "parcel home" OR "next.co" OR "tiktok shop") subject:(order OR shipping OR tracking OR delivered OR confirmation OR dispatched OR shipment OR "out for delivery" OR "on its way" OR "has been shipped" OR parcel OR pickup OR "pick up")';
+  'from:(amazon OR aliexpress OR ebay OR etsy OR shein OR temu OR walmart OR shopify OR iherb OR "zara.com" OR asos OR "hm.com" OR dhl OR fedex OR ups OR "israel post" OR "דואר ישראל" OR cainiao OR yanwen OR 4px OR "parcel home" OR "next.co" OR "tiktok shop" OR gaash) subject:(order OR shipping OR tracking OR delivered OR confirmation OR dispatched OR shipment OR "out for delivery" OR "on its way" OR "has been shipped" OR parcel OR pickup OR "pick up")';
 
 export const OUTLOOK_SEARCH_QUERY =
   '(from:amazon OR from:aliexpress OR from:ebay OR from:etsy) AND (subject:order OR subject:shipping OR subject:tracking)';

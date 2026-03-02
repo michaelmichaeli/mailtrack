@@ -645,7 +645,15 @@ function parseTemuEmail(
   }
 
   const trackingResults = extractTrackingNumbers(fullText);
-  const tracking = trackingResults[0] ?? null;
+  let tracking = trackingResults[0] ?? null;
+
+  // Fallback: look for TMU-prefixed tracking numbers specific to Temu
+  if (!tracking) {
+    const tmuMatch = fullText.match(/\bTMU\d{9,15}\b/i);
+    if (tmuMatch) {
+      tracking = { trackingNumber: tmuMatch[0].toUpperCase(), carrier: Carrier.TEMU_SHIPPING };
+    }
+  }
 
   let items = extractItemsFromHtml($);
   if (items.length === 0) {

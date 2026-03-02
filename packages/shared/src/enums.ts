@@ -57,6 +57,8 @@ export enum Carrier {
   CANADA_POST = "CANADA_POST",
   TNT = "TNT",
   GLS = "GLS",
+  TEMU_SHIPPING = "TEMU_SHIPPING",
+  GAASH = "GAASH",
   UNKNOWN = "UNKNOWN",
 }
 

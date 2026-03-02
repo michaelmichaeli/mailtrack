@@ -24,6 +24,8 @@ export function detectCarrier(trackingNumber: string): Carrier {
   if (/^\d{14}$/.test(n)) return Carrier.DPD;
   if (/^(3S|LS)\d{10,13}(NL)?$/i.test(n)) return Carrier.POSTNL;
   if (CARRIER_PATTERNS.ALIEXPRESS_STANDARD.test(n)) return Carrier.ALIEXPRESS_STANDARD;
+  if (CARRIER_PATTERNS.TEMU_SHIPPING.test(n)) return Carrier.TEMU_SHIPPING;
+  if (CARRIER_PATTERNS.GAASH.test(n)) return Carrier.GAASH;
 
   return Carrier.UNKNOWN;
 }
@@ -57,7 +59,7 @@ export function extractTrackingNumbers(text: string): Array<{ trackingNumber: st
   const specificCarriers = [
     "UPS", "USPS", "ROYAL_MAIL", "YANWEN", "CAINIAO", "DHL",
     "ISRAEL_POST", "FOUR_PX", "SUNYOU", "YUNEXPRESS", "JT_EXPRESS",
-    "POSTNL", "LA_POSTE",
+    "POSTNL", "LA_POSTE", "TEMU_SHIPPING", "GAASH",
   ];
 
   for (const carrierName of specificCarriers) {
