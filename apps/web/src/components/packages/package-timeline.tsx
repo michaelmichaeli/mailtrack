@@ -127,7 +127,7 @@ export function PackageTimeline({ orders }: { orders: Order[] }) {
                           )}
                         </div>
 
-                        {pickup && !pickup.carrierOnly && pickup.address && (
+                        {pickup && ((!pickup.carrierOnly && pickup.address) || status === "DELIVERED") && (
                           <div className="inline-flex items-center gap-1.5 mt-2 px-2 py-1 rounded-md text-xs font-medium" style={{ backgroundColor: '#047857', color: '#ffffff' }}>
                             <Navigation className="h-3 w-3" />
                             {status === "DELIVERED" ? "Picked up" : "Ready for pickup"}

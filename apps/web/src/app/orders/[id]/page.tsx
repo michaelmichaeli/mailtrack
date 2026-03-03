@@ -462,11 +462,14 @@ export default function OrderDetailPage() {
           } catch { return null; }
           if (!pickup) return null;
 
-          // Don't show carrier-only info as a separate card — it's not actionable
-          if (pickup.carrierOnly) return null;
+          // Don't show carrier-only info for active packages — not actionable
+          // But show it for delivered packages as historical context
           const isDelivered = pkgWithPickup.status === "DELIVERED";
+          if (pickup.carrierOnly && !isDelivered) return null;
           const headerText = isDelivered ? "✅ Picked Up" : "📦 Ready for Pickup";
-          const subText = isDelivered ? "Your package was collected from the location below" : "Your package is waiting at the location below";
+          const subText = isDelivered
+            ? `Delivered by ${pickup.name || 'carrier'}`
+            : "Your package is waiting at the location below";
 
           return (
             <Card className="overflow-hidden shadow-sm" style={{ borderColor: '#047857' }}>

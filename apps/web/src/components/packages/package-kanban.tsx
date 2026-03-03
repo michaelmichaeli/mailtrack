@@ -113,7 +113,7 @@ export function PackageKanban({ orders }: { orders: Order[] }) {
                       </p>
                     )}
 
-                    {pickup && !pickup.carrierOnly && pickup.address && (
+                    {pickup && ((!pickup.carrierOnly && pickup.address) || pkg?.status === "DELIVERED") && (
                       <div className="flex items-center gap-1.5 mt-2 px-2 py-1.5 rounded-md text-xs" style={{ backgroundColor: '#047857', color: '#ffffff' }}>
                         <Navigation className="h-3 w-3 shrink-0" />
                         <span className="truncate">{pkg?.status === "DELIVERED" ? "Picked up" : "Pickup ready"}</span>
