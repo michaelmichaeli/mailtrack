@@ -61,6 +61,10 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
         );
 
       const STATUS_ORDER = ["ORDERED", "PROCESSING", "SHIPPED", "IN_TRANSIT", "OUT_FOR_DELIVERY", "DELIVERED"];
+      const STATUS_LABELS: Record<string, string> = {
+        SHIPPED: "Shipped", IN_TRANSIT: "In Transit", OUT_FOR_DELIVERY: "Out for Delivery",
+        DELIVERED: "Delivered", EXCEPTION: "Exception", RETURNED: "Returned",
+      };
 
       for (const email of emails) {
         const parsed = parseEmail(email.html, email.from, email.subject);
@@ -136,27 +140,28 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
               where: { id: existingOrder.id },
               data: updateData,
             });
-            // Create notification for status change
+            // Create notification for status change (only if not already notified)
             if (updateData.status) {
-              const itemName = parsed.items[0] || parsed.trackingNumber || "Package";
-              const STATUS_ICONS: Record<string, string> = {
-                SHIPPED: "📤", IN_TRANSIT: "🚚", OUT_FOR_DELIVERY: "📬",
-                DELIVERED: "✅", EXCEPTION: "⚠️", RETURNED: "↩️",
-              };
-              const STATUS_LABELS: Record<string, string> = {
-                SHIPPED: "Shipped", IN_TRANSIT: "In Transit", OUT_FOR_DELIVERY: "Out for Delivery",
-                DELIVERED: "Delivered", EXCEPTION: "Exception", RETURNED: "Returned",
-              };
-              await app.prisma.notification.create({
-                data: {
-                  userId,
-                  type: updateData.status === "DELIVERED" ? "DELIVERY" : "STATUS_CHANGE",
-                  title: updateData.status === "DELIVERED" ? "Package Delivered! 🎉" : `Tracking Update`,
-                  body: `${itemName} — ${STATUS_LABELS[updateData.status] ?? updateData.status}`,
-                  icon: STATUS_ICONS[updateData.status] ?? "📦",
-                  orderId: existingOrder.id,
-                },
+              const existingNotif = await app.prisma.notification.findFirst({
+                where: { userId, orderId: existingOrder.id, type: updateData.status === "DELIVERED" ? "DELIVERY" : "STATUS_CHANGE", body: { contains: STATUS_LABELS[updateData.status] ?? updateData.status } },
               });
+              if (!existingNotif) {
+                const itemName = parsed.items[0] || parsed.trackingNumber || "Package";
+                const STATUS_ICONS: Record<string, string> = {
+                  SHIPPED: "📤", IN_TRANSIT: "🚚", OUT_FOR_DELIVERY: "📬",
+                  DELIVERED: "✅", EXCEPTION: "⚠️", RETURNED: "↩️",
+                };
+                await app.prisma.notification.create({
+                  data: {
+                    userId,
+                    type: updateData.status === "DELIVERED" ? "DELIVERY" : "STATUS_CHANGE",
+                    title: updateData.status === "DELIVERED" ? "Package Delivered! 🎉" : `Tracking Update`,
+                    body: `${itemName} — ${STATUS_LABELS[updateData.status] ?? updateData.status}`,
+                    icon: STATUS_ICONS[updateData.status] ?? "📦",
+                    orderId: existingOrder.id,
+                  },
+                });
+              }
             }
           } else {
             order = existingOrder;
@@ -177,18 +182,23 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
           });
           totalOrders++;
 
-          // Create notification for new order
+          // Create notification for new order (only if not already notified for this order)
           const itemName = parsed.items[0] || parsed.trackingNumber || "New package";
-          await app.prisma.notification.create({
-            data: {
-              userId,
-              type: "NEW_ORDER",
-              title: "New Order Detected",
-              body: `${itemName}${parsed.merchant ? ` from ${parsed.merchant}` : ""}`,
-              icon: "🛍️",
-              orderId: order.id,
-            },
+          const existingNewNotif = await app.prisma.notification.findFirst({
+            where: { userId, orderId: order.id, type: "NEW_ORDER" },
           });
+          if (!existingNewNotif) {
+            await app.prisma.notification.create({
+              data: {
+                userId,
+                type: "NEW_ORDER",
+                title: "New Order Detected",
+                body: `${itemName}${parsed.merchant ? ` from ${parsed.merchant}` : ""}`,
+                icon: "🛍️",
+                orderId: order.id,
+              },
+            });
+          }
         }
 
         // Create or update package if tracking number found
