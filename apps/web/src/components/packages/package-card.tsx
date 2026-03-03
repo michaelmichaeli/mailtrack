@@ -109,7 +109,7 @@ export function PackageCard({ order }: OrderCardProps) {
         </div>
 
         {/* Pickup location banner */}
-        {pickup && (
+        {pickup && !pickup.carrierOnly && pickup.address && (
           <div className="flex items-start gap-2 mb-3 px-2.5 py-2 rounded-lg border" style={{ backgroundColor: '#047857', borderColor: '#065f46' }}>
             <Navigation className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: '#ffffff' }} />
             <div className="min-w-0 flex-1">
