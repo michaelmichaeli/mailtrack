@@ -462,11 +462,10 @@ export default function OrderDetailPage() {
           } catch { return null; }
           if (!pickup) return null;
 
-          const isCarrierOnly = pickup.carrierOnly;
-          const headerText = isCarrierOnly ? "Delivery Carrier" : "📦 Ready for Pickup";
-          const subText = isCarrierOnly
-            ? `Handled by ${pickup.name || 'carrier'}`
-            : "Your package is waiting at the location below";
+          // Don't show carrier-only info as a separate card — it's not actionable
+          if (pickup.carrierOnly) return null;
+          const headerText = "📦 Ready for Pickup";
+          const subText = "Your package is waiting at the location below";
 
           return (
             <Card className="overflow-hidden shadow-sm" style={{ borderColor: '#047857' }}>
@@ -498,18 +497,8 @@ export default function OrderDetailPage() {
                   </div>
                 )}
 
-                {isCarrierOnly && pickup.name && (
-                  <div className="flex items-start gap-2.5">
-                    <Package className="h-4 w-4 mt-0.5 shrink-0" style={{ color: '#047857' }} />
-                    <div>
-                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Carrier</p>
-                      <p className="text-sm font-medium text-foreground mt-0.5">{pickup.name}</p>
-                    </div>
-                  </div>
-                )}
-
                 <div className="grid grid-cols-1 gap-4">
-                  {pickup.address && !isCarrierOnly && (
+                  {pickup.address && (
                     <div className="flex items-start gap-2.5">
                       <MapPin className="h-4 w-4 mt-0.5 shrink-0" style={{ color: '#047857' }} />
                       <div className="min-w-0 flex-1">
@@ -599,7 +588,7 @@ export default function OrderDetailPage() {
                 )}
               </CardContent>
 
-              {pickup.address && !isCarrierOnly && (
+              {pickup.address && (
                 <div className="border-t border-border">
                   <iframe
                     src={`https://maps.google.com/maps?q=${encodeURIComponent(pickup.address)}&output=embed&z=15`}
