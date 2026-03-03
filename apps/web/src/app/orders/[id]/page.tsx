@@ -464,8 +464,9 @@ export default function OrderDetailPage() {
 
           // Don't show carrier-only info as a separate card — it's not actionable
           if (pickup.carrierOnly) return null;
-          const headerText = "📦 Ready for Pickup";
-          const subText = "Your package is waiting at the location below";
+          const isDelivered = pkgWithPickup.status === "DELIVERED";
+          const headerText = isDelivered ? "✅ Picked Up" : "📦 Ready for Pickup";
+          const subText = isDelivered ? "Your package was collected from the location below" : "Your package is waiting at the location below";
 
           return (
             <Card className="overflow-hidden shadow-sm" style={{ borderColor: '#047857' }}>
