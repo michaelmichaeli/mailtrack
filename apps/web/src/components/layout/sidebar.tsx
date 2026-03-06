@@ -63,7 +63,7 @@ export function Sidebar() {
     <>
       {/* Logo */}
       <div className="flex items-center gap-3 border-b border-border px-5 py-4">
-        <Image src="/logo.png" alt="MailTrack" width={36} height={36} className="rounded-xl shadow-sm" />
+        <Image src="/logo.png" alt="MailTrack" width={36} height={36} className="drop-shadow-sm" />
         <div>
           <span className="text-base font-bold text-foreground tracking-tight">MailTrack</span>
           <p className="text-[10px] text-muted-foreground leading-none">Every package. One dashboard.</p>
