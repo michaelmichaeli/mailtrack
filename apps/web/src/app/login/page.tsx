@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Mail, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { api } from "@/lib/api";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
@@ -39,9 +40,7 @@ function LoginForm() {
       <Card className="w-full max-w-md shadow-xl border-border/50">
         <CardHeader className="text-center pb-2">
           <div className="flex justify-center mb-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/25">
-              <Mail className="h-7 w-7 text-primary-foreground" />
-            </div>
+            <Image src="/logo.png" alt="MailTrack" width={56} height={56} className="drop-shadow-lg" />
           </div>
           <CardTitle className="text-2xl font-bold tracking-tight">Welcome to MailTrack</CardTitle>
           <CardDescription className="text-sm">
