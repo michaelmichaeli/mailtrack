@@ -182,7 +182,7 @@ function PackagesContent() {
         try {
           const s = await api.getSyncStatus();
           if (s.status === "running") {
-            setSyncProgress(`Syncing… ${s.synced}/${s.total}`);
+            setSyncProgress(`Tracking ${s.synced} of ${s.total} packages…`);
           } else {
             clearInterval(poll);
             setSyncProgress(null);
