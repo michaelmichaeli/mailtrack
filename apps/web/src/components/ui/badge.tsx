@@ -1,16 +1,35 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { Slot } from "radix-ui";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 
-interface BadgeProps {
-  variant?: "default" | "secondary" | "outline" | "status";
-  status?: string;
-  className?: string;
-  children?: React.ReactNode;
-  style?: React.CSSProperties;
-}
+import { cn } from "@/lib/utils";
+
+const badgeVariants = cva(
+  "inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
+        secondary:
+          "bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
+        destructive:
+          "bg-destructive text-white focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40 [a&]:hover:bg-destructive/90",
+        outline:
+          "border-border text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+        ghost: "[a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 [a&]:hover:underline",
+        status: "", // handled dynamically
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+);
 
 const statusConfig: Record<string, { bg: string; text: string; dot: string; darkBg: string; darkText: string }> = {
   ORDERED:          { bg: "#f1f5f9", text: "#334155", dot: "#94a3b8", darkBg: "rgba(30,41,59,0.8)", darkText: "#cbd5e1" },
@@ -34,7 +53,15 @@ const statusLabels: Record<string, string> = {
   RETURNED: "Returned",
 };
 
-export function Badge({ variant = "default", status, className, children, style }: BadgeProps) {
+function Badge({
+  className,
+  variant = "default",
+  status,
+  asChild = false,
+  children,
+  ...props
+}: React.ComponentProps<"span"> &
+  VariantProps<typeof badgeVariants> & { asChild?: boolean; status?: string }) {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -44,6 +71,8 @@ export function Badge({ variant = "default", status, className, children, style 
     const config = statusConfig[status] ?? statusConfig.ORDERED;
     return (
       <span
+        data-slot="badge"
+        data-variant="status"
         className={cn(
           "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold",
           className
@@ -52,6 +81,7 @@ export function Badge({ variant = "default", status, className, children, style 
           backgroundColor: isDark ? config.darkBg : config.bg,
           color: isDark ? config.darkText : config.text,
         }}
+        {...props}
       >
         <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: config.dot }} />
         {children ?? statusLabels[status] ?? status}
@@ -59,18 +89,18 @@ export function Badge({ variant = "default", status, className, children, style 
     );
   }
 
+  const Comp = asChild ? Slot.Root : "span";
+
   return (
-    <span
-      className={cn(
-        "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold",
-        variant === "secondary" && "bg-secondary text-secondary-foreground",
-        variant === "outline" && "border border-border text-foreground",
-        variant === "default" && "bg-primary text-primary-foreground",
-        className
-      )}
-      style={style}
+    <Comp
+      data-slot="badge"
+      data-variant={variant}
+      className={cn(badgeVariants({ variant }), className)}
+      {...props}
     >
       {children}
-    </span>
+    </Comp>
   );
 }
+
+export { Badge, badgeVariants };
