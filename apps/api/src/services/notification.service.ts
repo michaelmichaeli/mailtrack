@@ -8,6 +8,7 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 }
 
+/** Returns the VAPID public key for Web Push subscription on the client. */
 export function getVapidPublicKey(): string {
   return VAPID_PUBLIC_KEY;
 }
