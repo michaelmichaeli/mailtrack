@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -651,6 +651,14 @@ function CompletionStep({ onFinish }: { onFinish: () => void }) {
 type WizardStep = "welcome" | "connect-email" | "syncing" | "features" | "complete";
 
 export default function OnboardingPage() {
+  return (
+    <Suspense>
+      <OnboardingWizard />
+    </Suspense>
+  );
+}
+
+function OnboardingWizard() {
   const [step, setStep] = useState<WizardStep>("welcome");
   const [userName, setUserName] = useState("");
   const [syncResult, setSyncResult] = useState<{
