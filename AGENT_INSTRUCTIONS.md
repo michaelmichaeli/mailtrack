@@ -130,6 +130,12 @@ npx vitest run apps/api/src/__tests__/carrier-detect.test.ts
 docker-compose up -d
 ```
 
+## Workflow Rules
+
+1. **Step-by-step approval**: Complete one task at a time. After each task, provide a summary of what was done and wait for user approval before proceeding to the next step.
+2. **No batch changes**: Do not chain multiple tasks together without review.
+3. **Summary format**: After each task, provide a clear summary including: what changed, which files were modified, and what the next step would be.
+
 ## Self-Recovery Protocol
 
 If you lose context or are starting a new session:
