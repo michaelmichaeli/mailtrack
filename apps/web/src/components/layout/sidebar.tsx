@@ -19,7 +19,6 @@ import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { useScrollRestore } from "@/lib/use-scroll-restore";
-import { NotificationBell } from "@/components/notifications/notification-bell";
 
 const navItems = [
   { href: "/packages", label: "Orders", icon: Package },
@@ -105,10 +104,6 @@ export function Sidebar() {
 
       {/* Bottom actions */}
       <div className="border-t border-border px-3 py-3 space-y-0.5">
-        <div className="flex items-center gap-2 px-3 py-2">
-          <NotificationBell />
-          <span className="text-sm font-medium text-muted-foreground">Notifications</span>
-        </div>
         <button
           onClick={cycleTheme}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
@@ -137,11 +132,6 @@ export function Sidebar() {
       >
         <Menu className="h-5 w-5" />
       </button>
-
-      {/* Floating notification bell — top right, visible on all screens */}
-      <div className="fixed top-4 right-4 z-40">
-        <NotificationBell />
-      </div>
 
       {/* Mobile overlay */}
       {mobileOpen && (
