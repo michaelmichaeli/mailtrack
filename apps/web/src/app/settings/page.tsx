@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense, useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -31,6 +31,7 @@ import {
   Smartphone,
   FileText,
   Check,
+  LogOut,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
@@ -57,6 +58,7 @@ function SettingsContent() {
   const queryClient = useQueryClient();
   const { theme, setTheme } = useTheme();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const errorParam = searchParams.get("error");
   const successParam = searchParams.get("success");
   const autoSync = searchParams.get("autoSync");
@@ -145,6 +147,12 @@ function SettingsContent() {
       toast.error("Failed to delete account");
       setIsDeleting(false);
     }
+  };
+
+  const handleSignOut = async () => {
+    try { await api.logout(); } catch {}
+    api.setToken(null);
+    router.push("/login");
   };
 
   return (
@@ -259,6 +267,12 @@ function SettingsContent() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Sign Out */}
+      <Button variant="outline" className="w-full" onClick={handleSignOut}>
+        <LogOut className="h-4 w-4" />
+        Sign out
+      </Button>
 
       {/* Data & Privacy */}
       <Card>
