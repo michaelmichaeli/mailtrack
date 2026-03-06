@@ -236,57 +236,114 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
         closeBrowser = mod.closeBrowser;
       } catch {
         use17track = false;
-        console.log("[sync-all] 17track unavailable, using Cainiao only");
+        console.log("[sync-all] 17track unavailable, using direct APIs only");
       }
 
-      const batchSize = 5;
-      for (let i = 0; i < packages.length; i += batchSize) {
-        const batch = packages.slice(i, i + batchSize);
+      // Split packages: Israel Post vs others
+      const { isIsraelPostPackage, trackIsraelPostBatch } = await import("../services/israelpost.service.js");
+      const israelPostPkgs = packages.filter((p) => isIsraelPostPackage(p.trackingNumber, p.carrier));
+      const otherPkgs = packages.filter((p) => !isIsraelPostPackage(p.trackingNumber, p.carrier));
 
-        // Try 17track batch first
-        let results17 = new Map();
-        if (use17track) {
-          try {
-            const trackingNumbers = batch.map((p) => p.trackingNumber);
-            console.log(`[sync-all] 17track batch ${Math.floor(i / batchSize) + 1}: ${trackingNumbers.join(", ")}`);
-            results17 = await track17Batch(trackingNumbers);
-          } catch (e: any) {
-            console.log(`[sync-all] 17track batch failed, falling back to Cainiao: ${e?.message}`);
-            use17track = false; // Don't try 17track again
+      console.log(`[sync-all] ${israelPostPkgs.length} Israel Post + ${otherPkgs.length} other packages`);
+
+      // Run Israel Post and 17track in parallel
+      const israelPostPromise = (async () => {
+        if (israelPostPkgs.length === 0) return;
+        try {
+          const trackingNumbers = israelPostPkgs.map((p) => p.trackingNumber);
+          const results = await trackIsraelPostBatch(trackingNumbers, 5);
+
+          for (const pkg of israelPostPkgs) {
+            try {
+              const result = results.get(pkg.trackingNumber);
+              if (result) {
+                await syncPackageFromResult(app.prisma, pkg.id, result);
+                job.synced++;
+                console.log(`[sync-all] ✓ ${pkg.trackingNumber} (israelpost): ${result.events.length} events`);
+              } else {
+                // Fallback: try 17track with location stripping
+                const fallback = await trackPackage(pkg.trackingNumber, pkg.carrier as any, true);
+                if (fallback) {
+                  await syncPackageFromResult(app.prisma, pkg.id, fallback);
+                  job.synced++;
+                }
+              }
+            } catch (e: any) {
+              job.errors++;
+              console.error(`[sync-all] Error syncing ${pkg.trackingNumber}:`, e?.message);
+            }
           }
-        }
-
-        // Process each package — use 17track result or fallback to Cainiao
-        for (const pkg of batch) {
-          try {
-            const shipment = results17.get(pkg.trackingNumber);
-            if (shipment?.shipment) {
-              const result = convert17TrackResult(shipment, pkg.carrier as any);
-              await syncPackageFromResult(app.prisma, pkg.id, result);
-              job.synced++;
-              console.log(`[sync-all] ✓ ${pkg.trackingNumber}: ${result.events.length} events`);
-            } else {
+        } catch (e: any) {
+          console.error("[sync-all] Israel Post batch error:", e?.message);
+          // Fallback: try each individually via trackPackage
+          for (const pkg of israelPostPkgs) {
+            try {
               const fallback = await trackPackage(pkg.trackingNumber, pkg.carrier as any, true);
               if (fallback) {
                 await syncPackageFromResult(app.prisma, pkg.id, fallback);
                 job.synced++;
-                console.log(`[sync-all] ✓ ${pkg.trackingNumber} (cainiao): ${fallback.events.length} events`);
               }
+            } catch (e2: any) {
+              job.errors++;
             }
-            // Always clean up bad locations
-            await cleanupBadLocations(app.prisma, pkg.id);
-          } catch (e: any) {
-            job.errors++;
-            console.error(`[sync-all] Error syncing ${pkg.trackingNumber}:`, e?.message);
           }
         }
+      })();
 
-        if (i + batchSize < packages.length) {
-          await new Promise((r) => setTimeout(r, 2000));
+      const otherPromise = (async () => {
+        if (otherPkgs.length === 0) return;
+        const batchSize = 10;
+        for (let i = 0; i < otherPkgs.length; i += batchSize) {
+          const batch = otherPkgs.slice(i, i + batchSize);
+
+          let results17 = new Map();
+          if (use17track) {
+            try {
+              const trackingNumbers = batch.map((p) => p.trackingNumber);
+              console.log(`[sync-all] 17track batch ${Math.floor(i / batchSize) + 1}: ${trackingNumbers.join(", ")}`);
+              results17 = await track17Batch(trackingNumbers);
+            } catch (e: any) {
+              console.log(`[sync-all] 17track batch failed, falling back to Cainiao: ${e?.message}`);
+              use17track = false;
+            }
+          }
+
+          for (const pkg of batch) {
+            try {
+              const shipment = results17.get(pkg.trackingNumber);
+              if (shipment?.shipment) {
+                const result = convert17TrackResult(shipment, pkg.carrier as any);
+                await syncPackageFromResult(app.prisma, pkg.id, result);
+                job.synced++;
+                console.log(`[sync-all] ✓ ${pkg.trackingNumber}: ${result.events.length} events`);
+              } else {
+                const fallback = await trackPackage(pkg.trackingNumber, pkg.carrier as any, true);
+                if (fallback) {
+                  await syncPackageFromResult(app.prisma, pkg.id, fallback);
+                  job.synced++;
+                }
+              }
+            } catch (e: any) {
+              job.errors++;
+              console.error(`[sync-all] Error syncing ${pkg.trackingNumber}:`, e?.message);
+            }
+          }
+
+          if (i + batchSize < otherPkgs.length) {
+            await new Promise((r) => setTimeout(r, 500));
+          }
         }
-      }
+      })();
+
+      // Wait for both pools to finish
+      await Promise.allSettled([israelPostPromise, otherPromise]);
 
       if (closeBrowser) { try { await closeBrowser(); } catch {} }
+
+      // Clean up bad locations across all packages
+      for (const pkg of packages) {
+        try { await cleanupBadLocations(app.prisma, pkg.id); } catch {}
+      }
 
       // Enrich pickup locations
       try {
@@ -439,10 +496,16 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
 };
 
 // Known-bad location patterns (extracted from descriptions, not real places)
-const BAD_LOCATION_PATTERNS = /\b(customs|warehouse|designated location|transit|sorting center|departed|arrived|received|collected|carrier)\b/i;
+const BAD_LOCATION_PATTERNS = /\b(customs|warehouse|designated location|transit|sorting center|departed|arrived|received|collected|carrier|canada|vancouver|toronto|montreal|china|shenzhen|guangzhou|shanghai|beijing|shatian|dongguan|yiwu|hangzhou|united states|new york|los angeles|chicago|germany|berlin|munich|france|paris|uk|london|netherlands|amsterdam|russia|moscow)\b/i;
+
+// For Israeli packages: only accept locations with Hebrew chars or known Israeli city names
+const ISRAELI_LOCATION_VALID = /[\u0590-\u05FF]|israel|tel\s*aviv|jerusalem|haifa|beer\s*sheva|ashdod|ashkelon|netanya|herzliya|ramat\s*gan|petah\s*tikva|rishon|holon|bat\s*yam|rehovot|kfar\s*saba|modi.in|eilat|tiberias|nazareth|acre|akko|nahariya|kiryat|raanana|givatayim|bnei\s*brak|lod|ramla|arad|dimona|yavne|or\s*yehuda|rosh\s*ha.ain/i;
 
 /** Clean up events with bad locations that were incorrectly extracted from descriptions */
 async function cleanupBadLocations(prisma: any, packageId: string) {
+  const pkg = await prisma.package.findUnique({ where: { id: packageId }, select: { carrier: true } });
+  const isIsraeliPackage = pkg?.carrier === "ISRAEL_POST";
+
   const events = await prisma.trackingEvent.findMany({
     where: { packageId, location: { not: null } },
     select: { id: true, location: true },
@@ -450,7 +513,21 @@ async function cleanupBadLocations(prisma: any, packageId: string) {
 
   let cleaned = 0;
   for (const event of events) {
-    if (event.location && BAD_LOCATION_PATTERNS.test(event.location) && !/\[/.test(event.location)) {
+    if (!event.location) continue;
+
+    let shouldClear = false;
+
+    // Always clear generic bad patterns
+    if (BAD_LOCATION_PATTERNS.test(event.location) && !/\[/.test(event.location)) {
+      shouldClear = true;
+    }
+
+    // For Israeli packages: clear any non-Israeli location
+    if (isIsraeliPackage && !shouldClear && !ISRAELI_LOCATION_VALID.test(event.location)) {
+      shouldClear = true;
+    }
+
+    if (shouldClear) {
       await prisma.trackingEvent.update({
         where: { id: event.id },
         data: { location: null },

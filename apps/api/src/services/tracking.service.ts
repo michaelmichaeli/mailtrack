@@ -63,6 +63,27 @@ function cleanDescription(desc: string): string {
     .trim() || desc.trim();
 }
 
+// Known Israeli cities/regions for location validation (Hebrew + English)
+const ISRAELI_LOCATION_PATTERNS = /[\u0590-\u05FF]|israel|tel\s*aviv|jerusalem|haifa|beer\s*sheva|ashdod|ashkelon|netanya|herzliya|ramat\s*gan|petah\s*tikva|rishon|holon|bat\s*yam|rehovot|kfar\s*saba|modi.in|eilat|tiberias|nazareth|acre|akko|nahariya|kiryat|raanana|givatayim|bnei\s*brak/i;
+
+/** Strip non-Israeli locations from tracking results (for Israeli packages tracked via 17track/Cainiao) */
+function stripForeignLocations(result: CarrierTrackingResult): CarrierTrackingResult {
+  const cleanedEvents = result.events.map((e) => {
+    if (e.location && !ISRAELI_LOCATION_PATTERNS.test(e.location)) {
+      return { ...e, location: null };
+    }
+    return e;
+  });
+
+  const lastLocation = cleanedEvents.find((e) => e.location)?.location || null;
+
+  return {
+    ...result,
+    events: cleanedEvents,
+    lastLocation,
+  };
+}
+
 /**
  * Track a package using Cainiao's public API (no API key required).
  * Works for AliExpress Standard, Cainiao, and most China-origin packages.
@@ -86,7 +107,43 @@ export async function trackPackage(
     }
   }
 
-  // Try 17track first (works for 2000+ carriers via browser scraping)
+  // Strategy: Israel Post first for Israeli packages, 17track for others
+  const { isIsraelPostPackage, trackIsraelPost } = await import("./israelpost.service.js");
+
+  if (isIsraelPostPackage(trackingNumber, carrier)) {
+    // Israeli package → try Israel Post API first (fast, accurate locations)
+    try {
+      console.log(`[tracking] Trying Israel Post for ${trackingNumber}...`);
+      const result = await trackIsraelPost(trackingNumber);
+      if (result && result.events.length > 0) {
+        console.log(`[tracking] Israel Post: ${result.events.length} events for ${trackingNumber}`);
+        lastFetchMap.set(trackingNumber, Date.now());
+        return result;
+      }
+      console.log(`[tracking] Israel Post: no data for ${trackingNumber}, trying 17track...`);
+    } catch (error: any) {
+      console.error(`[tracking] Israel Post error for ${trackingNumber}:`, error?.message);
+    }
+
+    // Fallback to 17track for Israeli packages (but strip bad locations)
+    try {
+      const { track17Single } = await import("./tracking17.service.js");
+      const result17 = await track17Single(trackingNumber, carrier);
+      if (result17 && result17.events.length > 0) {
+        // Strip non-Israeli location data from 17track results for Israeli packages
+        const cleaned = stripForeignLocations(result17);
+        console.log(`[tracking] 17track (location-stripped): ${cleaned.events.length} events for ${trackingNumber}`);
+        lastFetchMap.set(trackingNumber, Date.now());
+        return cleaned;
+      }
+    } catch (error: any) {
+      console.error(`[tracking] 17track error for ${trackingNumber}:`, error?.message);
+    }
+
+    return null;
+  }
+
+  // Non-Israeli package → 17track first, Cainiao fallback (unchanged)
   try {
     console.log(`[tracking] Trying 17track for ${trackingNumber}...`);
     const { track17Single } = await import("./tracking17.service.js");

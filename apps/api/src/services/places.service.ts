@@ -31,8 +31,8 @@ export async function lookupPickupPointDetails(locationName: string): Promise<Pl
   if (placeCache.has(cacheKey)) return placeCache.get(cacheKey)!;
 
   try {
-    // Step 1: Text search to find the place
-    const searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(locationName)}&key=${GOOGLE_PLACES_API_KEY}`;
+    // Step 1: Text search to find the place (biased to Israel)
+    const searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(locationName)}&region=il&key=${GOOGLE_PLACES_API_KEY}`;
     const searchRes = await fetch(searchUrl, { signal: AbortSignal.timeout(10000) });
     const searchData: any = await searchRes.json();
 
@@ -99,10 +99,11 @@ export async function enrichPickupLocation(pickup: any): Promise<any> {
   const details = await lookupPickupPointDetails(searchName);
   if (!details) return pickup;
 
-  // Validate: if original address contains Hebrew (Israel), reject foreign results
-  const hasHebrew = /[\u0590-\u05FF]/.test(addressPart);
-  if (hasHebrew && details.address && !details.address.includes("Israel") && !/[\u0590-\u05FF]/.test(details.address)) {
-    console.log(`[places] Rejected foreign result "${details.name}" at ${details.address} for Hebrew address "${addressPart}"`);
+  // Validate: reject results outside Israel (all pickup points should be in Israel)
+  const isIsraeliResult = details.address &&
+    (details.address.includes("Israel") || /[\u0590-\u05FF]/.test(details.address) || details.address.includes("ישראל"));
+  if (!isIsraeliResult) {
+    console.log(`[places] Rejected non-Israeli result "${details.name}" at ${details.address}`);
     return pickup;
   }
 
