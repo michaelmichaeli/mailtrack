@@ -173,10 +173,11 @@ function PackagesContent() {
   const handleFullSync = async () => {
     setIsSyncing(true);
     try {
+      setSyncProgress("Scanning emails…");
       const emailResult = await api.syncEmails();
-      toast.success(`Synced ${emailResult.emailsParsed} emails`);
+      const emailCount = emailResult.emailsParsed ?? 0;
       await api.syncAllTracking();
-      setSyncProgress("Starting tracking sync…");
+      setSyncProgress("Updating tracking…");
       const poll = setInterval(async () => {
         try {
           const s = await api.getSyncStatus();
@@ -186,8 +187,11 @@ function PackagesContent() {
             clearInterval(poll);
             setSyncProgress(null);
             setIsSyncing(false);
-            if (s.status === "done") toast.success(`Updated ${s.synced} of ${s.total} packages`);
-            else toast.error("Tracking sync failed");
+            if (s.status === "done") {
+              toast.success(`Synced ${emailCount} email${emailCount !== 1 ? "s" : ""}, updated ${s.synced} of ${s.total} packages`);
+            } else {
+              toast.error("Tracking sync failed");
+            }
             refetchStats();
           }
         } catch { clearInterval(poll); setSyncProgress(null); setIsSyncing(false); }
