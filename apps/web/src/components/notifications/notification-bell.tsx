@@ -197,12 +197,12 @@ export function NotificationBell() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute z-50 bg-card border border-border rounded-xl shadow-xl overflow-hidden"
+            className="absolute z-50 bg-card border border-border rounded-xl shadow-xl flex flex-col"
             style={{
               right: 0,
               top: "calc(100% + 8px)",
               width: "360px",
-              maxHeight: "480px",
+              maxHeight: "min(480px, calc(100vh - 120px))",
             }}
           >
             {/* Header */}
@@ -248,7 +248,7 @@ export function NotificationBell() {
             </div>
 
             {/* Notification list */}
-            <div className="overflow-y-auto" style={{ maxHeight: "400px" }}>
+            <div className="overflow-y-auto flex-1 min-h-0">
               {loading && notifications.length === 0 ? (
                 <div className="p-8 text-center">
                   <LogoSpinner size={24} text="Loading…" />
@@ -335,7 +335,7 @@ export function NotificationBell() {
             </div>
 
             {/* See all link */}
-            <div className="border-t border-border px-4 py-2.5">
+            <div className="border-t border-border px-4 py-2.5 shrink-0">
               <button
                 onClick={() => {
                   setOpen(false);
