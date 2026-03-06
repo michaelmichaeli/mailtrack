@@ -436,10 +436,10 @@ function PackagesContent() {
             </FadeIn>
           )}
 
-          {/* Infinite scroll trigger with skeletons */}
-          <div ref={observerRef} className="py-2">
+          {/* Infinite scroll trigger */}
+          <div ref={observerRef}>
             {isFetchingNextPage && (
-              <div className="space-y-4">
+              <div className="space-y-4 pt-2">
                 {view === "table" ? <TableSkeleton rows={3} /> :
                  view === "kanban" ? null :
                  view === "timeline" ? <TimelineSkeleton items={3} /> :
