@@ -239,6 +239,7 @@ export function NotificationBell() {
                 <button
                   onClick={() => setOpen(false)}
                   className="p-1.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                  aria-label="Close notifications"
                 >
                   <X className="h-4 w-4" />
                 </button>

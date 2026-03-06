@@ -35,6 +35,10 @@ import {
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Dialog,
   DialogContent,
@@ -46,21 +50,6 @@ import {
 } from "@/components/ui/dialog";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002";
-
-const ToggleSwitch = ({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) => (
-  <button
-    onClick={onToggle}
-    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${
-      enabled ? "bg-primary" : "bg-slate-200 dark:bg-slate-700"
-    }`}
-  >
-    <span
-      className={`inline-block h-4.5 w-4.5 transform rounded-full bg-white shadow-sm transition-transform ${
-        enabled ? "translate-x-[22px]" : "translate-x-[3px]"
-      }`}
-    />
-  </button>
-);
 
 function SettingsContent() {
   const [isExporting, setIsExporting] = useState(false);
@@ -166,17 +155,17 @@ function SettingsContent() {
       </div>
 
       {successParam && (
-        <div className="flex items-start gap-2 rounded-lg border p-3 text-sm" style={{ borderColor: '#16a34a', backgroundColor: '#f0fdf4', color: '#166534' }}>
-          <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" />
-          <span>{successParam}</span>
-        </div>
+        <Alert className="border-green-600 bg-green-50 text-green-800 dark:border-green-500 dark:bg-green-950 dark:text-green-200">
+          <CheckCircle2 className="h-4 w-4" />
+          <AlertDescription>{successParam}</AlertDescription>
+        </Alert>
       )}
 
       {errorParam && (
-        <div className="flex items-start gap-2 rounded-lg border p-3 text-sm" style={{ borderColor: '#f59e0b', backgroundColor: '#fffbeb', color: '#92400e' }}>
-          <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-          <span>{errorParam}</span>
-        </div>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{errorParam}</AlertDescription>
+        </Alert>
       )}
 
       {/* Connected Emails */}
@@ -239,7 +228,7 @@ function SettingsContent() {
         updateNotifications={updateNotifications}
       />
 
-      {/* Appearance */}
+       {/* Appearance */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
@@ -250,35 +239,23 @@ function SettingsContent() {
         <CardContent>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-foreground">Theme</p>
+              <Label className="text-sm font-medium">Theme</Label>
               <p className="text-xs text-muted-foreground">Choose your preferred appearance</p>
             </div>
-            <div className="flex gap-1.5">
-              <Button
-                variant={theme === "light" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTheme("light")}
-              >
-                <Sun className="h-4 w-4" />
+            <ToggleGroup type="single" value={theme ?? "system"} onValueChange={(v) => v && setTheme(v)}>
+              <ToggleGroupItem value="light" size="sm" aria-label="Light theme">
+                <Sun className="h-4 w-4 mr-1" />
                 Light
-              </Button>
-              <Button
-                variant={theme === "dark" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTheme("dark")}
-              >
-                <Moon className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="dark" size="sm" aria-label="Dark theme">
+                <Moon className="h-4 w-4 mr-1" />
                 Dark
-              </Button>
-              <Button
-                variant={theme === "system" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTheme("system")}
-              >
-                <Palette className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="system" size="sm" aria-label="System theme">
+                <Palette className="h-4 w-4 mr-1" />
                 System
-              </Button>
-            </div>
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
         </CardContent>
       </Card>
@@ -639,22 +616,23 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
         {/* Email Notifications */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-foreground">Email digest</p>
+            <Label htmlFor="email-digest" className="text-sm font-medium">Email digest</Label>
             <p className="text-xs text-muted-foreground">Weekly summary of your deliveries</p>
           </div>
-          <ToggleSwitch
-            enabled={notifPrefs?.emailEnabled ?? false}
-            onToggle={() => updateNotifications.mutate({ emailEnabled: !notifPrefs?.emailEnabled })}
+          <Switch
+            id="email-digest"
+            checked={notifPrefs?.emailEnabled ?? false}
+            onCheckedChange={() => updateNotifications.mutate({ emailEnabled: !notifPrefs?.emailEnabled })}
           />
         </div>
 
         {isSubscribed && (
-          <div className="rounded-lg border p-3 text-xs" style={{ borderColor: '#16a34a', backgroundColor: '#f0fdf4', color: '#166534' }}>
-            <p className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5" />
+          <Alert className="border-green-600 bg-green-50 text-green-800 dark:border-green-500 dark:bg-green-950 dark:text-green-200">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            <AlertDescription className="text-xs">
               Push notifications are active. You&apos;ll be notified when any tracked package changes status (shipped, in transit, delivered, etc.)
-            </p>
-          </div>
+            </AlertDescription>
+          </Alert>
         )}
       </CardContent>
     </Card>
@@ -725,19 +703,21 @@ function StoreImportSection() {
           ))}
         </div>
 
-        <div className="rounded-lg border p-3 text-xs space-y-1" style={{ borderColor: '#3b82f6', backgroundColor: '#eff6ff', color: '#1e40af' }}>
-          <p className="font-medium flex items-center gap-1.5">
-            <CheckCircle2 className="h-3.5 w-3.5" /> How it works
-          </p>
-          <p>Connect your Gmail above → we scan for order confirmations and shipping notifications → tracking starts automatically. No store login needed.</p>
-        </div>
+        <Alert className="border-blue-500 bg-blue-50 text-blue-800 dark:border-blue-400 dark:bg-blue-950 dark:text-blue-200">
+          <CheckCircle2 className="h-3.5 w-3.5" />
+          <AlertTitle className="text-xs font-medium">How it works</AlertTitle>
+          <AlertDescription className="text-xs">
+            Connect your Gmail above → we scan for order confirmations and shipping notifications → tracking starts automatically. No store login needed.
+          </AlertDescription>
+        </Alert>
 
-        <div className="rounded-lg border p-3 text-xs space-y-1" style={{ borderColor: '#f59e0b', backgroundColor: '#fffbeb', color: '#92400e' }}>
-          <p className="font-medium flex items-center gap-1.5">
-            <AlertCircle className="h-3.5 w-3.5" /> Why not connect stores directly?
-          </p>
-          <p>Unlike Google, stores like Amazon and eBay don&apos;t provide consumer APIs to read your orders. Gmail is the most reliable automatic source — it captures confirmations from all stores at once.</p>
-        </div>
+        <Alert className="border-amber-500 bg-amber-50 text-amber-800 dark:border-amber-400 dark:bg-amber-950 dark:text-amber-200">
+          <AlertCircle className="h-3.5 w-3.5" />
+          <AlertTitle className="text-xs font-medium">Why not connect stores directly?</AlertTitle>
+          <AlertDescription className="text-xs">
+            Unlike Google, stores like Amazon and eBay don&apos;t provide consumer APIs to read your orders. Gmail is the most reliable automatic source — it captures confirmations from all stores at once.
+          </AlertDescription>
+        </Alert>
 
         {/* CSV Import */}
         <div className="space-y-2">

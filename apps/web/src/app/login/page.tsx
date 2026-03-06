@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Mail, AlertCircle } from "lucide-react";
 import { api } from "@/lib/api";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002";
 
@@ -48,10 +50,10 @@ function LoginForm() {
         </CardHeader>
         <CardContent className="space-y-3 pt-2">
           {errorParam && (
-            <div className="flex items-start gap-2 rounded-lg border p-3 text-sm" style={{ borderColor: '#f59e0b', backgroundColor: '#fffbeb', color: '#92400e' }}>
-              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-              <span>{errorParam}</span>
-            </div>
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{errorParam}</AlertDescription>
+            </Alert>
           )}
 
           <Button className="w-full" size="lg" onClick={handleGoogleLogin} disabled={loading}>
@@ -72,8 +74,10 @@ function LoginForm() {
           </Button>
 
           <div className="relative my-2">
-            <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
-            <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">Dev</span></div>
+            <Separator />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="bg-card px-2 text-xs uppercase text-muted-foreground">Dev</span>
+            </div>
           </div>
 
           <Button className="w-full truncate" size="lg" variant="secondary" onClick={handleDevLogin} disabled={devLoading}>

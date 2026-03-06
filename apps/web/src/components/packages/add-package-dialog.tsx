@@ -17,6 +17,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const CARRIERS = [
   { value: "", label: "Auto-detect" },
@@ -100,10 +108,11 @@ export function AddPackageDialog() {
           className="space-y-4"
         >
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">
+            <Label htmlFor="tracking-number">
               Tracking Number <span className="text-red-500">*</span>
-            </label>
+            </Label>
             <Input
+              id="tracking-number"
               placeholder="e.g. 1Z999AA10123456784"
               value={trackingNumber}
               onChange={(e) => setTrackingNumber(e.target.value)}
@@ -112,22 +121,24 @@ export function AddPackageDialog() {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Carrier</label>
-            <select
-              value={carrier}
-              onChange={(e) => setCarrier(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            >
-              {CARRIERS.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
+            <Label htmlFor="carrier">Carrier</Label>
+            <Select value={carrier || "_auto"} onValueChange={(v) => setCarrier(v === "_auto" ? "" : v)}>
+              <SelectTrigger id="carrier">
+                <SelectValue placeholder="Select carrier" />
+              </SelectTrigger>
+              <SelectContent>
+                {CARRIERS.map((c) => (
+                  <SelectItem key={c.value || "_auto"} value={c.value || "_auto"}>
+                    {c.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Description (optional)</label>
+            <Label htmlFor="description">Description (optional)</Label>
             <Input
+              id="description"
               placeholder="e.g. Blue winter jacket"
               value={description}
               onChange={(e) => setDescription(e.target.value)}

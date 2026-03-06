@@ -14,6 +14,10 @@ import { PageTransition, StaggerContainer, StaggerItem, FadeIn, AnimatedNumber }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Label } from "@/components/ui/label";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Search, Loader2, Calendar, LayoutGrid, Table2, Columns3, Clock, X, RefreshCw, MessageSquare, TrendingUp, ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { AddPackageDialog } from "@/components/packages/add-package-dialog";
@@ -305,30 +309,31 @@ function PackagesContent() {
             )}
           </div>
           <div className="flex gap-2">
-            <select
-              id="status-filter"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              aria-label="Filter by status"
-              title="Filter packages by delivery status"
-              className="h-10 rounded-lg border border-border bg-background pl-3 pr-8 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat cursor-pointer w-full sm:w-44"
-            >
-              {STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.value ? opt.label : "⊘ Status"}</option>
-              ))}
-            </select>
-            <select
-              id="sort-select"
-              value={sort}
-              onChange={(e) => setSort(e.target.value)}
-              aria-label="Sort packages"
-              title="Change the order packages are displayed"
-              className="h-10 rounded-lg border border-border bg-background pl-3 pr-8 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat cursor-pointer w-full sm:w-52"
-            >
-              {SORT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>↕ {opt.label}</option>
-              ))}
-            </select>
+            <Select value={status || "_all"} onValueChange={(v) => setStatus(v === "_all" ? "" : v)}>
+              <SelectTrigger className="h-10 w-full sm:w-44" aria-label="Filter by status">
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value || "_all"} value={opt.value || "_all"}>
+                    {opt.value ? opt.label : "All Statuses"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={sort} onValueChange={setSort}>
+              <SelectTrigger className="h-10 w-full sm:w-52" aria-label="Sort packages">
+                <ArrowUpDown className="h-3.5 w-3.5 mr-1 shrink-0" />
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                {SORT_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </FadeIn>
@@ -336,22 +341,20 @@ function PackagesContent() {
       {/* Time filter + View switcher */}
       <FadeIn delay={0.15}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
             <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
-            {TIME_PERIODS.map((p) => (
-              <button
-                key={p.value}
-                onClick={() => setPeriod(p.value)}
-                title={`Show packages from the last ${p.label}`}
-                className={`px-3 py-1 text-xs font-medium rounded-full transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                  period === p.value
-                    ? "bg-primary text-primary-foreground shadow-sm scale-105"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80 hover:scale-105"
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
+            <ToggleGroup type="single" value={period} onValueChange={(v) => v && setPeriod(v)} className="gap-1">
+              {TIME_PERIODS.map((p) => (
+                <ToggleGroupItem
+                  key={p.value}
+                  value={p.value}
+                  size="sm"
+                  className="rounded-full px-3 py-1 text-xs font-medium data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                >
+                  {p.label}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
           </div>
           <div className="flex items-center gap-3">
             {!isLoading && totalCount > 0 && (
@@ -359,28 +362,23 @@ function PackagesContent() {
                 {allItems.length} of {totalCount}
               </p>
             )}
-            <div className="flex items-center gap-1 bg-muted rounded-lg p-1" role="group" aria-label="View mode">
+            <ToggleGroup type="single" value={view} onValueChange={(v) => v && setView(v as ViewMode)} className="bg-muted rounded-lg p-1 gap-0">
               {VIEW_MODES.map((mode) => {
                 const Icon = mode.icon;
                 return (
-                  <button
+                  <ToggleGroupItem
                     key={mode.value}
-                    onClick={() => setView(mode.value)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 cursor-pointer ${
-                      view === mode.value
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                    title={`Switch to ${mode.label.toLowerCase()} view`}
+                    value={mode.value}
+                    size="sm"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm"
                     aria-label={`${mode.label} view`}
-                    aria-pressed={view === mode.value}
                   >
                     <Icon className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline">{mode.label}</span>
-                  </button>
+                  </ToggleGroupItem>
                 );
               })}
-            </div>
+            </ToggleGroup>
           </div>
         </div>
       </FadeIn>
