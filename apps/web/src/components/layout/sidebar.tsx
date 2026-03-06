@@ -19,6 +19,7 @@ import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { useScrollRestore } from "@/lib/use-scroll-restore";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 const navItems = [
   { href: "/packages", label: "Orders", icon: Package },
@@ -132,6 +133,11 @@ export function Sidebar() {
       >
         <Menu className="h-5 w-5" />
       </button>
+
+      {/* Floating notification bell — top right */}
+      <div className="fixed top-4 right-4 z-40">
+        <NotificationBell />
+      </div>
 
       {/* Mobile overlay */}
       {mobileOpen && (
