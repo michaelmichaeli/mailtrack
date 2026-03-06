@@ -9,7 +9,7 @@ import { PackageTable } from "@/components/packages/package-table";
 import { PackageKanban } from "@/components/packages/package-kanban";
 import { PackageTimeline } from "@/components/packages/package-timeline";
 import { EmptyState } from "@/components/packages/empty-state";
-import { PackageCardSkeleton } from "@/components/ui/skeleton";
+import { PackageCardSkeleton, TableSkeleton, KanbanSkeleton, TimelineSkeleton } from "@/components/ui/skeleton";
 import { PageTransition, StaggerContainer, StaggerItem, FadeIn, AnimatedNumber } from "@/components/ui/motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -390,6 +390,9 @@ function PackagesContent() {
 
       {/* Results */}
       {isLoading ? (
+        view === "table" ? <TableSkeleton /> :
+        view === "kanban" ? <KanbanSkeleton /> :
+        view === "timeline" ? <TimelineSkeleton /> :
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 grid-catalog">
           {Array.from({ length: 6 }).map((_, i) => (
             <PackageCardSkeleton key={i} />
@@ -437,11 +440,15 @@ function PackagesContent() {
           <div ref={observerRef} className="py-2">
             {isFetchingNextPage && (
               <div className="space-y-4">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 grid-catalog">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <PackageCardSkeleton key={`loading-${i}`} />
-                  ))}
-                </div>
+                {view === "table" ? <TableSkeleton rows={3} /> :
+                 view === "kanban" ? null :
+                 view === "timeline" ? <TimelineSkeleton items={3} /> :
+                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 grid-catalog">
+                   {Array.from({ length: 3 }).map((_, i) => (
+                     <PackageCardSkeleton key={`loading-${i}`} />
+                   ))}
+                 </div>
+                }
                 <div className="flex items-center justify-center gap-2 py-2">
                   <LogoSpinner size={24} text="Loading more…" />
                 </div>
