@@ -102,7 +102,7 @@ export function Sidebar() {
       </nav>
 
       {/* Bottom actions */}
-      <div className="border-t border-border px-3 py-3 space-y-0.5">
+      <div className="border-t border-border px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] space-y-0.5">
         <button
           onClick={cycleTheme}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
