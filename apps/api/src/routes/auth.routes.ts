@@ -341,6 +341,25 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     return { success: true };
   });
 
+  // PATCH /api/auth/me — Update current user profile
+  app.patch("/me", {
+    preHandler: [app.authenticate],
+  }, async (request) => {
+    const { name } = request.body as { name?: string };
+    const data: Record<string, string> = {};
+    if (name && name.trim()) data.name = name.trim();
+
+    if (Object.keys(data).length === 0) {
+      return { success: false, message: "No fields to update" };
+    }
+
+    const user = await app.prisma.user.update({
+      where: { id: request.user.userId },
+      data,
+    });
+    return { success: true, name: user.name };
+  });
+
   // DELETE /api/auth/account — Delete account (GDPR right to be forgotten)
   app.delete("/account", {
     preHandler: [app.authenticate],

@@ -129,6 +129,13 @@ class ApiClient {
     return this.request<any>("/auth/me");
   }
 
+  async updateProfile(data: { name?: string }) {
+    return this.request<{ success: boolean; name?: string }>("/auth/me", {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
   async completeOnboarding() {
     return this.request("/auth/onboarding-complete", { method: "POST" });
   }

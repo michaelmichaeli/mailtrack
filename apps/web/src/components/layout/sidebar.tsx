@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   Bell,
+  User,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
@@ -24,6 +25,7 @@ import { NotificationBell } from "@/components/notifications/notification-bell";
 const navItems = [
   { href: "/packages", label: "Orders", icon: Package },
   { href: "/notifications", label: "Notifications", icon: Bell },
+  { href: "/profile", label: "Profile", icon: User },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -47,7 +49,7 @@ export function Sidebar() {
   const handleSignOut = async () => {
     try { await api.logout(); } catch {}
     api.setToken(null);
-    router.push("/login");
+    window.location.href = "/login";
   };
 
   const cycleTheme = () => {

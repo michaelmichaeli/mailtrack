@@ -152,7 +152,7 @@ function SettingsContent() {
   const handleSignOut = async () => {
     try { await api.logout(); } catch {}
     api.setToken(null);
-    router.push("/login");
+    window.location.href = "/login";
   };
 
   return (
