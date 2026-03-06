@@ -22,6 +22,7 @@ import { Search, Loader2, Calendar, LayoutGrid, Table2, Columns3, Clock, X, Refr
 import { toast } from "sonner";
 import { AddPackageDialog } from "@/components/packages/add-package-dialog";
 import { ScanSmsDialog } from "@/components/packages/scan-sms-dialog";
+import { LogoSpinner } from "@/components/ui/logo-spinner";
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -441,9 +442,8 @@ function PackagesContent() {
                     <PackageCardSkeleton key={`loading-${i}`} />
                   ))}
                 </div>
-                <div className="flex items-center justify-center gap-2 py-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading more…
+                <div className="flex items-center justify-center gap-2 py-2">
+                  <LogoSpinner size={24} text="Loading more…" />
                 </div>
               </div>
             )}

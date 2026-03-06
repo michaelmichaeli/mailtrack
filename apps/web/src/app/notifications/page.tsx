@@ -292,7 +292,7 @@ export default function NotificationsPage() {
                       onClick={() => fetchNextPage()}
                       disabled={isFetchingNextPage}
                     >
-                      {isFetchingNextPage && <Loader2 className="h-4 w-4 animate-spin mr-1.5" />}
+                      {isFetchingNextPage && <div className="animate-logo-spin inline-block mr-1.5"><img src="/logo.png" alt="" width={16} height={16} /></div>}
                       Load more
                     </Button>
                   </div>
