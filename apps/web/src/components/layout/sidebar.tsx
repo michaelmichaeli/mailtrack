@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -10,7 +11,6 @@ import {
   Moon,
   Sun,
   Monitor,
-  Mail,
   Menu,
   X,
   Bell,
@@ -63,9 +63,7 @@ export function Sidebar() {
     <>
       {/* Logo */}
       <div className="flex items-center gap-3 border-b border-border px-5 py-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-sm">
-          <Mail className="h-5 w-5 text-primary-foreground" />
-        </div>
+        <Image src="/logo.png" alt="MailTrack" width={36} height={36} className="rounded-xl shadow-sm" />
         <div>
           <span className="text-base font-bold text-foreground tracking-tight">MailTrack</span>
           <p className="text-[10px] text-muted-foreground leading-none">Every package. One dashboard.</p>
