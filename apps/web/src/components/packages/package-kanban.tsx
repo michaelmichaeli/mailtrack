@@ -69,9 +69,9 @@ export function PackageKanban({ orders }: { orders: Order[] }) {
   );
 
   return (
-    <div className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2">
+    <div className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2" style={{ minHeight: "60vh" }}>
       {activeColumns.map((col) => (
-        <div key={col.status} className="flex-shrink-0 w-72">
+        <div key={col.status} className="flex-shrink-0 w-72 flex flex-col">
           {/* Column header */}
           <div className="flex items-center gap-2 mb-3 px-1">
             <div className={`h-2.5 w-2.5 rounded-full ${col.color}`} />
@@ -81,8 +81,8 @@ export function PackageKanban({ orders }: { orders: Order[] }) {
             </span>
           </div>
 
-          {/* Column cards */}
-          <div className="space-y-2">
+          {/* Column cards — scrollable */}
+          <div className="space-y-2 overflow-y-auto flex-1 pr-1" style={{ maxHeight: "calc(100vh - 280px)" }}>
             {grouped[col.status].map((order) => {
               const pkg = order.package;
               const items = safeParse(order.items).length > 0 ? safeParse(order.items) : safeParse(pkg?.items);
