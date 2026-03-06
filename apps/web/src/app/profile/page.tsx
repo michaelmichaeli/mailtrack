@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogOut, User, Mail, Calendar, Shield, Save, Pencil } from "lucide-react";
+import { LogOut, User, Mail, Calendar, Shield, Save, Pencil, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { LogoSpinner } from "@/components/ui/logo-spinner";
 
@@ -223,10 +223,16 @@ export default function ProfilePage() {
       </Card>
 
       {/* Sign Out */}
-      <Button variant="outline" className="w-full" onClick={handleSignOut}>
-        <LogOut className="h-4 w-4" />
-        Sign out
-      </Button>
+      <div className="flex gap-3">
+        <Button variant="outline" className="flex-1" onClick={() => window.location.href = "/onboarding"}>
+          <RotateCcw className="h-4 w-4" />
+          Replay onboarding
+        </Button>
+        <Button variant="outline" className="flex-1" onClick={handleSignOut}>
+          <LogOut className="h-4 w-4" />
+          Sign out
+        </Button>
+      </div>
     </div>
   );
 }

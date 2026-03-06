@@ -666,12 +666,8 @@ export default function OnboardingPage() {
   useEffect(() => {
     api.getMe().then((user) => {
       setUserName(user.name || "");
-      // If user already completed onboarding, skip to dashboard
-      if (user.onboardingCompleted) {
-        router.replace("/packages");
-      }
     }).catch(() => {});
-  }, [router]);
+  }, []);
 
   // Handle return from Gmail OAuth — auto-advance to syncing
   useEffect(() => {
