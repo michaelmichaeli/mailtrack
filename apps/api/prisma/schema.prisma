@@ -52,6 +52,11 @@ model User {
   name         String
   email        String       @unique
   avatar       String?
+  givenName    String?
+  familyName   String?
+  locale       String?
+  googleId     String?      @unique
+  emailVerified Boolean     @default(false)
   authProvider  AuthProvider
   ingestKey    String?      @unique // API key for SMS/webhook auto-forwarding
   onboardingCompleted Boolean @default(false)

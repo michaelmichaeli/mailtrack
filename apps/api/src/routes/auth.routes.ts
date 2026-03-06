@@ -134,6 +134,11 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         name: payload.name,
         avatar: payload.picture ?? null,
         authProvider: AuthProvider.GOOGLE,
+        givenName: payload.givenName,
+        familyName: payload.familyName,
+        locale: payload.locale,
+        googleId: payload.sub,
+        emailVerified: payload.emailVerified,
       });
 
       const tokens = await generateTokens(app, user.id);
@@ -320,6 +325,11 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       name: user.name,
       email: user.email,
       avatar: user.avatar,
+      givenName: user.givenName,
+      familyName: user.familyName,
+      locale: user.locale,
+      googleId: user.googleId,
+      emailVerified: user.emailVerified,
       authProvider: user.authProvider,
       onboardingCompleted: user.onboardingCompleted,
       createdAt: user.createdAt.toISOString(),

@@ -18,6 +18,10 @@ interface GooglePayload {
   email: string;
   name: string;
   picture?: string;
+  givenName?: string;
+  familyName?: string;
+  locale?: string;
+  emailVerified?: boolean;
 }
 
 /**
@@ -57,6 +61,10 @@ export async function exchangeGoogleCode(code: string): Promise<GooglePayload> {
     email: payload.email,
     name: payload.name ?? payload.email.split("@")[0],
     picture: payload.picture,
+    givenName: payload.given_name,
+    familyName: payload.family_name,
+    locale: payload.locale,
+    emailVerified: payload.email_verified,
   };
 }
 
@@ -77,6 +85,10 @@ export async function verifyGoogleToken(idToken: string): Promise<GooglePayload>
     email: payload.email,
     name: payload.name ?? payload.email.split("@")[0],
     picture: payload.picture,
+    givenName: payload.given_name,
+    familyName: payload.family_name,
+    locale: payload.locale,
+    emailVerified: payload.email_verified,
   };
 }
 
@@ -101,7 +113,17 @@ export async function verifyAppleToken(idToken: string): Promise<{ sub: string; 
  */
 export async function findOrCreateUser(
   app: FastifyInstance,
-  data: { email: string; name: string; avatar?: string | null; authProvider: AuthProvider }
+  data: {
+    email: string;
+    name: string;
+    avatar?: string | null;
+    authProvider: AuthProvider;
+    givenName?: string;
+    familyName?: string;
+    locale?: string;
+    googleId?: string;
+    emailVerified?: boolean;
+  }
 ) {
   let user = await app.prisma.user.findUnique({ where: { email: data.email } });
 
@@ -111,6 +133,11 @@ export async function findOrCreateUser(
         email: data.email,
         name: data.name,
         avatar: data.avatar ?? null,
+        givenName: data.givenName ?? null,
+        familyName: data.familyName ?? null,
+        locale: data.locale ?? null,
+        googleId: data.googleId ?? null,
+        emailVerified: data.emailVerified ?? false,
         authProvider: data.authProvider,
         notificationPreference: {
           create: {
@@ -118,6 +145,20 @@ export async function findOrCreateUser(
             emailEnabled: false,
           },
         },
+      },
+    });
+  } else {
+    // Update profile data on each login to keep it fresh
+    user = await app.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        name: data.name,
+        avatar: data.avatar ?? user.avatar,
+        givenName: data.givenName ?? user.givenName,
+        familyName: data.familyName ?? user.familyName,
+        locale: data.locale ?? user.locale,
+        googleId: data.googleId ?? user.googleId,
+        emailVerified: data.emailVerified ?? user.emailVerified,
       },
     });
   }

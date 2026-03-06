@@ -16,6 +16,11 @@ interface UserProfile {
   name: string;
   email: string;
   avatar: string | null;
+  givenName: string | null;
+  familyName: string | null;
+  locale: string | null;
+  googleId: string | null;
+  emailVerified: boolean;
   authProvider: string;
   onboardingCompleted: boolean;
   createdAt: string;
@@ -145,18 +150,49 @@ export default function ProfilePage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label className="text-xs text-muted-foreground">Email</Label>
-              <p className="text-sm font-medium truncate">{user.email}</p>
+              <div className="flex items-center gap-1.5">
+                <p className="text-sm font-medium truncate">{user.email}</p>
+                {user.emailVerified && (
+                  <span className="inline-flex items-center rounded-full bg-green-100 px-1.5 py-0.5 text-[10px] font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                    Verified
+                  </span>
+                )}
+              </div>
             </div>
             <div>
               <Label className="text-xs text-muted-foreground">Sign-in Method</Label>
               <p className="text-sm font-medium capitalize">{user.authProvider.toLowerCase().replace("_", " ")}</p>
             </div>
+            {user.givenName && (
+              <div>
+                <Label className="text-xs text-muted-foreground">First Name</Label>
+                <p className="text-sm font-medium">{user.givenName}</p>
+              </div>
+            )}
+            {user.familyName && (
+              <div>
+                <Label className="text-xs text-muted-foreground">Last Name</Label>
+                <p className="text-sm font-medium">{user.familyName}</p>
+              </div>
+            )}
+            {user.locale && (
+              <div>
+                <Label className="text-xs text-muted-foreground">Locale</Label>
+                <p className="text-sm font-medium uppercase">{user.locale}</p>
+              </div>
+            )}
             <div>
               <Label className="text-xs text-muted-foreground">Member Since</Label>
               <p className="text-sm font-medium">
                 {joinDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
               </p>
             </div>
+            {user.googleId && (
+              <div>
+                <Label className="text-xs text-muted-foreground">Google ID</Label>
+                <p className="text-sm font-mono text-muted-foreground truncate">{user.googleId}</p>
+              </div>
+            )}
             <div>
               <Label className="text-xs text-muted-foreground">Account ID</Label>
               <p className="text-sm font-mono text-muted-foreground truncate">{user.id}</p>
