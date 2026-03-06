@@ -39,9 +39,15 @@ export function NotificationBell() {
       setUnreadCount((prev) => {
         // Show toast when new notifications arrive (not on first load)
         if (!initialLoad.current && count > prev) {
-          toast.info(`${count - prev} new notification${count - prev > 1 ? "s" : ""}`, {
-            description: "Click the bell to see updates",
+          const newCount = count - prev;
+          toast.info(`${newCount} new notification${newCount > 1 ? "s" : ""}`, {
+            description: "Tap to view",
             duration: 4000,
+            id: "new-notifications",
+            action: {
+              label: "View",
+              onClick: () => bellRef.current?.click(),
+            },
           });
         }
         initialLoad.current = false;

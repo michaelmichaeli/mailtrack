@@ -343,13 +343,18 @@ function detectShopPlatform(store?: string): any {
 
 /** Merge carrier result into DB: update status, upsert events */
 async function syncPackageFromResult(prisma: any, packageId: string, result: any) {
+  const updateData: any = {
+    status: result.status as any,
+    ...(result.estimatedDelivery ? { estimatedDelivery: new Date(result.estimatedDelivery) } : {}),
+    ...(result.lastLocation ? { lastLocation: result.lastLocation } : {}),
+  };
+  // Update carrier if tracking provider detected a more specific one
+  if (result.carrier && result.carrier !== "UNKNOWN" && result.carrier !== "ALIEXPRESS_STANDARD") {
+    updateData.carrier = result.carrier;
+  }
   await prisma.package.update({
     where: { id: packageId },
-    data: {
-      status: result.status as any,
-      ...(result.estimatedDelivery ? { estimatedDelivery: new Date(result.estimatedDelivery) } : {}),
-      ...(result.lastLocation ? { lastLocation: result.lastLocation } : {}),
-    },
+    data: updateData,
   });
 
   for (const event of result.events) {

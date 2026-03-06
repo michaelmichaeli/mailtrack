@@ -76,7 +76,7 @@ function LoginForm() {
             <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">Dev</span></div>
           </div>
 
-          <Button className="w-full" size="lg" variant="secondary" onClick={handleDevLogin} disabled={devLoading}>
+          <Button className="w-full truncate" size="lg" variant="secondary" onClick={handleDevLogin} disabled={devLoading}>
             {devLoading ? "Logging in…" : "Dev Login (michaelmichaeli888@gmail.com)"}
           </Button>
 

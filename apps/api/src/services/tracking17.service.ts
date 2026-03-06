@@ -177,6 +177,33 @@ export async function track17Batch(
   return results;
 }
 
+// Map 17track provider country/name to our Carrier enum
+function detectCarrierFrom17track(providers: Array<{ provider: { key: number; name: string; country: string } }>): Carrier | null {
+  // Use the last provider (last-mile / delivery carrier)
+  const lastProvider = providers[providers.length - 1];
+  if (!lastProvider) return null;
+  const name = lastProvider.provider.name.toLowerCase();
+  const country = lastProvider.provider.country?.toUpperCase();
+  if (name.includes("israel post") || country === "IL") return Carrier.ISRAEL_POST;
+  if (name.includes("dhl")) return Carrier.DHL;
+  if (name.includes("ups")) return Carrier.UPS;
+  if (name.includes("fedex")) return Carrier.FEDEX;
+  if (name.includes("usps")) return Carrier.USPS;
+  if (name.includes("royal mail")) return Carrier.ROYAL_MAIL;
+  if (name.includes("canada post") || name.includes("postes canada")) return Carrier.CANADA_POST;
+  if (name.includes("postnl")) return Carrier.POSTNL;
+  if (name.includes("la poste")) return Carrier.LA_POSTE;
+  if (name.includes("tnt")) return Carrier.TNT;
+  if (name.includes("dpd")) return Carrier.DPD;
+  if (name.includes("gls")) return Carrier.GLS;
+  if (name.includes("aramex")) return Carrier.ARAMEX;
+  if (name.includes("cainiao")) return Carrier.CAINIAO;
+  if (name.includes("yanwen")) return Carrier.YANWEN;
+  if (name.includes("4px")) return Carrier.FOUR_PX;
+  if (name.includes("gaash")) return Carrier.GAASH;
+  return null;
+}
+
 /**
  * Convert 17track shipment data to our CarrierTrackingResult format
  */
@@ -204,6 +231,10 @@ export function convert17TrackResult(
       });
     }
   }
+
+  // Detect last-mile carrier from 17track provider info
+  const detectedCarrier = detectCarrierFrom17track(s.tracking?.providers ?? []);
+  const resolvedCarrier = detectedCarrier ?? carrier;
 
   // Determine overall status
   const latestStatus = mapStatus(
@@ -242,7 +273,7 @@ export function convert17TrackResult(
 
   return {
     trackingNumber: shipment.number,
-    carrier,
+    carrier: resolvedCarrier,
     status: latestStatus,
     estimatedDelivery,
     lastLocation,

@@ -570,6 +570,10 @@ async function syncPackageFromResult(prisma: any, packageId: string, result: any
     lastLocation: result.lastLocation ?? null,
     ...(result.estimatedDelivery ? { estimatedDelivery: new Date(result.estimatedDelivery) } : {}),
   };
+  // Update carrier if 17track detected a more specific one
+  if (result.carrier && result.carrier !== "UNKNOWN" && result.carrier !== "ALIEXPRESS_STANDARD" && currentPkg?.carrier !== result.carrier) {
+    updateData.carrier = result.carrier;
+  }
   // Save pickup/carrier info
   if (result.pickupLocation) {
     if (result.pickupLocation.carrierOnly) {
