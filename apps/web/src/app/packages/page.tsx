@@ -45,12 +45,11 @@ const STATUS_OPTIONS = [
 ];
 
 const TIME_PERIODS = [
-  { value: "7d", label: "7 days", days: 7 },
-  { value: "30d", label: "30 days", days: 30 },
-  { value: "90d", label: "3 months", days: 90 },
-  { value: "180d", label: "6 months", days: 180 },
-  { value: "365d", label: "1 year", days: 365 },
-  { value: "all", label: "All time", days: 0 },
+  { value: "7d", label: "7D", days: 7 },
+  { value: "30d", label: "30D", days: 30 },
+  { value: "6m", label: "6M", days: 180 },
+  { value: "1y", label: "1Y", days: 365 },
+  { value: "all", label: "All", days: 0 },
 ];
 
 const SORT_OPTIONS = [
@@ -348,13 +347,13 @@ function PackagesContent() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2 flex-wrap">
             <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
-            <ToggleGroup type="single" value={period} onValueChange={(v) => v && setPeriod(v)} className="gap-1 flex-wrap">
+            <ToggleGroup type="single" value={period} onValueChange={(v) => v && setPeriod(v)} className="gap-0.5 bg-muted rounded-lg p-1">
               {TIME_PERIODS.map((p) => (
                 <ToggleGroupItem
                   key={p.value}
                   value={p.value}
                   size="sm"
-                  className="rounded-full px-3 py-1 text-xs font-medium data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                  className="rounded-md px-2.5 py-1 text-xs font-medium data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:shadow-sm"
                 >
                   {p.label}
                 </ToggleGroupItem>
