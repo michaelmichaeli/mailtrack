@@ -13,6 +13,7 @@ import {
   Mail,
   Menu,
   X,
+  Bell,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
@@ -22,6 +23,7 @@ import { NotificationBell } from "@/components/notifications/notification-bell";
 
 const navItems = [
   { href: "/packages", label: "Orders", icon: Package },
+  { href: "/notifications", label: "Notifications", icon: Bell },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

@@ -46,7 +46,7 @@ export function NotificationBell() {
             id: "new-notifications",
             action: {
               label: "View",
-              onClick: () => bellRef.current?.click(),
+              onClick: () => router.push("/notifications"),
             },
           });
         }
@@ -332,6 +332,19 @@ export function NotificationBell() {
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* See all link */}
+            <div className="border-t border-border px-4 py-2.5">
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  router.push("/notifications");
+                }}
+                className="w-full text-center text-xs font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer"
+              >
+                See all notifications
+              </button>
             </div>
           </motion.div>
         )}
