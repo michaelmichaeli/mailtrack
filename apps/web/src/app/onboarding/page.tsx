@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { api } from "@/lib/api";
 import { Mail, Package, ShoppingBag, Check, ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { LogoSpinner } from "@/components/ui/logo-spinner";
 
 type Step = "connect-email" | "syncing" | "connect-shops" | "complete";
 
@@ -96,10 +97,7 @@ export default function OnboardingPage() {
 
           {step === "syncing" && (
             <div className="flex flex-col items-center py-8">
-              <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
-              <p className="text-sm text-muted-foreground">
-                Scanning your inbox for order confirmations and shipping notifications...
-              </p>
+              <LogoSpinner size={48} text="Scanning your inbox for order confirmations and shipping notifications…" />
             </div>
           )}
 

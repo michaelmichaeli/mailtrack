@@ -6,6 +6,7 @@ import { Bell, Check, CheckCheck, Trash2, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
+import { LogoSpinner } from "@/components/ui/logo-spinner";
 import { toast } from "sonner";
 
 interface Notification {
@@ -250,8 +251,7 @@ export function NotificationBell() {
             <div className="overflow-y-auto" style={{ maxHeight: "400px" }}>
               {loading && notifications.length === 0 ? (
                 <div className="p-8 text-center">
-                  <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full mx-auto" />
-                  <p className="text-xs text-muted-foreground mt-2">Loading...</p>
+                  <LogoSpinner size={24} text="Loading…" />
                 </div>
               ) : notifications.length === 0 ? (
                 <div className="p-8 text-center">
