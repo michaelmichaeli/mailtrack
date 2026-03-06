@@ -312,7 +312,7 @@ function PackagesContent() {
               </button>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Select value={status || "_all"} onValueChange={(v) => setStatus(v === "_all" ? "" : v)}>
               <SelectTrigger className="h-10 w-full sm:w-44" aria-label="Filter by status">
                 <SelectValue placeholder="All Statuses" />
@@ -347,7 +347,7 @@ function PackagesContent() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2 flex-wrap">
             <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
-            <ToggleGroup type="single" value={period} onValueChange={(v) => v && setPeriod(v)} className="gap-1">
+            <ToggleGroup type="single" value={period} onValueChange={(v) => v && setPeriod(v)} className="gap-1 flex-wrap">
               {TIME_PERIODS.map((p) => (
                 <ToggleGroupItem
                   key={p.value}
@@ -366,7 +366,7 @@ function PackagesContent() {
                 {allItems.length} of {totalCount}
               </p>
             )}
-            <ToggleGroup type="single" value={view} onValueChange={(v) => v && setView(v as ViewMode)} className="bg-muted rounded-lg p-1 gap-0">
+            <ToggleGroup type="single" value={view} onValueChange={(v) => v && setView(v as ViewMode)} className="bg-muted rounded-lg p-1 gap-0 shrink-0">
               {VIEW_MODES.map((mode) => {
                 const Icon = mode.icon;
                 return (
