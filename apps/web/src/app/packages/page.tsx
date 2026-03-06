@@ -176,19 +176,20 @@ function PackagesContent() {
       setSyncProgress("Scanning emails…");
       const emailResult = await api.syncEmails();
       const emailCount = emailResult.emailsParsed ?? 0;
+      setSyncProgress(emailCount > 0 ? `Found ${emailCount} emails, tracking packages…` : "Tracking packages…");
       await api.syncAllTracking();
-      setSyncProgress("Updating tracking…");
       const poll = setInterval(async () => {
         try {
           const s = await api.getSyncStatus();
           if (s.status === "running") {
-            setSyncProgress(`Tracking ${s.synced} of ${s.total} packages…`);
+            const pct = s.total > 0 ? Math.round((s.synced / s.total) * 100) : 0;
+            setSyncProgress(`Tracking… ${pct}%`);
           } else {
             clearInterval(poll);
             setSyncProgress(null);
             setIsSyncing(false);
             if (s.status === "done") {
-              toast.success(`Synced ${emailCount} email${emailCount !== 1 ? "s" : ""}, updated ${s.synced} of ${s.total} packages`);
+              toast.success(`Synced ${emailCount} email${emailCount !== 1 ? "s" : ""}, updated ${s.synced} package${s.synced !== 1 ? "s" : ""}`);
             } else {
               toast.error("Tracking sync failed");
             }
