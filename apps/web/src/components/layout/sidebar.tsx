@@ -148,7 +148,7 @@ export function Sidebar() {
       {/* Mobile sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex h-screen w-64 flex-col border-r border-border bg-card transition-transform duration-200 md:hidden",
+          "fixed inset-y-0 left-0 z-50 flex h-[100dvh] w-64 flex-col border-r border-border bg-card transition-transform duration-200 md:hidden",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
