@@ -58,6 +58,7 @@ MailTrack is a universal package tracking dashboard built as a monorepo with thr
 | Settings | `routes/settings.routes.ts` | User settings management |
 | Tracking (Cainiao) | `services/tracking.service.ts` | Primary tracking via Cainiao public API |
 | Tracking (17track) | `services/tracking17.service.ts` | Secondary tracking via Playwright scraper |
+| Tracking (Israel Post) | `services/israelpost.service.ts` | Direct Israel Post API tracking |
 | Gmail | `services/gmail.service.ts` | Gmail API integration |
 | Email Parser | `services/email-parser.service.ts` | Extract orders/tracking from email HTML |
 | Places | `services/places.service.ts` | Google Places API for pickup locations |
@@ -68,14 +69,23 @@ MailTrack is a universal package tracking dashboard built as a monorepo with thr
 
 | Page | Route | Purpose |
 |------|-------|---------|
-| Landing | `/` | Public landing page |
+| Landing | `/` | Redirects to `/packages` |
 | Login | `/login` | OAuth login (Google/Apple) |
-| Auth Callback | `/auth/callback` | OAuth redirect handler |
-| Dashboard | `/dashboard` | Stats + package overview |
-| Packages | `/packages` | Package list with search/filter |
-| Order Detail | `/orders/[id]` | Full order + tracking timeline |
-| Settings | `/settings` | Preferences, connections, account |
-| Onboarding | `/onboarding` | First-time setup wizard |
+| Auth Callback | `/auth/callback` | OAuth redirect — routes new users to onboarding |
+| Packages | `/packages` | Package list (table/kanban/timeline views) with search/filter |
+| Order Detail | `/orders/[id]` | Full order + tracking timeline + location map |
+| Settings | `/settings` | Preferences, connections, sign out, account |
+| Onboarding | `/onboarding` | First-time wizard: welcome → Gmail → sync → feature tour |
+| Notifications | `/notifications` | Full notification history |
+
+**Key UI Components:**
+| Component | File | Purpose |
+|-----------|------|---------|
+| LogoSpinner | `components/ui/logo-spinner.tsx` | Animated logo (3D Y-axis rotation), used as loading indicator everywhere |
+| KanbanBoard | `components/packages/package-kanban.tsx` | Trello-style kanban with unified page scroll |
+| NotificationBell | `components/notifications/notification-bell.tsx` | Floating dropdown notification widget |
+| Sidebar | `components/layout/sidebar.tsx` | App navigation with logo, theme toggle, sign out |
+| Skeletons | `components/ui/skeleton.tsx` | View-specific loading skeletons (table/kanban/timeline) |
 
 ### Shared (`packages/shared`)
 
@@ -142,6 +152,9 @@ MailTrack is a universal package tracking dashboard built as a monorepo with thr
 7. Set refresh token as httpOnly cookie
 8. Redirect to /auth/callback?token=<access_token>
 9. Client stores access token in memory
+10. Check user.onboardingCompleted:
+    - false → redirect to /onboarding (first-time wizard)
+    - true  → redirect to /packages
 ```
 
 ## Design Decisions
@@ -155,6 +168,12 @@ MailTrack is a universal package tracking dashboard built as a monorepo with thr
 | **AES-256 token encryption** | Gmail OAuth tokens contain sensitive data; encrypted at rest |
 | **Carrier regex + 17track correction** | Regex is fast but imprecise for digit-only patterns; 17track provides accurate last-mile carrier |
 | **Removed digit-only carrier patterns** | CANADA_POST, TNT, GLS, ARAMEX regexes were too broad, misdetecting AliExpress order IDs |
+| **Israel Post direct API first** | Israeli packages try Israel Post API before 17track — faster, more accurate locations |
+| **Status reconciliation after sync** | Carriers sometimes report stale overall status; check events for DELIVERED and upgrade |
+| **Onboarding wizard with `onboardingCompleted` flag** | Cleanly separates first-time vs returning users; auth callback checks flag |
+| **No per-column scrolling in kanban** | User explicitly rejected it; Trello-style unified page scroll only |
+| **Simplified favicon for small sizes** | Full logo is unreadable at 16/32px; bold geometric pin shape used instead |
+| **LogoSpinner replaces all loading spinners** | Consistent branding; 3D Y-axis rotation animation |
 | **Background sync with polling** | Sync can take minutes; non-blocking with status polling is better UX |
 | **Sonner for toasts** | Lightweight, good API, supports actions and rich content |
 | **TanStack Query for data** | Automatic caching, refetching, optimistic updates |

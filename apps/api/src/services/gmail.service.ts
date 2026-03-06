@@ -18,9 +18,9 @@ function getOAuth2Client() {
  * Get Gmail OAuth2 URL for user authorization.
  * State encodes the flow type and user token as JSON.
  */
-export function getGmailAuthUrl(userToken: string): string {
+export function getGmailAuthUrl(userToken: string, returnTo?: string): string {
   const oauth2Client = getOAuth2Client();
-  const state = JSON.stringify({ flow: "gmail", token: userToken });
+  const state = JSON.stringify({ flow: "gmail", token: userToken, ...(returnTo && { returnTo }) });
 
   return oauth2Client.generateAuthUrl({
     access_type: "offline",

@@ -54,6 +54,7 @@ model User {
   avatar       String?
   authProvider  AuthProvider
   ingestKey    String?      @unique // API key for SMS/webhook auto-forwarding
+  onboardingCompleted Boolean @default(false)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 

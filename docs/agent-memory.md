@@ -10,43 +10,90 @@
 - Support email-based order ingestion (Gmail), SMS webhooks, and manual entry
 - Provide accurate carrier detection and real-time tracking
 - Deliver a polished, responsive UI with notifications
+- First-time user onboarding wizard with animations and feature tour
 
 ## Tasks Completed
 
+### Onboarding Wizard (Session: 2026-03-06) — NOT YET PUSHED
+- **What**: Multi-step first-time user wizard with framer-motion animations, canvas-confetti, Web Audio sounds, feature tour
+- **Schema**: Added `onboardingCompleted Boolean @default(false)` to User model
+- **API**: `GET /auth/me` now returns `onboardingCompleted`; added `POST /auth/onboarding-complete`
+- **Frontend**: `completeOnboarding()` in api.ts; auth callback routes new users to `/onboarding`
+- **Wizard steps**: Welcome (personalized greeting + confetti) → Connect Gmail → Auto-Sync (progress bar) → Feature Tour (5 features) → Completion (celebration)
+- **Status**: Built, awaiting user review before push
+- **Files**: `apps/api/prisma/schema.prisma`, `apps/api/src/routes/auth.routes.ts`, `apps/web/src/lib/api.ts`, `apps/web/src/app/auth/callback/page.tsx`, `apps/web/src/app/onboarding/page.tsx`
+
+### Package Status Reconciliation Fix (Session: 2026-03-06)
+- **Problem**: Packages stuck at OUT_FOR_DELIVERY when DELIVERED events existed in DB
+- **Fix**: After upserting events in `syncPackageFromResult`, check all events for highest-priority status and upgrade package/order accordingly
+- **File**: `apps/api/src/routes/packages.routes.ts` (end of `syncPackageFromResult`)
+
+### Logo & Branding (Session: 2026-03-06)
+- **Logo**: User's Gemini-generated pin+box icon, cropped to transparent 1071×1231
+- **Favicon**: Simplified bold geometric pin for 16/32/48px (too detailed at small sizes), full logo for 192/512px. All with indigo (#6366F1) background
+- **LogoSpinner**: 3D Y-axis rotation component (`logo-spinner.tsx`), replaces all loading spinners
+- **Files**: `apps/web/public/logo.png`, `favicon.ico`, `favicon-*.png`, `icon-*.png`, `apple-touch-icon.png`, `apps/web/src/components/ui/logo-spinner.tsx`, `apps/web/src/app/globals.css` (keyframes)
+
+### Kanban Board Redesign (Session: 2026-03-06)
+- **Problem**: User hated per-column scrolling
+- **Solution**: Trello-style — columns extend full height, page scrolls as one unit, horizontal scroll for column overflow. Columns have `bg-muted/40` rounded containers with sticky headers
+- **File**: `apps/web/src/components/packages/package-kanban.tsx`
+
+### View-Specific Loading Skeletons (Session: 2026-03-06)
+- **Created**: `TableSkeleton`, `KanbanSkeleton`, `TimelineSkeleton` in `skeleton.tsx`
+- **Updated**: Packages page shows correct skeleton per active view
+
+### Time Filter Compact Labels (Session: 2026-03-06)
+- Removed "3 months" period. Labels: 7D, 30D, 6M, 1Y, All
+- Styled as compact pill-group
+
+### Notification Bell Dropdown Fix (Session: 2026-03-06)
+- Changed from `overflow-hidden` to flex column layout. Footer always visible (`shrink-0`)
+
+### iPhone Safe Area Fix (Session: 2026-03-06)
+- `pb-[max(0.75rem,env(safe-area-inset-bottom))]` on sidebar bottom
+- `viewportFit: "cover"` in viewport config
+
+### Sign Out in Settings (Session: 2026-03-06)
+- Added Sign Out button between Appearance and Data & Privacy sections
+
+### Israel Post Direct API Integration (Session: 2026-03)
+- Created `apps/api/src/services/israelpost.service.ts` — direct Israel Post tracking
+- CSRF token handling, Hebrew location extraction, pickup center detection
+- Batch tracking with parallel requests
+- Integrated into sync flow: Israel Post packages tried first, then 17track fallback
+
 ### Carrier Detection Overhaul (Session: 2025-01)
-- **Problem**: Digit-only regex patterns (CANADA_POST `/\d{16}/`, TNT `/\d{9}/`, GLS `/\d{11,12}/`, ARAMEX `/\d{10}/`) were misdetecting AliExpress order IDs as wrong carriers
-- **Fix**: Removed all digit-only patterns from `CARRIER_PATTERNS` in `packages/shared/src/constants.ts`
-- **Enhancement**: Added `detectCarrierFrom17track()` in `tracking17.service.ts` — maps 17track provider name/country to `Carrier` enum for accurate last-mile detection
-- **DB Migration**: Fixed 55 misdetected packages (CANADA_POST/TNT → UNKNOWN)
-- **Files**: `packages/shared/src/constants.ts`, `apps/api/src/services/tracking17.service.ts`, `apps/api/src/routes/packages.routes.ts`, `apps/api/src/routes/ingest.routes.ts`
+- Removed digit-only regex patterns from `CARRIER_PATTERNS`
+- Added `detectCarrierFrom17track()` for accurate last-mile detection
+- Fixed 55 misdetected packages
 
 ### Login Button Overflow Fix (Session: 2025-01)
-- **Problem**: Dev Login button text was overflowing on the login page
-- **Fix**: Added `truncate` class to button in `apps/web/src/app/login/page.tsx`
+- Added `truncate` class to button
 
 ### Notification Toast UX (Session: 2025-01)
-- **Problem**: Toast notifications stacked, had wrong cursor, weren't actionable
-- **Fix**: Added `id: "new-notifications"` for deduplication, action button with `bellRef.current?.click()`
-- **Status**: May need verification — sonner renders outside React tree, click propagation uncertain
-- **File**: `apps/web/src/components/notifications/notification-bell.tsx`
+- Dedup toasts, action button to open dropdown
 
 ## Tasks In Progress
 
-_None currently_
+- **Onboarding Wizard**: Built, awaiting user review before push
 
 ## Known Issues
 
-1. **Toast click may not work**: The sonner toast action button uses `bellRef.current?.click()` to open the notification dropdown. Since sonner renders outside the React component tree, this might not propagate correctly. May need a global event approach.
-2. **Israel Post regex gap**: Tracking numbers like `RS1299291146Y` (ending in Y, not IL) are detected as `ALIEXPRESS_STANDARD` by regex. They get corrected to `ISRAEL_POST` during 17track sync, but only after a sync occurs.
-3. **Duplicate `syncPackageFromResult`**: The function exists in both `packages.routes.ts` and `ingest.routes.ts`. Should be extracted to a shared service.
+1. **Dev login doesn't create connectedEmail**: Dev login creates/finds user but does NOT create `connectedEmail` records. Email sync requires Google OAuth to connect Gmail tokens.
+2. **Israel Post regex gap**: Tracking numbers ending in Y (not IL) detected as ALIEXPRESS_STANDARD. Corrected during sync.
+3. **Duplicate `syncPackageFromResult`**: Exists in both `packages.routes.ts` and `ingest.routes.ts`. Should extract to shared service.
 
 ## Design Decisions
 
 | Decision | Date | Rationale |
 |----------|------|-----------|
-| Remove digit-only carrier patterns | 2025-01 | Too broad, caused 55+ misdetections. Better to default to UNKNOWN and let 17track correct. |
-| 17track carrier detection layer | 2025-01 | 17track provides accurate provider info (e.g., "Israel Post") that regex cannot match for ambiguous tracking formats. |
-| Carrier correction persisted to DB | 2025-01 | Once 17track identifies the real carrier, update the DB so subsequent views show correct carrier without re-scraping. |
+| No per-column scrolling in kanban | 2026-03 | User explicitly rejected it. Trello-style unified page scroll preferred. |
+| Simplified favicon for small sizes | 2026-03 | Full logo becomes a smudge at 16/32px. Geometric pin shape reads better. |
+| Status reconciliation after event upsert | 2026-03 | Carriers sometimes report stale overall status while individual events show DELIVERED. |
+| `onboardingCompleted` flag on User | 2026-03 | Cleanly separates first-time vs returning users without relying on heuristics. |
+| Web Audio API for sounds | 2026-03 | No audio files needed, works offline, lightweight synthesized effects. |
+| Remove digit-only carrier patterns | 2025-01 | Too broad, caused 55+ misdetections. |
 
 ## Important Assumptions
 
@@ -54,13 +101,22 @@ _None currently_
 - Hebrew language support is important (Israel-based users)
 - 17track scraping may break if their site changes — Cainiao is the stable fallback
 - Dev login (`POST /api/auth/dev-login`) is only available when `NODE_ENV !== 'production'`
+- User prefers verifying changes himself (check localhost, not screenshots)
+
+## User Preferences
+
+- Hates per-column scrolling in kanban — wants Trello/Jira style
+- Wants polished, professional UI
+- Expects docs to be updated with every change (AGENT_INSTRUCTIONS.md, agent-memory.md, dev-log.md)
+- Expects step-by-step approval — don't batch changes without review
+- Wants onboarding wizard to be extensible — new features should be added to wizard retrospectively
 
 ## Future Tasks
 
 - [ ] Extract `syncPackageFromResult` into a shared service (DRY)
-- [ ] Add Israel Post direct API integration (bypass 17track for IL packages)
 - [ ] Implement periodic auto-sync (cron/scheduled job)
 - [ ] Add package archiving (hide delivered packages after N days)
 - [ ] Mobile push notifications via Expo
 - [ ] Multi-language support (i18n)
 - [ ] Package grouping by merchant/order
+- [ ] Add new features to onboarding wizard as they're built

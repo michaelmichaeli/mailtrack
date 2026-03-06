@@ -21,7 +21,16 @@ function CallbackHandler() {
 
     if (token) {
       api.setToken(token);
-      router.replace("/dashboard");
+      // Check if user needs onboarding
+      api.getMe().then((user) => {
+        if (!user.onboardingCompleted) {
+          router.replace("/onboarding");
+        } else {
+          router.replace("/packages");
+        }
+      }).catch(() => {
+        router.replace("/packages");
+      });
     } else {
       router.replace("/login");
     }

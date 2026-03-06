@@ -1,7 +1,57 @@
 # Agent Instructions
 
-> This file is the first thing any AI agent should read before making changes to this codebase.
-> It contains coding standards, project rules, architecture principles, and important constraints.
+> **⚠️ STOP — READ THIS ENTIRE FILE BEFORE DOING ANYTHING ⚠️**
+> This file is the first thing any AI agent MUST read before making changes to this codebase.
+> It contains mandatory procedures, user preferences, coding standards, and architecture rules.
+
+---
+
+## 🚨 MANDATORY: Before Starting ANY Work
+
+**You MUST complete these steps at the start of every session, before touching any code:**
+
+1. ✅ Read this file completely (`AGENT_INSTRUCTIONS.md`)
+2. ✅ Read `docs/agent-memory.md` — current state, completed tasks, user preferences, known issues
+3. ✅ Read `docs/dev-log.md` — recent changes and their details
+4. ✅ Read `docs/architecture.md` — system overview and design decisions
+5. ✅ Check for any in-progress tasks in `agent-memory.md` and continue from where the last session left off
+
+**Do NOT skip these steps.** They contain critical context that prevents you from repeating mistakes, breaking existing features, or ignoring user preferences.
+
+---
+
+## 🚨 MANDATORY: After Every Significant Change
+
+**After completing any feature, fix, or modification, you MUST:**
+
+1. ✅ Update `docs/dev-log.md` — add an entry describing what changed, which files, and why
+2. ✅ Update `docs/agent-memory.md` — update tasks completed, tasks in progress, known issues
+3. ✅ Update `docs/architecture.md` — if architecture, data flow, or key modules changed
+4. ✅ Evaluate: should this feature be added to the onboarding wizard? (see User Preferences below)
+5. ✅ Do NOT push to git without explicit user approval for large changes
+
+**This is not optional.** The user relies on these docs for continuity across sessions.
+
+---
+
+## 👤 User Preferences (Standing Instructions)
+
+These are permanent instructions from the user. Follow them in EVERY session:
+
+| Rule | Details |
+|------|---------|
+| **Don't push without approval** | For large features, show the user first. Small bug fixes can be pushed. |
+| **Step-by-step approval** | Complete one task at a time. Summarize what was done. Wait for approval before the next task. |
+| **No batch changes** | Don't chain multiple unrelated tasks without review. |
+| **Update docs after every change** | `agent-memory.md`, `dev-log.md`, `architecture.md` — every time, no exceptions. |
+| **Add features to onboarding wizard** | When adding a new user-facing feature, add it to the `FEATURES` array in `apps/web/src/app/onboarding/page.tsx` |
+| **Verify changes yourself** | Don't ask the user for screenshots. Check the running app via `curl` or by reading the rendered output. |
+| **Hebrew/RTL awareness** | User is Israel-based. Hebrew text appears in tracking locations. Ensure UI handles `dir="auto"`. |
+| **Kanban style** | User wants Trello/Jira-style board — unified page scroll, NO per-column scrolling. Never revert this. |
+| **Dev servers** | API: port 3002, Web: port 3003. Dev login: `POST /api/auth/dev-login` with `{"email":"michaelmichaeli888@gmail.com"}` |
+| **Record ALL instructions** | Any new preference or instruction from the user must be added to this table and to `docs/agent-memory.md`. |
+
+---
 
 ## Project Overview
 
@@ -140,9 +190,15 @@ docker-compose up -d
 
 If you lose context or are starting a new session:
 
-1. Read this file (`AGENT_INSTRUCTIONS.md`)
-2. Read `docs/architecture.md` for system overview
-3. Read `docs/agent-memory.md` for current state
-4. Read `docs/dev-log.md` for recent changes
-5. Reconstruct the project state from these files
-6. Continue from the latest incomplete task
+1. **READ `AGENT_INSTRUCTIONS.md` FIRST** — especially the MANDATORY sections at the top
+2. Read `docs/agent-memory.md` for current state, user preferences, and known issues
+3. Read `docs/dev-log.md` for recent changes
+4. Read `docs/architecture.md` for system overview
+5. Check for in-progress tasks and continue from where the last session left off
+6. **Before writing any code**, confirm you've read all of the above
+
+**After completing work:**
+1. Update `docs/dev-log.md` with what changed
+2. Update `docs/agent-memory.md` with completed tasks, new issues, new preferences
+3. Update `docs/architecture.md` if architecture changed
+4. Check if any new feature should be added to the onboarding wizard

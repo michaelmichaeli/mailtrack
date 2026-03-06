@@ -129,6 +129,10 @@ class ApiClient {
     return this.request<any>("/auth/me");
   }
 
+  async completeOnboarding() {
+    return this.request("/auth/onboarding-complete", { method: "POST" });
+  }
+
   async logout() {
     return this.request("/auth/logout", { method: "POST" });
   }

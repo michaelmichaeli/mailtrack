@@ -12,7 +12,7 @@ const WEB_URL = process.env.WEB_URL ?? "http://localhost:3003";
 export const emailRoutes: FastifyPluginAsync = async (app) => {
   // GET /api/email/connect/gmail — Redirect to Gmail OAuth consent screen
   app.get("/connect/gmail", async (request, reply) => {
-    const { token } = request.query as { token?: string };
+    const { token, returnTo } = request.query as { token?: string; returnTo?: string };
 
     if (!token) {
       return reply.redirect(`${WEB_URL}/settings?error=${encodeURIComponent("Authentication required")}`);
@@ -25,7 +25,7 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
     }
 
     // Redirect to Google with state containing flow type + user token
-    const url = getGmailAuthUrl(token);
+    const url = getGmailAuthUrl(token, returnTo);
     return reply.redirect(url);
   });
 

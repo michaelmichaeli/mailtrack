@@ -57,12 +57,14 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     // Parse state to determine flow type
     let flow = "login";
     let userToken: string | undefined;
+    let returnTo: string | undefined;
     if (state) {
       try {
         const parsed = JSON.parse(state);
         if (parsed.flow === "gmail") {
           flow = "gmail";
           userToken = parsed.token;
+          returnTo = parsed.returnTo;
         }
       } catch {
         // Not JSON state — treat as login flow
@@ -70,24 +72,25 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     }
 
     if (error || !code) {
-      const redirectUrl = flow === "gmail" ? `${WEB_URL}/settings` : `${WEB_URL}/login`;
+      const redirectUrl = flow === "gmail" ? `${WEB_URL}${returnTo ?? "/settings"}` : `${WEB_URL}/login`;
       return reply.redirect(`${redirectUrl}?error=${encodeURIComponent(error ?? "No authorization code received")}`);
     }
 
     // === Gmail connect flow ===
     if (flow === "gmail" && userToken) {
+      const redirectBase = `${WEB_URL}${returnTo ?? "/settings"}`;
       let userId: string;
       try {
         const decoded = app.jwt.verify(userToken) as { userId: string };
         userId = decoded.userId;
       } catch {
-        return reply.redirect(`${WEB_URL}/settings?error=${encodeURIComponent("Session expired. Please log in again.")}`);
+        return reply.redirect(`${redirectBase}?error=${encodeURIComponent("Session expired. Please log in again.")}`);
       }
 
       try {
         const tokens = await exchangeGmailCode(code);
         if (!tokens.access_token) {
-          return reply.redirect(`${WEB_URL}/settings?error=${encodeURIComponent("Failed to get Gmail access token")}`);
+          return reply.redirect(`${redirectBase}?error=${encodeURIComponent("Failed to get Gmail access token")}`);
         }
 
         // Get user's email from Gmail
@@ -115,10 +118,10 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         });
 
         await logAudit(app, userId, "EMAIL_CONNECT", "Gmail: " + email, request.ip);
-        return reply.redirect(`${WEB_URL}/settings?success=${encodeURIComponent("Gmail connected: " + email)}&autoSync=1`);
+        return reply.redirect(`${redirectBase}?success=${encodeURIComponent("Gmail connected: " + email)}&autoSync=1`);
       } catch (err: any) {
         app.log.error(err, "Gmail OAuth callback failed");
-        return reply.redirect(`${WEB_URL}/settings?error=${encodeURIComponent("Failed to connect Gmail. Please try again.")}`);
+        return reply.redirect(`${redirectBase}?error=${encodeURIComponent("Failed to connect Gmail. Please try again.")}`);
       }
     }
 
@@ -318,12 +321,24 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       email: user.email,
       avatar: user.avatar,
       authProvider: user.authProvider,
+      onboardingCompleted: user.onboardingCompleted,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
       connectedEmails: user.connectedEmails,
       connectedShops: user.connectedShops,
       notificationPreference: user.notificationPreference,
     };
+  });
+
+  // POST /api/auth/onboarding-complete — Mark onboarding as done
+  app.post("/onboarding-complete", {
+    preHandler: [app.authenticate],
+  }, async (request) => {
+    await app.prisma.user.update({
+      where: { id: request.user.userId },
+      data: { onboardingCompleted: true },
+    });
+    return { success: true };
   });
 
   // DELETE /api/auth/account — Delete account (GDPR right to be forgotten)
