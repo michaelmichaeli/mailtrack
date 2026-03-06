@@ -63,7 +63,7 @@ export default function NotificationsPage() {
         unreadOnly: filter === "unread",
       }),
     getNextPageParam: (lastPage: any, allPages: any[]) => {
-      const fetched = allPages.reduce((acc: number, p: any) => acc + (p.notifications?.length ?? 0), 0);
+      const fetched = allPages.reduce((acc: number, p: any) => acc + (p.items?.length ?? 0), 0);
       if (fetched < (lastPage.total ?? 0)) return allPages.length + 1;
       return undefined;
     },
@@ -71,7 +71,7 @@ export default function NotificationsPage() {
   });
 
   const allNotifications: Notification[] =
-    data?.pages?.flatMap((p: any) => p.notifications ?? []) ?? [];
+    data?.pages?.flatMap((p: any) => p.items ?? []) ?? [];
   const total = data?.pages?.[0]?.total ?? 0;
   const unreadCount = allNotifications.filter((n) => !n.read).length;
 
