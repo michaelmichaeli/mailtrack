@@ -74,13 +74,13 @@ export function PackageKanban({ orders }: { orders: Order[] }) {
   }
 
   return (
-    <div className="flex gap-3 overflow-x-auto -mx-6 px-6 lg:-mx-8 lg:px-8 h-[calc(100vh-280px)] min-h-[400px]">
+    <div className="flex gap-3 overflow-x-auto -mx-6 px-6 lg:-mx-8 lg:px-8 pb-4">
       {activeColumns.map((col) => (
         <div
           key={col.status}
-          className="flex-shrink-0 w-72 flex flex-col rounded-xl bg-muted/40 border border-border/50"
+          className="flex-shrink-0 w-72 rounded-xl bg-muted/40 border border-border/50"
         >
-          {/* Column header — sticky */}
+          {/* Column header */}
           <div className="flex items-center gap-2 px-3 py-3 border-b border-border/50">
             <div className={`h-2.5 w-2.5 rounded-full ${col.color}`} />
             <h3 className="text-sm font-semibold text-foreground">{col.label}</h3>
@@ -89,8 +89,8 @@ export function PackageKanban({ orders }: { orders: Order[] }) {
             </span>
           </div>
 
-          {/* Scrollable card list */}
-          <div className="flex-1 overflow-y-auto p-2 space-y-2">
+          {/* Card list */}
+          <div className="p-2 space-y-2">
             {grouped[col.status].map((order) => {
               const pkg = order.package;
               const items = safeParse(order.items).length > 0 ? safeParse(order.items) : safeParse(pkg?.items);
