@@ -74,6 +74,10 @@ export function Sidebar() {
             <p className="text-[10px] text-muted-foreground leading-none">Every package. One dashboard.</p>
           </div>
         </Link>
+        {/* Desktop: notification bell in sidebar header */}
+        <div className="ml-auto hidden md:block">
+          <NotificationBell />
+        </div>
         <button
           onClick={() => setMobileOpen(false)}
           className="ml-auto md:hidden p-1 rounded-lg hover:bg-accent"
@@ -138,8 +142,8 @@ export function Sidebar() {
         <Menu className="h-5 w-5" />
       </button>
 
-      {/* Floating notification bell — top right */}
-      <div className="fixed top-4 right-4 z-40">
+      {/* Floating notification bell — mobile only */}
+      <div className="fixed top-4 right-4 z-40 md:hidden">
         <NotificationBell />
       </div>
 
