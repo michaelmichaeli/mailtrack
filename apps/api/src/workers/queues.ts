@@ -12,6 +12,7 @@ export const emailSyncQueue = new Queue("sync-email", { connection: connection a
 export const trackPackageQueue = new Queue("track-package", { connection: connection as any });
 export const enrichOrderQueue = new Queue("enrich-order", { connection: connection as any });
 export const sendNotificationQueue = new Queue("send-notification", { connection: connection as any });
+export const emailDigestQueue = new Queue("email-digest", { connection: connection as any });
 
 // ─── Email Sync Worker ───
 
@@ -104,6 +105,30 @@ export const sendNotificationWorker = new Worker(
   }
 );
 
+// ─── Email Digest Worker ───
+
+export const emailDigestWorker = new Worker(
+  "email-digest",
+  async (job: Job) => {
+    job.log("Starting weekly email digest");
+
+    const { PrismaClient } = await import("@prisma/client");
+    const prisma = new PrismaClient();
+    try {
+      const { sendWeeklyDigests } = await import("../services/email-digest.service.js");
+      const result = await sendWeeklyDigests(prisma);
+      job.log(`Digest complete: ${result.sent} sent, ${result.errors} errors`);
+      return result;
+    } finally {
+      await prisma.$disconnect();
+    }
+  },
+  {
+    connection: connection as any,
+    concurrency: 1,
+  }
+);
+
 // ─── Scheduled Jobs ───
 
 /**
@@ -117,6 +142,21 @@ export async function scheduleEmailSync() {
       repeat: { every: 15 * 60 * 1000 }, // every 15 minutes
       removeOnComplete: 100,
       removeOnFail: 50,
+    }
+  );
+}
+
+/**
+ * Schedule weekly email digest (every Monday at 9:00 AM UTC).
+ */
+export async function scheduleWeeklyDigest() {
+  await emailDigestQueue.add(
+    "weekly-digest",
+    { type: "weekly-digest" },
+    {
+      repeat: { pattern: "0 9 * * 1" }, // cron: Monday 9 AM UTC
+      removeOnComplete: 20,
+      removeOnFail: 10,
     }
   );
 }
@@ -142,5 +182,6 @@ process.on("SIGTERM", async () => {
   await trackPackageWorker.close();
   await enrichOrderWorker.close();
   await sendNotificationWorker.close();
+  await emailDigestWorker.close();
   await connection.quit();
 });

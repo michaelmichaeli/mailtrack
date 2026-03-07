@@ -675,6 +675,26 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
           />
         </div>
 
+        {notifPrefs?.emailEnabled && (
+          <div className="flex items-center justify-between rounded-md border border-dashed p-3">
+            <p className="text-xs text-muted-foreground">Send yourself a test digest email now</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                try {
+                  const res = await api.sendTestDigest();
+                  toast.success(res.message || "Test digest sent!");
+                } catch {
+                  toast.error("Failed to send test digest");
+                }
+              }}
+            >
+              Send test
+            </Button>
+          </div>
+        )}
+
         {isSubscribed && (
           <Alert className="border-green-600 bg-green-50 text-green-800 dark:border-green-500 dark:bg-green-950 dark:text-green-200">
             <CheckCircle2 className="h-3.5 w-3.5" />

@@ -332,6 +332,12 @@ class ApiClient {
   async getConnectedAccounts() {
     return this.request<any>("/settings/connected-accounts");
   }
+
+  async sendTestDigest() {
+    return this.request<{ success: boolean; message: string }>("/settings/notifications/test-digest", {
+      method: "POST",
+    });
+  }
 }
 
 export const api = new ApiClient(API_BASE);

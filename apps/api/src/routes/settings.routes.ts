@@ -114,4 +114,22 @@ export const settingsRoutes: FastifyPluginAsync = async (app) => {
 
     return { emails, shops };
   });
+
+  // POST /api/settings/notifications/test-digest — Send a test digest email to the current user
+  app.post("/notifications/test-digest", {
+    preHandler: [app.authenticate],
+  }, async (request, reply) => {
+    const userId = request.user.userId;
+
+    const user = await app.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return reply.status(404).send({ error: "User not found" });
+
+    if (!process.env.RESEND_API_KEY) {
+      return reply.status(503).send({ error: "Email service not configured (RESEND_API_KEY missing)" });
+    }
+
+    const { sendWeeklyDigestForUser } = await import("../services/email-digest.service.js");
+    const result = await sendWeeklyDigestForUser(app.prisma, userId);
+    return result;
+  });
 };
