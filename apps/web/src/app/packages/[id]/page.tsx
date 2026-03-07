@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton, OrderDetailSkeleton } from "@/components/ui/skeleton";
 import { PackageProgressBar } from "@/components/packages/package-progress-bar";
 import { TrackingTimeline } from "@/components/packages/tracking-timeline";
-import { ArrowLeft, RefreshCw, ExternalLink, MapPin, Clock, DollarSign, Store } from "lucide-react";
+import { ArrowLeft, RefreshCw, ExternalLink, MapPin, Clock, DollarSign, Store, Package } from "lucide-react";
 import { toast } from "sonner";
 
 export default function PackageDetailPage() {
@@ -39,12 +40,18 @@ export default function PackageDetailPage() {
 
   if (!pkg) {
     return (
-      <div className="text-center py-16">
-        <p className="text-muted-foreground">Package not found</p>
-        <Button variant="outline" className="mt-4" onClick={() => router.back()}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Go back
-        </Button>
+      <div className="flex flex-col items-center justify-center py-24 px-4">
+        <div className="rounded-full bg-muted/50 p-5 mb-5">
+          <Package className="h-12 w-12 text-muted-foreground/40" />
+        </div>
+        <h2 className="text-xl font-semibold mb-1">Package not found</h2>
+        <p className="text-sm text-muted-foreground mb-6">This package may have been deleted or the link is invalid.</p>
+        <Link href="/packages">
+          <Button variant="outline" size="sm" className="cursor-pointer">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Orders
+          </Button>
+        </Link>
       </div>
     );
   }

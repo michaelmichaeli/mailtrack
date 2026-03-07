@@ -76,13 +76,18 @@ export default function OrderDetailPage() {
 
   if (!order) {
     return (
-      <div className="text-center py-16">
-        <Package className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
-        <p className="text-muted-foreground">Order not found</p>
-        <Button variant="outline" size="sm" className="mt-4" onClick={() => router.back()}>
-          <ArrowLeft className="h-4 w-4" />
-          Go back
-        </Button>
+      <div className="flex flex-col items-center justify-center py-24 px-4">
+        <div className="rounded-full bg-muted/50 p-5 mb-5">
+          <Package className="h-12 w-12 text-muted-foreground/40" />
+        </div>
+        <h2 className="text-xl font-semibold mb-1">Order not found</h2>
+        <p className="text-sm text-muted-foreground mb-6">This order may have been deleted or the link is invalid.</p>
+        <Link href="/packages">
+          <Button variant="outline" size="sm" className="cursor-pointer">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Orders
+          </Button>
+        </Link>
       </div>
     );
   }
