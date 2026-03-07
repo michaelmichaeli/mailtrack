@@ -22,6 +22,7 @@ import { api } from "@/lib/api";
 import { useScrollRestore } from "@/lib/use-scroll-restore";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
+import { PushNotificationManager } from "@/components/notifications/push-manager";
 
 const navItems = [
   { href: "/packages", label: "Orders", icon: Package },
@@ -167,6 +168,9 @@ export function Sidebar() {
 
       {/* Floating scroll-to-top button */}
       <ScrollToTop />
+
+      {/* Push notification permission manager */}
+      <PushNotificationManager />
     </>
   );
 }
