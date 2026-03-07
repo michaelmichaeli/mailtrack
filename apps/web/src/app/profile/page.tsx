@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogOut, User, Mail, Calendar, Shield, Save, Pencil, RotateCcw, Package, Truck, CheckCircle2, Bell, Store, BarChart3 } from "lucide-react";
+import { LogOut, User, Mail, Calendar, Shield, Save, Pencil, RotateCcw, Package, Truck, CheckCircle2, Bell, Store, BarChart3, RefreshCw, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { LogoSpinner } from "@/components/ui/logo-spinner";
 
@@ -42,21 +42,29 @@ export default function ProfilePage() {
     uniqueStores: number;
   } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
+  const loadProfile = () => {
+    setLoading(true);
+    setError(null);
     Promise.all([
       api.getMe(),
-      api.getUserStats(),
+      api.getUserStats().catch(() => null),
     ]).then(([userData, statsData]) => {
       setUser(userData as UserProfile);
       setEditName(userData.name || "");
       setStats(statsData);
       setLoading(false);
-    }).catch(() => setLoading(false));
-  }, []);
+    }).catch((err) => {
+      setError(err?.message || "Could not load profile");
+      setLoading(false);
+    });
+  };
+
+  useEffect(() => { loadProfile(); }, []);
 
   const handleSaveName = async () => {
     if (!editName.trim()) return;
@@ -88,7 +96,32 @@ export default function ProfilePage() {
   }
 
   if (!user) {
-    return <p className="text-center text-muted-foreground py-20">Unable to load profile</p>;
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Card className="max-w-sm w-full border-destructive/30">
+          <CardContent className="pt-8 pb-8 text-center space-y-4">
+            <div className="mx-auto w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center">
+              <WifiOff className="h-7 w-7 text-destructive" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold">Couldn&apos;t load your profile</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {error || "Something went wrong. The server might be taking a nap."}
+              </p>
+            </div>
+            <div className="flex gap-3 justify-center">
+              <Button onClick={loadProfile}>
+                <RefreshCw className="h-4 w-4" />
+                Try Again
+              </Button>
+              <Button variant="outline" onClick={() => window.location.href = "/packages"}>
+                Go to Orders
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   const joinDate = new Date(user.createdAt);
