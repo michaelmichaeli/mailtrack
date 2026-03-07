@@ -74,6 +74,13 @@
 ### Notification Toast UX (Session: 2025-01)
 - Dedup toasts, action button to open dropdown
 
+### Next.js 16 Upgrade (Session: 2026-03-07)
+- **Upgrade**: Next.js 14.2.35 → 16.1.6, React 18.3.1 → 19.2.4, @types/react 18 → 19
+- **Crash fix**: Turbopack is now the default dev bundler — eliminates all webpack `.next` cache corruption crashes
+- **Monorepo types**: Root `package.json` has `overrides` for `@types/react` → v19 (mobile still uses React 18 at runtime, but types are compatible). Web tsconfig has `skipLibCheck: true`.
+- **Config**: Removed `optimizePackageImports` from `experimental` (invalid in Next.js 16)
+- **Files**: `apps/web/package.json`, `apps/web/next.config.mjs`, `apps/web/tsconfig.json`, `package.json`
+
 ### Loading Skeletons, Logo Link, Scroll-to-Top (Session: 2026-03-07)
 - **Skeletons**: Added `ProfileSkeleton`, `NotificationsSkeleton`, `SettingsSkeleton`, `OrderDetailSkeleton` to `skeleton.tsx`. Replaced `LogoSpinner` loading states in profile, notifications, and order detail pages with content-shaped skeletons
 - **Logo Link**: Sidebar logo now links to `/packages` (home)

@@ -5,6 +5,34 @@
 
 ---
 
+## 2026-03-07 — Next.js 16 Upgrade (Turbopack, React 19)
+
+### Problem
+Next.js 14 dev server used webpack, which corrupted its `.next` cache during hot module replacement. This caused repeated "Cannot find module './XXX.js'" crashes requiring manual `rm -rf .next`.
+
+### Solution
+Upgraded the entire web stack:
+- **Next.js**: 14.2.35 → 16.1.6
+- **React**: 18.3.1 → 19.2.4
+- **@types/react**: 18 → 19
+
+### Key Changes
+- **Turbopack is now the default dev bundler** — no webpack cache = no crashes
+- Dev server startup: ~1300ms → ~290ms
+- Added `skipLibCheck: true` to web tsconfig for monorepo compatibility (mobile uses React 18)
+- Added root `overrides` in package.json to force `@types/react@19` across all workspaces
+- Removed `optimizePackageImports` from `experimental` (not a valid config key in Next.js 16)
+- `next-env.d.ts` auto-updated by Next.js 16
+
+### Files Changed
+- `apps/web/package.json`: next, react, react-dom, @types/react, @types/react-dom versions
+- `apps/web/next.config.mjs`: Removed invalid optimizePackageImports
+- `apps/web/tsconfig.json`: Added skipLibCheck
+- `package.json`: Added @types/react + overrides at root level
+- `apps/web/next-env.d.ts`: Auto-updated by Next.js 16
+
+---
+
 ## 2026-03-07 — Loading Skeletons, Logo Link, Scroll-to-Top
 
 ### Content-Shaped Loading Skeletons
