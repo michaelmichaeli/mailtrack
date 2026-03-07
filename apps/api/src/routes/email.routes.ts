@@ -6,6 +6,7 @@ import { decrypt } from "../lib/encryption.js";
 import { detectCarrier } from "../lib/carrier-detect.js";
 import { logAudit } from "../services/auth.service.js";
 import { trackPackage, clearRateLimits } from "../services/tracking.service.js";
+import { sendPushNotification } from "../services/notification.service.js";
 
 const WEB_URL = process.env.WEB_URL ?? "http://localhost:3003";
 
@@ -161,6 +162,17 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
                     orderId: existingOrder.id,
                   },
                 });
+                // Send push notification
+                try {
+                  const pref = await app.prisma.notificationPreference.findUnique({ where: { userId } });
+                  if (pref?.pushEnabled && pref?.pushSubscription) {
+                    await sendPushNotification(pref.pushSubscription, {
+                      title: updateData.status === "DELIVERED" ? "Package Delivered! 🎉" : "📦 Tracking Update",
+                      body: `${itemName} — ${STATUS_LABELS[updateData.status] ?? updateData.status}`,
+                      url: `/orders/${existingOrder.id}`,
+                    });
+                  }
+                } catch (e) { /* non-fatal */ }
               }
             }
           } else {
@@ -198,6 +210,17 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
                 orderId: order.id,
               },
             });
+            // Send push notification
+            try {
+              const pref = await app.prisma.notificationPreference.findUnique({ where: { userId } });
+              if (pref?.pushEnabled && pref?.pushSubscription) {
+                await sendPushNotification(pref.pushSubscription, {
+                  title: "🛍️ New Order Detected",
+                  body: `${itemName}${parsed.merchant ? ` from ${parsed.merchant}` : ""}`,
+                  url: `/orders/${order.id}`,
+                });
+              }
+            } catch (e) { /* non-fatal */ }
           }
         }
 

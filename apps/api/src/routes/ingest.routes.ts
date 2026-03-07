@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { randomBytes } from "crypto";
 import { trackPackage } from "../services/tracking.service.js";
+import { notifyStatusChange } from "../services/notification.service.js";
 
 /** Parse pickup location info from delivery SMS (Cheetah, Israel Post, etc.) */
 function parseSmsPickupInfo(text: string): {
@@ -124,6 +125,22 @@ async function handleSmsIngest(app: any, key: string, text: string, source?: str
         });
         results.push({ trackingNumber: item.trackingNumber, carrier: item.carrier, status: "updated_pickup" });
         updated++;
+
+        // Notify about pickup update
+        try {
+          await app.prisma.notification.create({
+            data: {
+              userId: user.id,
+              type: "STATUS_CHANGE",
+              title: "📦 Ready for Pickup",
+              body: `${item.trackingNumber} is ready${pickupInfo.storeName ? ` at ${pickupInfo.storeName}` : ""}`,
+              metadata: JSON.stringify({ trackingNumber: item.trackingNumber }),
+            },
+          });
+          await notifyStatusChange(app.prisma, user.id, item.trackingNumber, existing.status, "OUT_FOR_DELIVERY", existing.id);
+        } catch (e) {
+          app.log.error(`[ingest/sms] Error sending pickup notification: ${e}`);
+        }
       } else {
         results.push({ trackingNumber: item.trackingNumber, carrier: item.carrier, status: "already_tracked" });
       }
@@ -171,6 +188,22 @@ async function handleSmsIngest(app: any, key: string, text: string, source?: str
 
     results.push({ trackingNumber: item.trackingNumber, carrier: item.carrier, status: "added" });
     added++;
+
+    // Send push notification for new package
+    try {
+      await app.prisma.notification.create({
+        data: {
+          userId: user.id,
+          type: "STATUS_CHANGE",
+          title: "📦 New Package Detected",
+          body: `${item.trackingNumber} (${item.carrier}) added via SMS`,
+          metadata: JSON.stringify({ trackingNumber: item.trackingNumber, carrier: item.carrier }),
+        },
+      });
+      await notifyStatusChange(app.prisma, user.id, item.trackingNumber, "NEW", "PROCESSING", order.packages[0].id);
+    } catch (e) {
+      app.log.error(`[ingest/sms] Error sending notification for ${item.trackingNumber}: ${e}`);
+    }
   }
 
   return { status: 200, body: { success: true, added, updated, total: found.length, results } };
@@ -282,6 +315,13 @@ export const ingestRoutes: FastifyPluginAsync = async (app) => {
       }
 
       imported++;
+
+      // Send push notification for CSV import
+      try {
+        await notifyStatusChange(app.prisma, userId, tn, "NEW", "PROCESSING", order.packages[0].id);
+      } catch (e) {
+        // Non-fatal
+      }
     }
 
     return { success: true, imported, skipped, total: rows.length };
