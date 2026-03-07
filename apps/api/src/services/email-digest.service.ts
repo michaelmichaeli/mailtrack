@@ -307,8 +307,10 @@ function buildDigestHtml(data: DigestData): string {
           <!-- Logo bar -->
           <tr>
             <td align="center" style="padding-bottom:24px">
-              <span style="font-size:24px;vertical-align:middle">📦</span>
-              <span style="font-size:18px;font-weight:800;color:#1e293b;vertical-align:middle;margin-left:6px;letter-spacing:-0.5px">MailTrack</span>
+              <a href="${appUrl}" style="text-decoration:none">
+                <img src="${appUrl}/logo.png" alt="MailTrack" width="36" height="36" style="vertical-align:middle;border:0" />
+                <span style="font-size:18px;font-weight:800;color:#1e293b;vertical-align:middle;margin-left:8px;letter-spacing:-0.5px">MailTrack</span>
+              </a>
             </td>
           </tr>
 
@@ -322,25 +324,25 @@ function buildDigestHtml(data: DigestData): string {
 
           <!-- Stats Row -->
           <tr>
-            <td style="background:#ffffff;padding:0 24px;border-left:1px solid #f0f0f5;border-right:1px solid #f0f0f5">
+            <td style="background:#ffffff;padding:0 28px;border-left:1px solid #f0f0f5;border-right:1px solid #f0f0f5">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:-20px">
                 <tr>
                   <td>
                     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);border:1px solid #f0f0f5;overflow:hidden">
                       <tr>
-                        <td width="25%" align="center" style="padding:20px 8px;border-right:1px solid #f0f0f5">
+                        <td width="25%" align="center" style="padding:20px 12px;border-right:1px solid #f0f0f5">
                           <div style="font-size:24px;font-weight:800;color:#16a34a;line-height:1">${data.delivered.length}</div>
                           <div style="font-size:11px;color:#64748b;margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Delivered</div>
                         </td>
-                        <td width="25%" align="center" style="padding:20px 8px;border-right:1px solid #f0f0f5">
+                        <td width="25%" align="center" style="padding:20px 12px;border-right:1px solid #f0f0f5">
                           <div style="font-size:24px;font-weight:800;color:#2563eb;line-height:1">${data.inTransit.length}</div>
                           <div style="font-size:11px;color:#64748b;margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">In Transit</div>
                         </td>
-                        <td width="25%" align="center" style="padding:20px 8px;border-right:1px solid #f0f0f5">
+                        <td width="25%" align="center" style="padding:20px 12px;border-right:1px solid #f0f0f5">
                           <div style="font-size:24px;font-weight:800;color:#dc2626;line-height:1">${data.exceptions.length}</div>
                           <div style="font-size:11px;color:#64748b;margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Attention</div>
                         </td>
-                        <td width="25%" align="center" style="padding:20px 8px">
+                        <td width="25%" align="center" style="padding:20px 12px">
                           <div style="font-size:24px;font-weight:800;color:#7c3aed;line-height:1">${data.newOrders.length}</div>
                           <div style="font-size:11px;color:#64748b;margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">New</div>
                         </td>
@@ -354,7 +356,7 @@ function buildDigestHtml(data: DigestData): string {
 
           <!-- Main Content -->
           <tr>
-            <td style="background:#ffffff;padding:28px 24px 8px;border-left:1px solid #f0f0f5;border-right:1px solid #f0f0f5">
+            <td style="background:#ffffff;padding:28px 28px 8px;border-left:1px solid #f0f0f5;border-right:1px solid #f0f0f5">
               <!-- Greeting -->
               <p style="color:#334155;font-size:15px;margin:0 0 28px;line-height:1.6">
                 Hi <strong>${data.userName}</strong> 👋<br>
@@ -371,7 +373,7 @@ function buildDigestHtml(data: DigestData): string {
 
           <!-- CTA -->
           <tr>
-            <td style="background:#ffffff;padding:8px 24px 36px;text-align:center;border-left:1px solid #f0f0f5;border-right:1px solid #f0f0f5">
+            <td style="background:#ffffff;padding:8px 28px 36px;text-align:center;border-left:1px solid #f0f0f5;border-right:1px solid #f0f0f5">
               <table cellpadding="0" cellspacing="0" border="0" align="center">
                 <tr>
                   <td style="background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:10px;padding:14px 36px">
@@ -391,7 +393,10 @@ function buildDigestHtml(data: DigestData): string {
               <p style="margin:0">
                 <a href="${appUrl}/settings" style="color:#6366f1;font-size:12px;text-decoration:underline">Manage preferences</a>
               </p>
-              <p style="color:#cbd5e1;font-size:11px;margin:16px 0 0;font-weight:600;letter-spacing:0.5px">MAILTRACK</p>
+              <p style="margin:16px 0 0">
+                <img src="${appUrl}/logo.png" alt="MailTrack" width="20" height="20" style="vertical-align:middle;border:0;opacity:0.4" />
+                <span style="color:#cbd5e1;font-size:11px;font-weight:600;letter-spacing:0.5px;vertical-align:middle;margin-left:4px">MAILTRACK</span>
+              </p>
             </td>
           </tr>
 
