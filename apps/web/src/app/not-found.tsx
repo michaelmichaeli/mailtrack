@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
+import { Sidebar } from "@/components/layout/sidebar";
+import { NotificationBell } from "@/components/notifications/notification-bell";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, Package } from "lucide-react";
 
 const MESSAGES = [
   "This package got lost in transit… just like this page.",
@@ -80,69 +84,70 @@ export default function NotFound() {
   };
 
   return (
-    <div
-      className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden bg-gradient-to-br from-indigo-50 via-background to-violet-50 dark:from-indigo-950/20 dark:via-background dark:to-violet-950/20"
-    >
-      {/* Floating boxes */}
-      {boxes.map((box) => (
-        <button
-          key={box.id}
-          onClick={() => catchBox(box.id)}
-          className="absolute text-3xl cursor-pointer hover:scale-150 transition-transform duration-150 select-none z-10"
-          style={{ left: `${box.x}%`, top: `${box.y}%` }}
-          aria-label="Catch the package"
-        >
-          {box.emoji}
-        </button>
-      ))}
-
-      <div className={`text-center z-20 px-4 ${shaking ? "animate-bounce" : ""}`}>
-        {/* Big 404 */}
-        <h1 className="text-[8rem] sm:text-[10rem] font-black leading-none tracking-tighter text-foreground/10 select-none">
-          404
-        </h1>
-
-        {/* Lost package icon */}
-        <div className="text-6xl mb-4 animate-bounce">📦❓</div>
-
-        {/* Funny message */}
-        <button
-          onClick={cycleMessage}
-          className="text-lg sm:text-xl font-medium text-foreground max-w-md mx-auto cursor-pointer hover:text-primary transition-colors"
-        >
-          {message}
-        </button>
-        <p className="text-xs text-muted-foreground mt-1">(click for another excuse)</p>
-
-        {/* Score */}
-        {score > 0 && (
-          <div className="mt-4 text-sm font-medium text-primary animate-in fade-in">
-            📦 Packages rescued: {score}
-            {score >= 5 && " — You're a delivery hero!"}
-            {score >= 10 && " 🏆"}
-          </div>
-        )}
-
-        {/* CTA */}
-        <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
-          <Link
-            href="/packages"
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground px-6 py-3 font-medium shadow-sm hover:bg-primary/90 transition-all active:scale-[0.98]"
-          >
-            📋 Track My Packages
-          </Link>
-          <button
-            onClick={() => window.history.back()}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-6 py-3 font-medium shadow-sm hover:bg-accent transition-all active:scale-[0.98]"
-          >
-            ← Go Back
-          </button>
-        </div>
-
-        <p className="text-xs text-muted-foreground mt-6">
-          💡 Tip: Catch the floating packages for bonus points!
-        </p>
+    <div className="flex h-screen">
+      <Sidebar />
+      <div className="fixed top-4 right-4 z-40">
+        <NotificationBell />
       </div>
+      <main className="flex-1 overflow-y-auto overflow-x-hidden relative">
+        {/* Floating boxes */}
+        {boxes.map((box) => (
+          <button
+            key={box.id}
+            onClick={() => catchBox(box.id)}
+            className="absolute text-3xl cursor-pointer hover:scale-150 transition-transform duration-150 select-none z-10"
+            style={{ left: `${box.x}%`, top: `${box.y}%` }}
+            aria-label="Catch the package"
+          >
+            {box.emoji}
+          </button>
+        ))}
+
+        <div className="flex flex-col items-center justify-center min-h-full p-6 pt-16 md:pt-6">
+          <div className={`text-center z-20 ${shaking ? "animate-bounce" : ""}`}>
+            <h1 className="text-[8rem] sm:text-[10rem] font-black leading-none tracking-tighter text-foreground/10 select-none">
+              404
+            </h1>
+
+            <div className="text-6xl mb-4 animate-bounce">📦❓</div>
+
+            <Card className="max-w-md mx-auto border-border/50 shadow-lg">
+              <CardContent className="pt-6 pb-6 text-center space-y-4">
+                <button
+                  onClick={cycleMessage}
+                  className="text-base sm:text-lg font-medium text-foreground cursor-pointer hover:text-primary transition-colors"
+                >
+                  {message}
+                </button>
+                <p className="text-xs text-muted-foreground">(click for another excuse)</p>
+
+                {score > 0 && (
+                  <div className="text-sm font-medium text-primary animate-in fade-in">
+                    📦 Packages rescued: {score}
+                    {score >= 5 && " — You're a delivery hero!"}
+                    {score >= 10 && " 🏆"}
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+                  <Button onClick={() => (window.location.href = "/packages")}>
+                    <Package className="h-4 w-4" />
+                    Track My Packages
+                  </Button>
+                  <Button variant="outline" onClick={() => window.history.back()}>
+                    <ArrowLeft className="h-4 w-4" />
+                    Go Back
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <p className="text-xs text-muted-foreground mt-6">
+              💡 Tip: Catch the floating packages for bonus points!
+            </p>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
