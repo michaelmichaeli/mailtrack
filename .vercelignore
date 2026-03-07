@@ -1,0 +1,11 @@
+node_modules
+.turbo
+.next
+.expo
+dist
+*.tsbuildinfo
+coverage
+test-results
+apps/api
+apps/mobile
+.git
