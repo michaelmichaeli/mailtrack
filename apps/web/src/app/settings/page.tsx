@@ -658,14 +658,22 @@ function StoreImportSection() {
   const queryClient = useQueryClient();
 
   const SUPPORTED_STORES = [
-    { label: "Amazon", icon: "🛒" },
-    { label: "eBay", icon: "🏷️" },
-    { label: "AliExpress", icon: "📦" },
-    { label: "iHerb", icon: "🌿" },
-    { label: "Shein", icon: "👗" },
-    { label: "Temu", icon: "🛍️" },
-    { label: "Etsy", icon: "🎨" },
-    { label: "Shopify", icon: "🏪" },
+    { label: "Amazon", domain: "amazon.com" },
+    { label: "eBay", domain: "ebay.com" },
+    { label: "AliExpress", domain: "aliexpress.com" },
+    { label: "iHerb", domain: "iherb.com" },
+    { label: "Shein", domain: "shein.com" },
+    { label: "Temu", domain: "temu.com" },
+    { label: "Etsy", domain: "etsy.com" },
+    { label: "Shopify", domain: "shopify.com" },
+    { label: "Walmart", domain: "walmart.com" },
+    { label: "Target", domain: "target.com" },
+    { label: "ASOS", domain: "asos.com" },
+    { label: "Zara", domain: "zara.com" },
+    { label: "Nike", domain: "nike.com" },
+    { label: "Apple", domain: "apple.com" },
+    { label: "IKEA", domain: "ikea.com" },
+    { label: "H&M", domain: "hm.com" },
   ];
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -709,9 +717,16 @@ function StoreImportSection() {
           {SUPPORTED_STORES.map((store) => (
             <div
               key={store.label}
-              className="flex flex-col items-center gap-1 rounded-lg border border-border p-2.5 bg-muted/20"
+              className="flex flex-col items-center gap-1.5 rounded-lg border border-border p-2.5 bg-muted/20"
             >
-              <span className="text-lg">{store.icon}</span>
+              <img
+                src={`https://www.google.com/s2/favicons?domain=${store.domain}&sz=32`}
+                alt={store.label}
+                width={24}
+                height={24}
+                className="rounded-sm"
+                loading="lazy"
+              />
               <span className="text-[10px] font-medium text-muted-foreground">{store.label}</span>
             </div>
           ))}
