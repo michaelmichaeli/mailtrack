@@ -126,6 +126,7 @@
 - 17track scraping may break if their site changes — Cainiao is the stable fallback
 - Dev login (`POST /api/auth/dev-login`) is only available when `NODE_ENV !== 'production'`
 - User prefers verifying changes himself (check localhost, not screenshots)
+- **CRITICAL**: Dev servers MUST always be running (web :3003, API :3002). Verify before, during, and after all work. Never leave user with broken localhost.
 
 ## User Preferences
 

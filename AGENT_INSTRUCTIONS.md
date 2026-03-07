@@ -20,6 +20,33 @@
 
 ---
 
+## 🚨 MANDATORY: Dev Servers Must ALWAYS Be Running
+
+**At ALL times — before, during, and after any work — ensure the dev servers are running:**
+
+- **Web**: `localhost:3003` (Next.js 16 / Turbopack)
+- **API**: `localhost:3002` (Fastify)
+
+**Rules:**
+1. ✅ **Start of session**: Verify both servers are running with `curl -s -o /dev/null -w "%{http_code}" http://localhost:3003/ && curl -s -o /dev/null -w " %{http_code}" http://localhost:3002/health`
+2. ✅ **After any restart/rebuild/install**: Restart servers and verify they respond
+3. ✅ **End of session**: Confirm servers are still running before finishing
+4. ✅ **Use detached mode** (`detach: true`) when starting servers so they survive shell cleanup
+5. ✅ **If a server dies**, restart it IMMEDIATELY — do not leave the user with a broken localhost
+
+**Start commands (run from project root):**
+```bash
+# Web (detached)
+cd apps/web && npx next dev --port 3003
+
+# API (detached)  
+cd apps/api && npm run dev
+```
+
+**⚠️ NEVER leave the user with a non-running dev server. This is a hard rule.**
+
+---
+
 ## 🚨 MANDATORY: After Every Significant Change
 
 **After completing any feature, fix, or modification, you MUST:**
