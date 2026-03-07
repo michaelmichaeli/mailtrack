@@ -306,47 +306,42 @@ function buildDigestHtml(data: DigestData): string {
 
           <!-- Logo bar -->
           <tr>
-            <td align="center" style="padding-bottom:28px">
+            <td align="center" style="padding-bottom:24px">
               <a href="${appUrl}" style="text-decoration:none;display:inline-block">
-                <table cellpadding="0" cellspacing="0" border="0">
-                  <tr>
-                    <td style="background:#4f46e5;width:32px;height:32px;border-radius:8px;text-align:center;vertical-align:middle;font-size:16px;line-height:32px">📦</td>
-                    <td style="padding-left:10px;font-size:19px;font-weight:800;color:#1e293b;letter-spacing:-0.5px;vertical-align:middle">MailTrack</td>
-                  </tr>
-                </table>
+                <span style="font-size:18px;font-weight:800;color:#1e293b;letter-spacing:-0.3px">📦 MailTrack</span>
               </a>
             </td>
           </tr>
 
-          <!-- Hero Card -->
+          <!-- Hero + Stats unified block -->
           <tr>
-            <td style="background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#6366f1 100%);border-radius:16px 16px 0 0;padding:44px 36px 40px;text-align:center">
-              <h1 style="color:#ffffff;font-size:28px;font-weight:800;margin:0 0 10px;letter-spacing:-0.5px">Weekly Digest</h1>
-              <p style="color:rgba(255,255,255,0.7);font-size:15px;margin:0;font-weight:500">${data.weekStart} – ${data.weekEnd}</p>
-            </td>
-          </tr>
-
-          <!-- Stats Row -->
-          <tr>
-            <td style="background:#ffffff;padding:0 32px;border-left:1px solid #e8e8ef;border-right:1px solid #e8e8ef">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:-22px">
+            <td style="background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#6366f1 100%);border-radius:16px 16px 0 0;padding:0">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <!-- Hero text -->
                 <tr>
-                  <td>
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);border:1px solid #e8e8ef;overflow:hidden">
+                  <td style="padding:44px 36px 32px;text-align:center">
+                    <h1 style="color:#ffffff;font-size:28px;font-weight:800;margin:0 0 10px;letter-spacing:-0.5px">Weekly Digest</h1>
+                    <p style="color:rgba(255,255,255,0.7);font-size:15px;margin:0;font-weight:500">${data.weekStart} – ${data.weekEnd}</p>
+                  </td>
+                </tr>
+                <!-- Stats inside hero -->
+                <tr>
+                  <td style="padding:0 28px 28px">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;overflow:hidden">
                       <tr>
-                        <td width="25%" align="center" style="padding:22px 14px;border-right:1px solid #f0f0f5">
+                        <td width="25%" align="center" style="padding:20px 14px;border-right:1px solid #f0f0f5">
                           <div style="font-size:26px;font-weight:800;color:#16a34a;line-height:1">${data.delivered.length}</div>
                           <div style="font-size:10px;color:#64748b;margin-top:6px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px">Delivered</div>
                         </td>
-                        <td width="25%" align="center" style="padding:22px 14px;border-right:1px solid #f0f0f5">
+                        <td width="25%" align="center" style="padding:20px 14px;border-right:1px solid #f0f0f5">
                           <div style="font-size:26px;font-weight:800;color:#2563eb;line-height:1">${data.inTransit.length}</div>
                           <div style="font-size:10px;color:#64748b;margin-top:6px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px">In Transit</div>
                         </td>
-                        <td width="25%" align="center" style="padding:22px 14px;border-right:1px solid #f0f0f5">
+                        <td width="25%" align="center" style="padding:20px 14px;border-right:1px solid #f0f0f5">
                           <div style="font-size:26px;font-weight:800;color:#dc2626;line-height:1">${data.exceptions.length}</div>
                           <div style="font-size:10px;color:#64748b;margin-top:6px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px">Attention</div>
                         </td>
-                        <td width="25%" align="center" style="padding:22px 14px">
+                        <td width="25%" align="center" style="padding:20px 14px">
                           <div style="font-size:26px;font-weight:800;color:#7c3aed;line-height:1">${data.newOrders.length}</div>
                           <div style="font-size:10px;color:#64748b;margin-top:6px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px">New</div>
                         </td>
@@ -397,12 +392,7 @@ function buildDigestHtml(data: DigestData): string {
               <p style="margin:0">
                 <a href="${appUrl}/settings" style="color:#6366f1;font-size:12px;text-decoration:underline">Manage preferences</a>
               </p>
-              <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin-top:20px">
-                <tr>
-                  <td style="background:#e2e8f0;width:24px;height:24px;border-radius:6px;text-align:center;vertical-align:middle;font-size:12px;line-height:24px">📦</td>
-                  <td style="padding-left:8px;color:#94a3b8;font-size:11px;font-weight:700;letter-spacing:0.8px;vertical-align:middle">MAILTRACK</td>
-                </tr>
-              </table>
+              <p style="margin:16px 0 0;color:#94a3b8;font-size:11px;font-weight:700;letter-spacing:0.8px">📦 MAILTRACK</p>
             </td>
           </tr>
 
