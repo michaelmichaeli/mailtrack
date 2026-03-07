@@ -20,7 +20,7 @@
 - **API**: `GET /auth/me` now returns `onboardingCompleted`; added `POST /auth/onboarding-complete`
 - **Frontend**: `completeOnboarding()` in api.ts; auth callback routes new users to `/onboarding`
 - **Wizard steps**: Welcome (personalized greeting + confetti) → Connect Gmail → Auto-Sync (progress bar) → Feature Tour (5 features) → Completion (celebration)
-- **Status**: Built, awaiting user review before push
+- **Status**: Completed, pushed to main
 - **Files**: `apps/api/prisma/schema.prisma`, `apps/api/src/routes/auth.routes.ts`, `apps/web/src/lib/api.ts`, `apps/web/src/app/auth/callback/page.tsx`, `apps/web/src/app/onboarding/page.tsx`
 
 ### Package Status Reconciliation Fix (Session: 2026-03-06)
@@ -74,15 +74,19 @@
 ### Notification Toast UX (Session: 2025-01)
 - Dedup toasts, action button to open dropdown
 
+### Extract syncPackageFromResult to Shared Service (Session: 2026-03-07)
+- **Problem**: Duplicate `syncPackageFromResult` in `packages.routes.ts` and `ingest.routes.ts` — ingest version was missing terminal status protection, notifications, pickup enrichment, status reconciliation
+- **Fix**: Extracted comprehensive version to `apps/api/src/services/package-sync.service.ts`, both routes now import from it
+- **Files**: `apps/api/src/services/package-sync.service.ts` (new), `apps/api/src/routes/packages.routes.ts`, `apps/api/src/routes/ingest.routes.ts`
+
 ## Tasks In Progress
 
-- **Onboarding Wizard**: Built, awaiting user review before push
+- None
 
 ## Known Issues
 
 1. **Dev login doesn't create connectedEmail**: Dev login creates/finds user but does NOT create `connectedEmail` records. Email sync requires Google OAuth to connect Gmail tokens.
 2. **Israel Post regex gap**: Tracking numbers ending in Y (not IL) detected as ALIEXPRESS_STANDARD. Corrected during sync.
-3. **Duplicate `syncPackageFromResult`**: Exists in both `packages.routes.ts` and `ingest.routes.ts`. Should extract to shared service.
 
 ## Design Decisions
 
@@ -113,7 +117,7 @@
 
 ## Future Tasks
 
-- [ ] Extract `syncPackageFromResult` into a shared service (DRY)
+- [x] Extract `syncPackageFromResult` into a shared service (DRY) — Done 2026-03-07
 - [ ] Implement periodic auto-sync (cron/scheduled job)
 - [ ] Add package archiving (hide delivered packages after N days)
 - [ ] Mobile push notifications via Expo

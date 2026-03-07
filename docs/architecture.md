@@ -63,6 +63,7 @@ MailTrack is a universal package tracking dashboard built as a monorepo with thr
 | Email Parser | `services/email-parser.service.ts` | Extract orders/tracking from email HTML |
 | Places | `services/places.service.ts` | Google Places API for pickup locations |
 | Notifications | `services/notification.service.ts` | Web Push + in-app notifications |
+| Package Sync | `services/package-sync.service.ts` | Sync tracking results to DB: status, events, notifications |
 | Carrier Detection | `lib/carrier-detect.ts` | Regex-based carrier identification |
 
 ### Web (`apps/web`)

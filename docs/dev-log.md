@@ -5,6 +5,23 @@
 
 ---
 
+## 2026-03-07 — Extract syncPackageFromResult to Shared Service
+
+### DRY Refactor: package-sync.service.ts
+
+**Problem**: `syncPackageFromResult` was duplicated in `packages.routes.ts` and `ingest.routes.ts`. The ingest version was a simplified copy missing: terminal status protection (DELIVERED/RETURNED), push notifications on status change, pickup location enrichment via Google Places, smart event deduplication (6h status window), and status reconciliation.
+
+**Fix**: Extracted the comprehensive version into `apps/api/src/services/package-sync.service.ts`. Both route files now import from the shared service.
+
+**Changes**:
+- `apps/api/src/services/package-sync.service.ts` (NEW): Full `syncPackageFromResult` with all features
+- `apps/api/src/routes/packages.routes.ts`: Removed inline function, imports from service
+- `apps/api/src/routes/ingest.routes.ts`: Removed simplified duplicate, imports from service. SMS ingested packages now get full sync treatment (notifications, status reconciliation, etc.)
+
+**Impact**: SMS-ingested packages now benefit from the same sync quality as email-parsed ones — terminal status protection, push notifications, and status reconciliation.
+
+---
+
 ## 2026-03-06 — Onboarding Wizard, Branding, Kanban Redesign, Status Reconciliation
 
 ### Onboarding Wizard (In Progress)

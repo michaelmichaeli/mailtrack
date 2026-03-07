@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { randomBytes } from "crypto";
 import { trackPackage } from "../services/tracking.service.js";
+import { syncPackageFromResult } from "../services/package-sync.service.js";
 import { notifyStatusChange } from "../services/notification.service.js";
 
 /** Parse pickup location info from delivery SMS (Cheetah, Israel Post, etc.) */
@@ -383,45 +384,4 @@ function detectShopPlatform(store?: string): any {
   return "UNKNOWN";
 }
 
-/** Merge carrier result into DB: update status, upsert events */
-async function syncPackageFromResult(prisma: any, packageId: string, result: any) {
-  const updateData: any = {
-    status: result.status as any,
-    ...(result.estimatedDelivery ? { estimatedDelivery: new Date(result.estimatedDelivery) } : {}),
-    ...(result.lastLocation ? { lastLocation: result.lastLocation } : {}),
-  };
-  // Update carrier if tracking provider detected a more specific one
-  if (result.carrier && result.carrier !== "UNKNOWN" && result.carrier !== "ALIEXPRESS_STANDARD") {
-    updateData.carrier = result.carrier;
-  }
-  await prisma.package.update({
-    where: { id: packageId },
-    data: updateData,
-  });
 
-  for (const event of result.events) {
-    const eventTime = new Date(event.timestamp);
-    const windowStart = new Date(eventTime.getTime() - 2000);
-    const windowEnd = new Date(eventTime.getTime() + 2000);
-
-    const exists = await prisma.trackingEvent.findFirst({
-      where: {
-        packageId,
-        timestamp: { gte: windowStart, lte: windowEnd },
-        description: event.description,
-      },
-    });
-
-    if (!exists) {
-      await prisma.trackingEvent.create({
-        data: {
-          packageId,
-          timestamp: eventTime,
-          location: event.location,
-          status: event.status as any,
-          description: event.description,
-        },
-      });
-    }
-  }
-}
