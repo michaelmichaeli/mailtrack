@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -91,12 +90,13 @@ export default function ProfilePage() {
         <CardContent className="pt-6">
           <div className="flex items-center gap-4">
             {user.avatar ? (
-              <Image
+              <img
                 src={user.avatar}
                 alt={user.name}
                 width={64}
                 height={64}
-                className="rounded-full border-2 border-border shadow-sm"
+                className="h-16 w-16 rounded-full border-2 border-border shadow-sm object-cover"
+                referrerPolicy="no-referrer"
               />
             ) : (
               <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center border-2 border-border">
