@@ -326,7 +326,7 @@ function ScanMessagesSection() {
   };
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(text.replace(/\s+/g, ' ').trim());
     setCopied(true);
     toast.success("Copied to clipboard");
     setTimeout(() => setCopied(false), 2000);
@@ -353,7 +353,7 @@ function ScanMessagesSection() {
             </div>
           ) : ingestKey ? (
             <div className="flex items-center gap-2">
-              <code className="flex-1 rounded-md bg-muted px-3 py-2 text-xs font-mono overflow-x-auto whitespace-nowrap select-all">
+              <code className="flex-1 rounded-md bg-muted px-3 py-2 text-xs font-mono overflow-x-auto whitespace-nowrap">
                 {ingestKey}
               </code>
               <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={() => copyToClipboard(ingestKey)} title="Copy API key to clipboard">
@@ -376,7 +376,7 @@ function ScanMessagesSection() {
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground">2. Webhook URL</p>
             <div className="flex items-center gap-2">
-              <code className="flex-1 rounded-md bg-muted px-3 py-2 text-xs font-mono overflow-x-auto whitespace-nowrap select-all">
+              <code className="flex-1 rounded-md bg-muted px-3 py-2 text-xs font-mono overflow-x-auto whitespace-nowrap">
                 {webhookUrl}?key={ingestKey}
               </code>
               <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={() => copyToClipboard(`${webhookUrl}?key=${ingestKey}`)} title="Copy webhook URL to clipboard">
@@ -484,7 +484,7 @@ function ScanMessagesSection() {
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground">Test it</p>
             <div className="flex items-center gap-2">
-              <code className="flex-1 rounded-md bg-muted px-3 py-2 text-[10px] font-mono overflow-x-auto whitespace-nowrap select-all leading-relaxed">
+              <code className="flex-1 rounded-md bg-muted px-3 py-2 text-[10px] font-mono overflow-x-auto whitespace-nowrap leading-relaxed">
                 curl -X POST &quot;{webhookUrl}?key={ingestKey}&quot; -H &quot;Content-Type: application/json&quot; -d &apos;{`{"text":"Your package LP00123456789012 has shipped"}`}&apos;
               </code>
               <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={() => copyToClipboard(`curl -X POST "${webhookUrl}?key=${ingestKey}" -H "Content-Type: application/json" -d '{"text":"Your package LP00123456789012 has shipped"}'`)}>
