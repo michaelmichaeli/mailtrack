@@ -12,6 +12,7 @@ export enum PackageStatus {
 export enum AuthProvider {
   GOOGLE = "GOOGLE",
   APPLE = "APPLE",
+  GITHUB = "GITHUB",
 }
 
 export enum EmailProvider {

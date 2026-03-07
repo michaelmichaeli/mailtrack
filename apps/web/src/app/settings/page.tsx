@@ -33,6 +33,7 @@ import {
   Check,
   LogOut,
   RotateCcw,
+  KeyRound,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
@@ -75,6 +76,13 @@ function SettingsContent() {
     queryKey: ["notification-prefs"],
     queryFn: () => api.getNotificationPreferences(),
   });
+
+  const { data: passkeys, refetch: refetchPasskeys } = useQuery({
+    queryKey: ["passkeys"],
+    queryFn: () => api.listPasskeys(),
+  });
+
+  const [registeringPasskey, setRegisteringPasskey] = useState(false);
 
   const connectGmail = () => {
     const token = localStorage.getItem("mailtrack_token");
@@ -272,6 +280,75 @@ function SettingsContent() {
               </ToggleGroupItem>
             </ToggleGroup>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Passkeys */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <KeyRound className="h-4 w-4 text-primary" />
+            Passkeys
+          </CardTitle>
+          <CardDescription>Sign in with Face ID, Touch ID, or security keys</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {passkeys && passkeys.length > 0 && (
+            <div className="space-y-2">
+              {passkeys.map((pk) => (
+                <div key={pk.id} className="flex items-center justify-between rounded-lg border p-3">
+                  <div className="flex items-center gap-3">
+                    <KeyRound className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium">{pk.friendlyName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Added {new Date(pk.createdAt).toLocaleDateString()}
+                        {pk.backedUp && " · Synced"}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        await api.deletePasskey(pk.id);
+                        toast.success("Passkey removed");
+                        refetchPasskeys();
+                      } catch { toast.error("Failed to remove passkey"); }
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+          <Button
+            variant="outline"
+            className="w-full"
+            disabled={registeringPasskey}
+            onClick={async () => {
+              setRegisteringPasskey(true);
+              try {
+                const { startRegistration } = await import("@simplewebauthn/browser");
+                const options = await api.getPasskeyRegisterOptions();
+                const credential = await startRegistration({ optionsJSON: options });
+                await api.registerPasskey(credential, `Passkey ${(passkeys?.length ?? 0) + 1}`);
+                toast.success("Passkey registered!");
+                refetchPasskeys();
+              } catch (err: any) {
+                if (err?.name !== "NotAllowedError") {
+                  toast.error("Failed to register passkey");
+                }
+              } finally {
+                setRegisteringPasskey(false);
+              }
+            }}
+          >
+            <Key className="h-4 w-4" />
+            {registeringPasskey ? "Registering…" : "Add a passkey"}
+          </Button>
         </CardContent>
       </Card>
 

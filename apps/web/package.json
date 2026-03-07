@@ -13,6 +13,7 @@
     "@mailtrack/shared": "*",
     "@mailtrack/ui": "*",
     "@radix-ui/react-dialog": "^1.1.15",
+    "@simplewebauthn/browser": "^13.2.2",
     "@tanstack/react-query": "^5.90.21",
     "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",

@@ -10,6 +10,10 @@ import {
   logAudit,
   getGoogleAuthUrl,
   exchangeGoogleCode,
+  getGitHubAuthUrl,
+  exchangeGitHubCode,
+  getAppleAuthUrl,
+  exchangeAppleCode,
 } from "../services/auth.service.js";
 import { exchangeGmailCode } from "../services/gmail.service.js";
 import { encrypt } from "../lib/encryption.js";
@@ -254,6 +258,311 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     };
   });
 
+  // ─── GitHub OAuth ───
+
+  // GET /api/auth/github — Redirect to GitHub OAuth
+  app.get("/github", async (_request, reply) => {
+    try {
+      const url = getGitHubAuthUrl();
+      return reply.redirect(url);
+    } catch (err: any) {
+      return reply.redirect(`${WEB_URL}/login?error=${encodeURIComponent(err.message)}`);
+    }
+  });
+
+  // GET /api/auth/github/callback — Handle GitHub OAuth callback
+  app.get("/github/callback", async (request, reply) => {
+    const { code, error } = request.query as { code?: string; error?: string };
+
+    if (error || !code) {
+      return reply.redirect(`${WEB_URL}/login?error=${encodeURIComponent(error ?? "No authorization code received")}`);
+    }
+
+    try {
+      const payload = await exchangeGitHubCode(code);
+
+      const user = await findOrCreateUser(app, {
+        email: payload.email,
+        name: payload.name,
+        avatar: payload.avatar,
+        authProvider: AuthProvider.GITHUB,
+        githubId: payload.sub,
+        emailVerified: true,
+      });
+
+      const tokens = await generateTokens(app, user.id);
+      await logAudit(app, user.id, "LOGIN", "Provider: GITHUB (OAuth)", request.ip);
+
+      reply.setCookie("refreshToken", tokens.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/api/auth",
+        maxAge: 30 * 24 * 60 * 60,
+      });
+
+      return reply.redirect(`${WEB_URL}/auth/callback?token=${tokens.accessToken}`);
+    } catch (err: any) {
+      app.log.error(err, "GitHub OAuth callback failed");
+      return reply.redirect(`${WEB_URL}/login?error=${encodeURIComponent("GitHub authentication failed. Please try again.")}`);
+    }
+  });
+
+  // ─── Apple Sign-In ───
+
+  // GET /api/auth/apple — Redirect to Apple Sign-In
+  app.get("/apple", async (_request, reply) => {
+    try {
+      const url = getAppleAuthUrl();
+      return reply.redirect(url);
+    } catch (err: any) {
+      return reply.redirect(`${WEB_URL}/login?error=${encodeURIComponent(err.message)}`);
+    }
+  });
+
+  // POST /api/auth/apple/callback — Handle Apple Sign-In callback (form_post)
+  app.post("/apple/callback", async (request, reply) => {
+    const body = request.body as { code?: string; id_token?: string; user?: string; error?: string };
+
+    if (body.error || !body.code) {
+      return reply.redirect(`${WEB_URL}/login?error=${encodeURIComponent(body.error ?? "Apple Sign-In failed")}`);
+    }
+
+    try {
+      const payload = await exchangeAppleCode(body.code);
+
+      // Apple sends user info only on first authorization
+      let name = payload.name;
+      if (body.user) {
+        try {
+          const userData = JSON.parse(body.user);
+          if (userData.name) {
+            name = [userData.name.firstName, userData.name.lastName].filter(Boolean).join(" ") || name;
+          }
+        } catch { /* ignore parse errors */ }
+      }
+
+      const user = await findOrCreateUser(app, {
+        email: payload.email,
+        name,
+        authProvider: AuthProvider.APPLE,
+        appleId: payload.sub,
+        emailVerified: true,
+      });
+
+      const tokens = await generateTokens(app, user.id);
+      await logAudit(app, user.id, "LOGIN", "Provider: APPLE (OAuth)", request.ip);
+
+      reply.setCookie("refreshToken", tokens.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/api/auth",
+        maxAge: 30 * 24 * 60 * 60,
+      });
+
+      return reply.redirect(`${WEB_URL}/auth/callback?token=${tokens.accessToken}`);
+    } catch (err: any) {
+      app.log.error(err, "Apple Sign-In callback failed");
+      return reply.redirect(`${WEB_URL}/login?error=${encodeURIComponent("Apple authentication failed. Please try again.")}`);
+    }
+  });
+
+  // ─── Passkey / WebAuthn ───
+
+  // POST /api/auth/passkey/register-options — Get registration options (authenticated)
+  app.post("/passkey/register-options", {
+    preHandler: [app.authenticate],
+  }, async (request) => {
+    const userId = request.user.userId;
+    const user = await app.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error("User not found");
+
+    const existingPasskeys = await app.prisma.passkey.findMany({ where: { userId } });
+
+    const { generateRegistrationOptions } = await import("@simplewebauthn/server");
+    const options = await generateRegistrationOptions({
+      rpName: "MailTrack",
+      rpID: getRpId(),
+      userName: user.email,
+      userDisplayName: user.name,
+      attestationType: "none",
+      excludeCredentials: existingPasskeys.map((p) => ({
+        id: p.credentialId,
+        transports: p.transports ? JSON.parse(p.transports) : undefined,
+      })),
+      authenticatorSelection: {
+        residentKey: "preferred",
+        userVerification: "preferred",
+      },
+    });
+
+    // Store challenge in a short-lived key
+    await app.redis.set(`passkey:challenge:${userId}`, options.challenge, "EX", 300);
+
+    return options;
+  });
+
+  // POST /api/auth/passkey/register — Verify and store passkey (authenticated)
+  app.post("/passkey/register", {
+    preHandler: [app.authenticate],
+  }, async (request) => {
+    const userId = request.user.userId;
+    const body = request.body as any;
+    const friendlyName = body.friendlyName ?? "Passkey";
+
+    const expectedChallenge = await app.redis.get(`passkey:challenge:${userId}`);
+    if (!expectedChallenge) throw new Error("Challenge expired. Please try again.");
+
+    const { verifyRegistrationResponse } = await import("@simplewebauthn/server");
+    const verification = await verifyRegistrationResponse({
+      response: body,
+      expectedChallenge,
+      expectedOrigin: getExpectedOrigin(),
+      expectedRPID: getRpId(),
+    });
+
+    if (!verification.verified || !verification.registrationInfo) {
+      throw new Error("Passkey verification failed");
+    }
+
+    const { credential, credentialDeviceType, credentialBackedUp } = verification.registrationInfo;
+
+    await app.prisma.passkey.create({
+      data: {
+        userId,
+        credentialId: credential.id,
+        publicKey: Buffer.from(credential.publicKey).toString("base64url"),
+        counter: BigInt(credential.counter),
+        deviceType: credentialDeviceType,
+        backedUp: credentialBackedUp,
+        transports: body.response?.transports ? JSON.stringify(body.response.transports) : null,
+        friendlyName,
+      },
+    });
+
+    await app.redis.del(`passkey:challenge:${userId}`);
+    await logAudit(app, userId, "PASSKEY_REGISTER", `Name: ${friendlyName}`, request.ip);
+
+    return { success: true, message: "Passkey registered successfully" };
+  });
+
+  // POST /api/auth/passkey/login-options — Get authentication options (unauthenticated)
+  app.post("/passkey/login-options", async (request) => {
+    const { generateAuthenticationOptions } = await import("@simplewebauthn/server");
+    const options = await generateAuthenticationOptions({
+      rpID: getRpId(),
+      userVerification: "preferred",
+    });
+
+    // Store challenge keyed by itself (no user context yet)
+    await app.redis.set(`passkey:login-challenge:${options.challenge}`, "1", "EX", 300);
+
+    return options;
+  });
+
+  // POST /api/auth/passkey/login — Verify passkey and login (unauthenticated)
+  app.post("/passkey/login", async (request, reply) => {
+    const body = request.body as any;
+
+    const passkey = await app.prisma.passkey.findUnique({
+      where: { credentialId: body.id },
+      include: { user: true },
+    });
+
+    if (!passkey) {
+      return reply.status(401).send({ error: "Passkey not recognized" });
+    }
+
+    const challengeKey = `passkey:login-challenge:${body.response?.clientDataJSON ? "" : ""}`;
+    // We need to extract challenge from clientDataJSON to verify
+    const { verifyAuthenticationResponse } = await import("@simplewebauthn/server");
+
+    // Find the challenge — decode clientDataJSON to get it
+    const clientData = JSON.parse(Buffer.from(body.response.clientDataJSON, "base64url").toString());
+    const storedChallenge = await app.redis.get(`passkey:login-challenge:${clientData.challenge}`);
+    if (!storedChallenge) {
+      return reply.status(401).send({ error: "Challenge expired. Please try again." });
+    }
+
+    const verification = await verifyAuthenticationResponse({
+      response: body,
+      expectedChallenge: clientData.challenge,
+      expectedOrigin: getExpectedOrigin(),
+      expectedRPID: getRpId(),
+      credential: {
+        id: passkey.credentialId,
+        publicKey: Buffer.from(passkey.publicKey, "base64url"),
+        counter: Number(passkey.counter),
+        transports: passkey.transports ? JSON.parse(passkey.transports) : undefined,
+      },
+    });
+
+    if (!verification.verified) {
+      return reply.status(401).send({ error: "Passkey verification failed" });
+    }
+
+    // Update counter
+    await app.prisma.passkey.update({
+      where: { id: passkey.id },
+      data: { counter: BigInt(verification.authenticationInfo.newCounter) },
+    });
+
+    await app.redis.del(`passkey:login-challenge:${clientData.challenge}`);
+
+    const tokens = await generateTokens(app, passkey.userId);
+    await logAudit(app, passkey.userId, "LOGIN", "Provider: PASSKEY", request.ip);
+
+    reply.setCookie("refreshToken", tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/api/auth",
+      maxAge: 30 * 24 * 60 * 60,
+    });
+
+    return {
+      accessToken: tokens.accessToken,
+      expiresIn: tokens.expiresIn,
+      user: {
+        id: passkey.user.id,
+        name: passkey.user.name,
+        email: passkey.user.email,
+        avatar: passkey.user.avatar,
+        authProvider: passkey.user.authProvider,
+        createdAt: passkey.user.createdAt.toISOString(),
+        updatedAt: passkey.user.updatedAt.toISOString(),
+      },
+    };
+  });
+
+  // GET /api/auth/passkeys — List user's passkeys (authenticated)
+  app.get("/passkeys", {
+    preHandler: [app.authenticate],
+  }, async (request) => {
+    const passkeys = await app.prisma.passkey.findMany({
+      where: { userId: request.user.userId },
+      select: { id: true, friendlyName: true, createdAt: true, deviceType: true, backedUp: true },
+      orderBy: { createdAt: "desc" },
+    });
+    return passkeys;
+  });
+
+  // DELETE /api/auth/passkeys/:id — Remove a passkey (authenticated)
+  app.delete("/passkeys/:id", {
+    preHandler: [app.authenticate],
+  }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const passkey = await app.prisma.passkey.findFirst({
+      where: { id, userId: request.user.userId },
+    });
+    if (!passkey) return reply.status(404).send({ error: "Passkey not found" });
+
+    await app.prisma.passkey.delete({ where: { id } });
+    await logAudit(app, request.user.userId, "PASSKEY_DELETE", `Name: ${passkey.friendlyName}`, request.ip);
+    return { success: true };
+  });
+
   // POST /api/auth/refresh — Refresh access token
   app.post("/refresh", async (request, reply) => {
     const refreshToken =
@@ -460,3 +769,18 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     return data;
   });
 };
+
+// ─── Helpers ───
+
+function getRpId(): string {
+  const webUrl = process.env.WEB_URL ?? "http://localhost:3003";
+  try {
+    return new URL(webUrl).hostname;
+  } catch {
+    return "localhost";
+  }
+}
+
+function getExpectedOrigin(): string {
+  return process.env.WEB_URL ?? "http://localhost:3003";
+}

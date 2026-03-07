@@ -10,6 +10,7 @@ datasource db {
 enum AuthProvider {
   GOOGLE
   APPLE
+  GITHUB
 }
 
 enum EmailProvider {
@@ -56,6 +57,8 @@ model User {
   familyName   String?
   locale       String?
   googleId     String?      @unique
+  githubId     String?      @unique
+  appleId      String?      @unique
   emailVerified Boolean     @default(false)
   authProvider  AuthProvider
   ingestKey    String?      @unique // API key for SMS/webhook auto-forwarding
@@ -70,6 +73,7 @@ model User {
   refreshTokens   RefreshToken[]
   auditLogs       AuditLog[]
   notifications   Notification[]
+  passkeys        Passkey[]
 
   @@map("users")
 }
@@ -85,6 +89,24 @@ model RefreshToken {
 
   @@index([userId])
   @@map("refresh_tokens")
+}
+
+model Passkey {
+  id              String   @id @default(uuid())
+  userId          String
+  credentialId    String   @unique
+  publicKey       String   // base64url-encoded
+  counter         BigInt   @default(0)
+  deviceType      String?  // "singleDevice" | "multiDevice"
+  backedUp        Boolean  @default(false)
+  transports      String?  // JSON array of transports
+  friendlyName    String   @default("Passkey")
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("passkeys")
 }
 
 model ConnectedEmail {

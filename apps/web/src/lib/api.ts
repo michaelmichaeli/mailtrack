@@ -338,6 +338,40 @@ class ApiClient {
       method: "POST",
     });
   }
+
+  // ─── Passkey API ───
+
+  async getPasskeyRegisterOptions() {
+    return this.request<any>("/auth/passkey/register-options", { method: "POST" });
+  }
+
+  async registerPasskey(credential: any, friendlyName: string) {
+    return this.request<{ success: boolean; message: string }>("/auth/passkey/register", {
+      method: "POST",
+      body: JSON.stringify({ ...credential, friendlyName }),
+    });
+  }
+
+  async getPasskeyLoginOptions() {
+    return this.request<any>("/auth/passkey/login-options", { method: "POST" });
+  }
+
+  async loginWithPasskey(credential: any) {
+    const result = await this.request<{ accessToken: string; expiresIn: number; user: any }>("/auth/passkey/login", {
+      method: "POST",
+      body: JSON.stringify(credential),
+    });
+    this.setToken(result.accessToken);
+    return result;
+  }
+
+  async listPasskeys() {
+    return this.request<Array<{ id: string; friendlyName: string; createdAt: string; deviceType: string | null; backedUp: boolean }>>("/auth/passkeys");
+  }
+
+  async deletePasskey(id: string) {
+    return this.request<{ success: boolean }>(`/auth/passkeys/${id}`, { method: "DELETE" });
+  }
 }
 
 export const api = new ApiClient(API_BASE);

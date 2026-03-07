@@ -24,6 +24,7 @@
     "@fastify/websocket": "^11.2.0",
     "@mailtrack/shared": "*",
     "@prisma/client": "^6.0.0",
+    "@simplewebauthn/server": "^13.2.3",
     "bcryptjs": "^3.0.3",
     "bullmq": "^5.70.4",
     "cheerio": "^1.2.0",
