@@ -64,6 +64,7 @@ export default function OrderDetailPage() {
       queryClient.invalidateQueries({ queryKey: ["packages"] });
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
+      window.dispatchEvent(new Event("notifications-updated"));
       router.push("/packages");
     },
     onError: (err: any) => {

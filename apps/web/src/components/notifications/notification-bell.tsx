@@ -108,6 +108,16 @@ export function NotificationBell() {
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
+  // Refresh when other parts of the app signal a change (e.g. order deleted)
+  useEffect(() => {
+    const handler = () => {
+      fetchUnreadCount();
+      if (open) fetchNotifications();
+    };
+    window.addEventListener("notifications-updated", handler);
+    return () => window.removeEventListener("notifications-updated", handler);
+  }, [open, fetchUnreadCount, fetchNotifications]);
+
   const handleMarkRead = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     await api.markNotificationRead(id);
