@@ -3,7 +3,7 @@ import type { PrismaClient, PackageStatus } from "@prisma/client";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const FROM_EMAIL = process.env.EMAIL_FROM ?? "MailTrack <digest@mailtrack.app>";
+const FROM_EMAIL = process.env.EMAIL_FROM ?? "MailTrack <onboarding@resend.dev>";
 
 interface DigestData {
   userName: string;
