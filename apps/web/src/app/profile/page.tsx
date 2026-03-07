@@ -10,6 +10,7 @@ import { LogOut, User, Mail, Calendar, Shield, Save, Pencil, RotateCcw, Package,
 import { toast } from "sonner";
 import { LogoSpinner } from "@/components/ui/logo-spinner";
 import { ProfileSkeleton } from "@/components/ui/skeleton";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 interface UserProfile {
   id: string;
@@ -125,9 +126,14 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Profile</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Your account information</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Profile</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Your account information</p>
+        </div>
+        <div className="hidden md:block">
+          <NotificationBell />
+        </div>
       </div>
 
       {/* Avatar + Name */}

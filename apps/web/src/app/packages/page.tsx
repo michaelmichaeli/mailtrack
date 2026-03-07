@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { AddPackageDialog } from "@/components/packages/add-package-dialog";
 import { ScanSmsDialog } from "@/components/packages/scan-sms-dialog";
 import { LogoSpinner } from "@/components/ui/logo-spinner";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -227,6 +228,9 @@ function PackagesContent() {
               <RefreshCw className={`h-4 w-4 transition-transform ${busy ? "animate-spin" : ""}`} />
               {syncProgress || (isSyncing ? "Syncing…" : "Sync All")}
             </Button>
+            <div className="hidden md:block">
+              <NotificationBell />
+            </div>
             <ScanSmsDialog open={scanOpen} onOpenChange={setScanOpen} />
           </div>
         </div>

@@ -40,6 +40,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import {
   Dialog,
   DialogContent,
@@ -157,9 +158,14 @@ function SettingsContent() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Settings</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Manage your account and preferences</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Settings</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Manage your account and preferences</p>
+        </div>
+        <div className="hidden md:block">
+          <NotificationBell />
+        </div>
       </div>
 
       {successParam && (

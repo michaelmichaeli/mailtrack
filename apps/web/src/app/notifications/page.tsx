@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { LogoSpinner } from "@/components/ui/logo-spinner";
 import { NotificationsSkeleton } from "@/components/ui/skeleton";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -144,6 +145,9 @@ export default function NotificationsPage() {
                 <span className="hidden sm:inline">Clear all</span>
               </Button>
             )}
+            <div className="hidden md:block">
+              <NotificationBell />
+            </div>
           </div>
         </div>
       </FadeIn>
