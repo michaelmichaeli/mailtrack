@@ -397,13 +397,13 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     // Unique carriers used
     const carriers = await app.prisma.package.groupBy({
       by: ["carrier"],
-      where: { order: { userId }, carrier: { not: null } },
+      where: { order: { userId } },
     });
 
-    // Unique stores
+    // Unique stores/merchants
     const stores = await app.prisma.order.groupBy({
-      by: ["store"],
-      where: { userId, store: { not: null } },
+      by: ["merchant"],
+      where: { userId },
     });
 
     return {
