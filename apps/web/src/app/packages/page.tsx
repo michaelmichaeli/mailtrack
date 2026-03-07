@@ -9,7 +9,7 @@ import { PackageTable } from "@/components/packages/package-table";
 import { PackageKanban } from "@/components/packages/package-kanban";
 import { PackageTimeline } from "@/components/packages/package-timeline";
 import { EmptyState } from "@/components/packages/empty-state";
-import { PackageCardSkeleton, TableSkeleton, KanbanSkeleton, TimelineSkeleton } from "@/components/ui/skeleton";
+import { PackageCardSkeleton, TableSkeleton, KanbanSkeleton, TimelineSkeleton, Skeleton } from "@/components/ui/skeleton";
 import { PageTransition, StaggerContainer, StaggerItem, FadeIn, AnimatedNumber } from "@/components/ui/motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -102,7 +102,7 @@ function PackagesContent() {
   const debouncedQuery = useDebounce(query, 300);
 
   // Fetch stats for the stats bar
-  const { data: dashData, refetch: refetchStats } = useQuery({
+  const { data: dashData, refetch: refetchStats, isPending: statsLoading } = useQuery({
     queryKey: ["dashboard", period],
     queryFn: () => api.getDashboard(period),
     retry: false,
@@ -237,7 +237,34 @@ function PackagesContent() {
       </FadeIn>
 
       {/* Stats bar — clickable pills act as status filters */}
-      {stats && stats.total > 0 && (
+      {statsLoading ? (
+        <FadeIn delay={0.05}>
+          <Card className="overflow-hidden border-border/60">
+            <div className="flex flex-col sm:flex-row">
+              <div className="flex items-center gap-4 px-5 py-4 sm:border-r border-b sm:border-b-0 border-border/60 sm:min-w-[160px]">
+                <Skeleton className="h-10 w-10 rounded-xl" />
+                <div>
+                  <Skeleton className="h-7 w-10" />
+                  <Skeleton className="h-3 w-12 mt-1" />
+                </div>
+              </div>
+              <div className="flex-1 flex items-center px-4 py-3 sm:px-5">
+                <div className="flex flex-wrap gap-1.5 w-full">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <Skeleton key={i} className="h-8 w-28 rounded-full" />
+                  ))}
+                </div>
+              </div>
+              <div className="hidden sm:flex items-center px-5 border-l border-border/60">
+                <div className="text-center">
+                  <Skeleton className="h-6 w-8 mx-auto" />
+                  <Skeleton className="h-3 w-10 mt-1" />
+                </div>
+              </div>
+            </div>
+          </Card>
+        </FadeIn>
+      ) : stats && stats.total > 0 && (
         <FadeIn delay={0.05}>
           <Card className="overflow-hidden border-border/60">
             <div className="flex flex-col sm:flex-row">
