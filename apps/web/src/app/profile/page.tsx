@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogOut, User, Mail, Calendar, Shield, Save, Pencil, RotateCcw } from "lucide-react";
+import { LogOut, User, Mail, Calendar, Shield, Save, Pencil, RotateCcw, Package, Truck, CheckCircle2, Bell, Store, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { LogoSpinner } from "@/components/ui/logo-spinner";
 
@@ -30,15 +30,30 @@ interface UserProfile {
 
 export default function ProfilePage() {
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [stats, setStats] = useState<{
+    totalOrders: number;
+    totalPackages: number;
+    deliveredPackages: number;
+    inTransitPackages: number;
+    totalEvents: number;
+    totalNotifications: number;
+    connectedEmailCount: number;
+    uniqueCarriers: number;
+    uniqueStores: number;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    api.getMe().then((data) => {
-      setUser(data as UserProfile);
-      setEditName(data.name || "");
+    Promise.all([
+      api.getMe(),
+      api.getUserStats(),
+    ]).then(([userData, statsData]) => {
+      setUser(userData as UserProfile);
+      setEditName(userData.name || "");
+      setStats(statsData);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
@@ -234,29 +249,70 @@ export default function ProfilePage() {
         </Card>
       )}
 
-      {/* Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Calendar className="h-4 w-4 text-primary" />
-            Activity
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label className="text-xs text-muted-foreground">Last Updated</Label>
-              <p className="text-sm font-medium">
-                {new Date(user.updatedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-              </p>
+      {/* Usage Stats */}
+      {stats && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <BarChart3 className="h-4 w-4 text-primary" />
+              Usage Stats
+            </CardTitle>
+            <CardDescription>Your activity on MailTrack</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="rounded-lg border border-border p-3 text-center">
+                <Package className="h-5 w-5 mx-auto mb-1 text-primary" />
+                <p className="text-2xl font-bold">{stats.totalOrders}</p>
+                <p className="text-[11px] text-muted-foreground">Orders</p>
+              </div>
+              <div className="rounded-lg border border-border p-3 text-center">
+                <Truck className="h-5 w-5 mx-auto mb-1 text-blue-500" />
+                <p className="text-2xl font-bold">{stats.totalPackages}</p>
+                <p className="text-[11px] text-muted-foreground">Packages</p>
+              </div>
+              <div className="rounded-lg border border-border p-3 text-center">
+                <CheckCircle2 className="h-5 w-5 mx-auto mb-1 text-green-500" />
+                <p className="text-2xl font-bold">{stats.deliveredPackages}</p>
+                <p className="text-[11px] text-muted-foreground">Delivered</p>
+              </div>
+              <div className="rounded-lg border border-border p-3 text-center">
+                <Store className="h-5 w-5 mx-auto mb-1 text-orange-500" />
+                <p className="text-2xl font-bold">{stats.uniqueStores}</p>
+                <p className="text-[11px] text-muted-foreground">Stores</p>
+              </div>
+              <div className="rounded-lg border border-border p-3 text-center">
+                <Truck className="h-5 w-5 mx-auto mb-1 text-violet-500" />
+                <p className="text-2xl font-bold">{stats.uniqueCarriers}</p>
+                <p className="text-[11px] text-muted-foreground">Carriers</p>
+              </div>
+              <div className="rounded-lg border border-border p-3 text-center">
+                <Bell className="h-5 w-5 mx-auto mb-1 text-yellow-500" />
+                <p className="text-2xl font-bold">{stats.totalNotifications}</p>
+                <p className="text-[11px] text-muted-foreground">Notifications</p>
+              </div>
             </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">Onboarding</Label>
-              <p className="text-sm font-medium">{user.onboardingCompleted ? "Completed ✓" : "Not completed"}</p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">In transit</span>
+                <span className="font-medium">{stats.inTransitPackages}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Tracking events</span>
+                <span className="font-medium">{stats.totalEvents}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Connected emails</span>
+                <span className="font-medium">{stats.connectedEmailCount}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Member since</span>
+                <span className="font-medium">{joinDate.toLocaleDateString("en-US", { month: "short", year: "numeric" })}</span>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Sign Out */}
       <div className="flex gap-3">

@@ -129,6 +129,20 @@ class ApiClient {
     return this.request<any>("/auth/me");
   }
 
+  async getUserStats() {
+    return this.request<{
+      totalOrders: number;
+      totalPackages: number;
+      deliveredPackages: number;
+      inTransitPackages: number;
+      totalEvents: number;
+      totalNotifications: number;
+      connectedEmailCount: number;
+      uniqueCarriers: number;
+      uniqueStores: number;
+    }>("/auth/stats");
+  }
+
   async updateProfile(data: { name?: string }) {
     return this.request<{ success: boolean; name?: string }>("/auth/me", {
       method: "PATCH",

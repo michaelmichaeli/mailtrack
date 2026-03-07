@@ -370,6 +370,55 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     return { success: true, name: user.name };
   });
 
+  // GET /api/auth/stats — Get user usage statistics
+  app.get("/stats", {
+    preHandler: [app.authenticate],
+  }, async (request) => {
+    const userId = request.user.userId;
+
+    const [
+      totalOrders,
+      totalPackages,
+      deliveredPackages,
+      inTransitPackages,
+      totalEvents,
+      totalNotifications,
+      connectedEmailCount,
+    ] = await Promise.all([
+      app.prisma.order.count({ where: { userId } }),
+      app.prisma.package.count({ where: { order: { userId } } }),
+      app.prisma.package.count({ where: { order: { userId }, status: "DELIVERED" } }),
+      app.prisma.package.count({ where: { order: { userId }, status: { in: ["IN_TRANSIT", "OUT_FOR_DELIVERY"] } } }),
+      app.prisma.trackingEvent.count({ where: { package: { order: { userId } } } }),
+      app.prisma.notification.count({ where: { userId } }),
+      app.prisma.connectedEmail.count({ where: { userId } }),
+    ]);
+
+    // Unique carriers used
+    const carriers = await app.prisma.package.groupBy({
+      by: ["carrier"],
+      where: { order: { userId }, carrier: { not: null } },
+    });
+
+    // Unique stores
+    const stores = await app.prisma.order.groupBy({
+      by: ["store"],
+      where: { userId, store: { not: null } },
+    });
+
+    return {
+      totalOrders,
+      totalPackages,
+      deliveredPackages,
+      inTransitPackages,
+      totalEvents,
+      totalNotifications,
+      connectedEmailCount,
+      uniqueCarriers: carriers.length,
+      uniqueStores: stores.length,
+    };
+  });
+
   // DELETE /api/auth/account — Delete account (GDPR right to be forgotten)
   app.delete("/account", {
     preHandler: [app.authenticate],
