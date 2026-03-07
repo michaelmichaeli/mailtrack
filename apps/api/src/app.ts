@@ -75,7 +75,7 @@ export async function buildApp() {
   app.get("/health", async (request, reply) => {
     try {
       await app.prisma.$queryRaw`SELECT 1`;
-      return { status: "ok", timestamp: new Date().toISOString(), version: "2026-03-07a" };
+      return { status: "ok", timestamp: new Date().toISOString(), version: "2026-03-07b" };
     } catch (err) {
       app.log.error(`[health] DB check failed: ${(err as Error).message}`);
       return reply.status(503).send({
