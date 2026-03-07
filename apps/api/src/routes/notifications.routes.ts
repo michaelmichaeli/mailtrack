@@ -9,6 +9,24 @@ export const notificationRoutes: FastifyPluginAsync = async (app) => {
     const pageNum = Math.max(1, parseInt(page));
     const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
 
+    // Clean up orphaned notifications (orderId points to deleted order)
+    const orphaned = await app.prisma.notification.findMany({
+      where: { userId, orderId: { not: null } },
+      select: { id: true, orderId: true },
+    });
+    if (orphaned.length > 0) {
+      const orderIds = [...new Set(orphaned.map((n: any) => n.orderId).filter(Boolean))];
+      const existingOrders = await app.prisma.order.findMany({
+        where: { id: { in: orderIds as string[] } },
+        select: { id: true },
+      });
+      const existingSet = new Set(existingOrders.map((o: any) => o.id));
+      const orphanIds = orphaned.filter((n: any) => n.orderId && !existingSet.has(n.orderId)).map((n: any) => n.id);
+      if (orphanIds.length > 0) {
+        await app.prisma.notification.deleteMany({ where: { id: { in: orphanIds } } });
+      }
+    }
+
     const where: any = { userId };
     if (unreadOnly === "true") where.read = false;
 
