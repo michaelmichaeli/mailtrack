@@ -98,6 +98,7 @@ async function handleSmsIngest(app: any, key: string, text: string, source?: str
   for (const item of found) {
     const existing = await app.prisma.package.findFirst({
       where: { trackingNumber: item.trackingNumber, order: { userId: user.id } },
+      include: { order: { select: { id: true } } },
     });
 
     if (existing) {
@@ -135,7 +136,7 @@ async function handleSmsIngest(app: any, key: string, text: string, source?: str
               type: "STATUS_CHANGE",
               title: "📦 Ready for Pickup",
               body: `${item.trackingNumber} is ready${pickupInfo.storeName ? ` at ${pickupInfo.storeName}` : ""}`,
-              metadata: JSON.stringify({ trackingNumber: item.trackingNumber }),
+              orderId: existing.order.id,
             },
           });
           await notifyStatusChange(app.prisma, user.id, item.trackingNumber, existing.status, "OUT_FOR_DELIVERY", existing.id);
@@ -198,7 +199,7 @@ async function handleSmsIngest(app: any, key: string, text: string, source?: str
           type: "STATUS_CHANGE",
           title: "📦 New Package Detected",
           body: `${item.trackingNumber} (${item.carrier}) added via SMS`,
-          metadata: JSON.stringify({ trackingNumber: item.trackingNumber, carrier: item.carrier }),
+          orderId: order.id,
         },
       });
       app.log.info(`[ingest/sms] Created notification for ${item.trackingNumber}, attempting push...`);
