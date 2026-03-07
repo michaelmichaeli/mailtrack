@@ -685,8 +685,8 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
                 try {
                   const res = await api.sendTestDigest();
                   toast.success(res.message || "Test digest sent!");
-                } catch {
-                  toast.error("Failed to send test digest");
+                } catch (err: any) {
+                  toast.error(err?.message || "Failed to send test digest");
                 }
               }}
             >

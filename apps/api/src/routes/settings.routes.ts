@@ -125,7 +125,7 @@ export const settingsRoutes: FastifyPluginAsync = async (app) => {
     if (!user) return reply.status(404).send({ error: "User not found" });
 
     if (!process.env.RESEND_API_KEY) {
-      return reply.status(503).send({ error: "Email service not configured (RESEND_API_KEY missing)" });
+      return reply.status(503).send({ message: "Email service not configured — ask admin to set RESEND_API_KEY" });
     }
 
     const { sendWeeklyDigestForUser } = await import("../services/email-digest.service.js");
