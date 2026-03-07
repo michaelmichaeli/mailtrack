@@ -30,9 +30,21 @@ Created `components/ui/scroll-to-top.tsx`:
 - Fade-in animation with `tailwindcss-animate`
 - Added to `Sidebar` component so it appears on all authenticated pages
 
-### SMS Ingest Verification
+### SMS Ingest — CSS Copy Fix & Notification Bug Fix
 
-User reported curl "malformed URL" error — caused by newline in URL when pasting in terminal. Tested the endpoint directly: `POST /api/ingest/sms` returns 200 and processes the tracking number correctly. No code fix needed.
+**Curl malformed URL**: User reported curl "malformed URL" when pasting the test command from the settings page. Root cause: `break-all select-all` CSS on `<code>` elements inserted newlines at visual wrap points when text was copied. Fixed by using `whitespace-nowrap overflow-x-auto select-all` on all three code blocks (ingest key, webhook URL, curl command).
+
+**Notifications not created**: SMS ingest returned 200 and added packages, but no in-app notification records were created. Root cause: `notification.create()` calls in `ingest.routes.ts` included a `metadata` field that does NOT exist in the Prisma `Notification` model. Prisma threw an error, caught by try/catch, notification creation silently failed. Fix: removed `metadata` field, added `orderId` instead.
+
+**Deployment fix**: All Railway deployments via `railway up` were failing because `prisma db push` errors on `googleId String? @unique` with existing duplicate NULL values. Fix: added `--accept-data-loss` flag to prisma db push in both `Dockerfile.api` CMD and `railway.toml` startCommand.
+
+### Visual Verification Protocol
+
+Added Playwright-based visual verification to `AGENT_INSTRUCTIONS.md` as a hard rule. Agents must capture screenshots using Playwright (with dev-login auth flow) instead of asking the user for screenshots.
+
+### Next.js Cache Recovery
+
+Added `.next` cache recovery procedure to `AGENT_INSTRUCTIONS.md`. Stale `.next` cache causes "Cannot find module './XXX.js'" crashes — fix is `rm -rf apps/web/.next` and rebuild.
 
 ---
 

@@ -78,8 +78,11 @@
 - **Skeletons**: Added `ProfileSkeleton`, `NotificationsSkeleton`, `SettingsSkeleton`, `OrderDetailSkeleton` to `skeleton.tsx`. Replaced `LogoSpinner` loading states in profile, notifications, and order detail pages with content-shaped skeletons
 - **Logo Link**: Sidebar logo now links to `/packages` (home)
 - **Scroll-to-Top**: Created `ScrollToTop` floating button component — appears after scrolling 300px, works with `<main>` scroll container
-- **SMS Ingest**: Verified working — the curl "malformed URL" error was client-side (newline in URL). API returns 200 correctly
-- **Files**: `components/ui/skeleton.tsx`, `components/ui/scroll-to-top.tsx` (new), `components/layout/sidebar.tsx`, `app/profile/page.tsx`, `app/notifications/page.tsx`, `app/orders/[id]/page.tsx`, `app/packages/[id]/page.tsx`
+- **SMS Ingest**: Verified working — the curl "malformed URL" error was caused by `break-all` CSS inserting newlines when copying. Fixed with `whitespace-nowrap overflow-x-auto`. Notification creation was silently failing because `notification.create()` used a nonexistent `metadata` field — removed it, added `orderId`.
+- **Deploy fix**: `prisma db push` failing on `googleId @unique` with duplicate NULLs — added `--accept-data-loss` flag to Dockerfile.api and railway.toml.
+- **Visual Verification**: Added Playwright screenshot protocol to AGENT_INSTRUCTIONS.md as hard rule.
+- **Next.js Cache Recovery**: Added `.next` cache cleanup procedure to AGENT_INSTRUCTIONS.md.
+- **Files**: `components/ui/skeleton.tsx`, `components/ui/scroll-to-top.tsx` (new), `components/layout/sidebar.tsx`, `app/profile/page.tsx`, `app/notifications/page.tsx`, `app/orders/[id]/page.tsx`, `app/packages/[id]/page.tsx`, `app/settings/page.tsx`, `apps/api/src/routes/ingest.routes.ts`, `Dockerfile.api`, `railway.toml`, `AGENT_INSTRUCTIONS.md`
 
 ### Extract syncPackageFromResult to Shared Service (Session: 2026-03-07)
 - **Problem**: Duplicate `syncPackageFromResult` in `packages.routes.ts` and `ingest.routes.ts` — ingest version was missing terminal status protection, notifications, pickup enrichment, status reconciliation
@@ -94,6 +97,7 @@
 
 1. **Dev login doesn't create connectedEmail**: Dev login creates/finds user but does NOT create `connectedEmail` records. Email sync requires Google OAuth to connect Gmail tokens.
 2. **Israel Post regex gap**: Tracking numbers ending in Y (not IL) detected as ALIEXPRESS_STANDARD. Corrected during sync.
+3. **Prisma db push needs --accept-data-loss**: `googleId String? @unique` has duplicate NULL values in production DB. Without `--accept-data-loss`, all `railway up` deploys fail at container startup.
 
 ## Design Decisions
 
@@ -103,6 +107,8 @@
 | Simplified favicon for small sizes | 2026-03 | Full logo becomes a smudge at 16/32px. Geometric pin shape reads better. |
 | Status reconciliation after event upsert | 2026-03 | Carriers sometimes report stale overall status while individual events show DELIVERED. |
 | `onboardingCompleted` flag on User | 2026-03 | Cleanly separates first-time vs returning users without relying on heuristics. |
+| `--accept-data-loss` for prisma db push | 2026-03 | googleId @unique has duplicate NULLs in prod. Without this flag, all deploys fail. |
+| Playwright visual verification | 2026-03 | Agents must screenshot pages to verify changes instead of asking user. |
 | Web Audio API for sounds | 2026-03 | No audio files needed, works offline, lightweight synthesized effects. |
 | Remove digit-only carrier patterns | 2025-01 | Too broad, caused 55+ misdetections. |
 
