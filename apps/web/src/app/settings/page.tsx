@@ -515,9 +515,24 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
   const handleSubscribe = async () => {
     setPushState("subscribing");
     try {
+      // Check secure context
+      if (!window.isSecureContext) {
+        toast.error("Push notifications require HTTPS. Try the production URL.");
+        setPushState("idle");
+        return;
+      }
+
       // Register service worker
-      const registration = await navigator.serviceWorker.register("/sw.js");
-      await navigator.serviceWorker.ready;
+      let registration: ServiceWorkerRegistration;
+      try {
+        registration = await navigator.serviceWorker.register("/sw.js");
+        await navigator.serviceWorker.ready;
+      } catch (swErr: any) {
+        console.error("SW registration error:", swErr);
+        toast.error("Service worker registration failed. Try refreshing the page.");
+        setPushState("idle");
+        return;
+      }
 
       // Get VAPID key
       const { publicKey } = await api.getVapidKey();
@@ -538,7 +553,7 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
       // Request permission
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
-        toast.error("Notification permission denied");
+        toast.error("Notification permission denied. Check your browser settings.");
         setPushState("idle");
         return;
       }
@@ -555,7 +570,12 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
       toast.success("Push notifications enabled!");
     } catch (err: any) {
       console.error("Push subscribe error:", err);
-      toast.error(err?.message ?? "Failed to enable push notifications");
+      const msg = err?.message ?? "";
+      if (msg.includes("push service") || msg.includes("AbortError")) {
+        toast.error("Push service unavailable. This browser may not support push on this domain.");
+      } else {
+        toast.error(msg || "Failed to enable push notifications");
+      }
     } finally {
       setPushState("idle");
     }
