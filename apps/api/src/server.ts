@@ -15,6 +15,15 @@ process.on("uncaughtException", (err) => {
 async function start() {
   const app = await buildApp();
 
+  // Graceful shutdown on SIGTERM/SIGINT
+  const shutdown = async (signal: string) => {
+    app.log.info(`[${signal}] Shutting down gracefully...`);
+    await app.close();
+    process.exit(0);
+  };
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
+
   try {
     await app.listen({ port: PORT, host: HOST });
     app.log.info(`MailTrack API running at http://${HOST}:${PORT}`);

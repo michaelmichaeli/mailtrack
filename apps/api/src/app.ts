@@ -59,11 +59,20 @@ export async function buildApp() {
   // Routes
   await app.register(registerRoutes, { prefix: "/api" });
 
-  // Health check
-  app.get("/health", async () => ({
-    status: "ok",
-    timestamp: new Date().toISOString(),
-  }));
+  // Health check — verifies DB connectivity so Railway restarts on real failures
+  app.get("/health", async (request, reply) => {
+    try {
+      await app.prisma.$queryRaw`SELECT 1`;
+      return { status: "ok", timestamp: new Date().toISOString() };
+    } catch (err) {
+      app.log.error(`[health] DB check failed: ${(err as Error).message}`);
+      return reply.status(503).send({
+        status: "unhealthy",
+        error: "database unreachable",
+        timestamp: new Date().toISOString(),
+      });
+    }
+  });
 
   return app;
 }
