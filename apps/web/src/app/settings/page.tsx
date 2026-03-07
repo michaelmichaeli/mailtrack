@@ -32,6 +32,7 @@ import {
   FileText,
   Check,
   LogOut,
+  RotateCcw,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
@@ -274,11 +275,17 @@ function SettingsContent() {
         </CardContent>
       </Card>
 
-      {/* Sign Out */}
-      <Button variant="outline" className="w-full" onClick={handleSignOut}>
-        <LogOut className="h-4 w-4" />
-        Sign out
-      </Button>
+      {/* Sign Out & Onboarding */}
+      <div className="flex gap-3">
+        <Button variant="outline" className="flex-1" onClick={() => window.location.href = "/onboarding"}>
+          <RotateCcw className="h-4 w-4" />
+          Replay onboarding
+        </Button>
+        <Button variant="outline" className="flex-1" onClick={handleSignOut}>
+          <LogOut className="h-4 w-4" />
+          Sign out
+        </Button>
+      </div>
 
       {/* Data & Privacy */}
       <Card>

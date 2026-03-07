@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogOut, User, Mail, Calendar, Shield, Save, Pencil, RotateCcw, Package, Truck, CheckCircle2, Bell, Store, BarChart3, RefreshCw, WifiOff } from "lucide-react";
+import { User, Mail, Calendar, Shield, Save, Pencil, Package, Truck, CheckCircle2, Bell, Store, BarChart3, RefreshCw, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { LogoSpinner } from "@/components/ui/logo-spinner";
 import { ProfileSkeleton } from "@/components/ui/skeleton";
@@ -81,12 +81,6 @@ export default function ProfilePage() {
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleSignOut = async () => {
-    try { await api.logout(); } catch {}
-    api.setToken(null);
-    window.location.href = "/login";
   };
 
   if (loading) {
@@ -259,39 +253,6 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      {/* Connected Emails */}
-      {user.connectedEmails.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Mail className="h-4 w-4 text-primary" />
-              Connected Emails
-            </CardTitle>
-            <CardDescription>Emails linked for package tracking</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {user.connectedEmails.map((ce) => (
-                <div key={ce.id} className="flex items-center justify-between rounded-lg border border-border p-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{ce.email}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{ce.provider.toLowerCase()}</p>
-                    </div>
-                  </div>
-                  {ce.lastSyncAt && (
-                    <p className="text-xs text-muted-foreground shrink-0">
-                      Last synced {new Date(ce.lastSyncAt).toLocaleDateString()}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Usage Stats */}
       {stats && (
         <Card>
@@ -369,17 +330,6 @@ export default function ProfilePage() {
         </Card>
       )}
 
-      {/* Sign Out */}
-      <div className="flex gap-3">
-        <Button variant="outline" className="flex-1" onClick={() => window.location.href = "/onboarding"}>
-          <RotateCcw className="h-4 w-4" />
-          Replay onboarding
-        </Button>
-        <Button variant="outline" className="flex-1" onClick={handleSignOut}>
-          <LogOut className="h-4 w-4" />
-          Sign out
-        </Button>
-      </div>
     </div>
   );
 }
