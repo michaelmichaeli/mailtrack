@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { LogOut, User, Mail, Calendar, Shield, Save, Pencil, RotateCcw, Package, Truck, CheckCircle2, Bell, Store, BarChart3, RefreshCw, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { LogoSpinner } from "@/components/ui/logo-spinner";
+import { ProfileSkeleton } from "@/components/ui/skeleton";
 
 interface UserProfile {
   id: string;
@@ -88,11 +89,7 @@ export default function ProfilePage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <LogoSpinner size={48} />
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   if (!user) {

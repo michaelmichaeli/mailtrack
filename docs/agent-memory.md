@@ -74,6 +74,13 @@
 ### Notification Toast UX (Session: 2025-01)
 - Dedup toasts, action button to open dropdown
 
+### Loading Skeletons, Logo Link, Scroll-to-Top (Session: 2026-03-07)
+- **Skeletons**: Added `ProfileSkeleton`, `NotificationsSkeleton`, `SettingsSkeleton`, `OrderDetailSkeleton` to `skeleton.tsx`. Replaced `LogoSpinner` loading states in profile, notifications, and order detail pages with content-shaped skeletons
+- **Logo Link**: Sidebar logo now links to `/packages` (home)
+- **Scroll-to-Top**: Created `ScrollToTop` floating button component — appears after scrolling 300px, works with `<main>` scroll container
+- **SMS Ingest**: Verified working — the curl "malformed URL" error was client-side (newline in URL). API returns 200 correctly
+- **Files**: `components/ui/skeleton.tsx`, `components/ui/scroll-to-top.tsx` (new), `components/layout/sidebar.tsx`, `app/profile/page.tsx`, `app/notifications/page.tsx`, `app/orders/[id]/page.tsx`, `app/packages/[id]/page.tsx`
+
 ### Extract syncPackageFromResult to Shared Service (Session: 2026-03-07)
 - **Problem**: Duplicate `syncPackageFromResult` in `packages.routes.ts` and `ingest.routes.ts` — ingest version was missing terminal status protection, notifications, pickup enrichment, status reconciliation
 - **Fix**: Extracted comprehensive version to `apps/api/src/services/package-sync.service.ts`, both routes now import from it

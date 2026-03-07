@@ -5,6 +5,37 @@
 
 ---
 
+## 2026-03-07 — Loading Skeletons, Logo Link, Scroll-to-Top
+
+### Content-Shaped Loading Skeletons
+
+**Problem**: Pages used `LogoSpinner` (a rotating logo) as loading state, instead of content-shaped skeleton placeholders.
+
+**Changes**:
+- Added to `skeleton.tsx`: `ProfileSkeleton` (avatar + details + stats grid), `NotificationsSkeleton` (card with list items), `SettingsSkeleton` (connected emails + notification prefs + appearance cards), `OrderDetailSkeleton` (back button + info cards + timeline)
+- `app/profile/page.tsx`: Replaced `LogoSpinner` with `ProfileSkeleton`
+- `app/notifications/page.tsx`: Replaced `LogoSpinner` with inline notification item skeletons
+- `app/orders/[id]/page.tsx`, `app/packages/[id]/page.tsx`: Replaced basic `Skeleton` blocks with `OrderDetailSkeleton`
+
+### Sidebar Logo → Home Link
+
+Wrapped logo + brand text in `<Link href="/packages">` so clicking navigates to the home (packages) page.
+
+### Floating Scroll-to-Top Button
+
+Created `components/ui/scroll-to-top.tsx`:
+- Listens to scroll events on `<main>` element (which has `overflow-y-auto`)
+- Shows floating button with up arrow after scrolling 300px
+- Smooth scroll to top on click
+- Fade-in animation with `tailwindcss-animate`
+- Added to `Sidebar` component so it appears on all authenticated pages
+
+### SMS Ingest Verification
+
+User reported curl "malformed URL" error — caused by newline in URL when pasting in terminal. Tested the endpoint directly: `POST /api/ingest/sms` returns 200 and processes the tracking number correctly. No code fix needed.
+
+---
+
 ## 2026-03-07 — Extract syncPackageFromResult to Shared Service
 
 ### DRY Refactor: package-sync.service.ts

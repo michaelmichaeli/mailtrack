@@ -135,3 +135,181 @@ export function DashboardSkeleton() {
     </div>
   );
 }
+
+export function ProfileSkeleton() {
+  return (
+    <div className="space-y-6 max-w-2xl">
+      <div>
+        <Skeleton className="h-7 w-24 mb-1" />
+        <Skeleton className="h-4 w-48" />
+      </div>
+      {/* Avatar card */}
+      <div className="rounded-xl border border-border bg-card p-6">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-16 w-16 rounded-full" />
+          <div className="flex-1">
+            <Skeleton className="h-6 w-40 mb-2" />
+            <Skeleton className="h-4 w-56" />
+          </div>
+        </div>
+      </div>
+      {/* Account details card */}
+      <div className="rounded-xl border border-border bg-card">
+        <div className="p-6 pb-3">
+          <Skeleton className="h-5 w-36" />
+        </div>
+        <div className="p-6 pt-3 grid gap-4 sm:grid-cols-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i}>
+              <Skeleton className="h-3 w-20 mb-1.5" />
+              <Skeleton className="h-4 w-36" />
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* Stats card */}
+      <div className="rounded-xl border border-border bg-card">
+        <div className="p-6 pb-3">
+          <Skeleton className="h-5 w-28 mb-1" />
+          <Skeleton className="h-3 w-40" />
+        </div>
+        <div className="p-6 pt-3 grid grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-lg border border-border p-3 text-center">
+              <Skeleton className="h-5 w-5 mx-auto mb-2" />
+              <Skeleton className="h-7 w-8 mx-auto mb-1" />
+              <Skeleton className="h-3 w-14 mx-auto" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function NotificationsSkeleton() {
+  return (
+    <div className="space-y-5">
+      <div>
+        <Skeleton className="h-7 w-36 mb-1" />
+        <Skeleton className="h-4 w-64" />
+      </div>
+      <div className="rounded-xl border border-border bg-card">
+        <div className="p-6 pb-3 flex items-center justify-between">
+          <Skeleton className="h-5 w-24" />
+          <div className="flex gap-1">
+            <Skeleton className="h-8 w-12 rounded-full" />
+            <Skeleton className="h-8 w-16 rounded-full" />
+          </div>
+        </div>
+        <div className="border-t border-border" />
+        <div className="divide-y divide-border">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-start gap-3 px-5 py-4">
+              <Skeleton className="h-9 w-9 rounded-lg shrink-0" />
+              <div className="flex-1">
+                <Skeleton className="h-4 w-48 mb-2" />
+                <Skeleton className="h-3 w-64" />
+              </div>
+              <Skeleton className="h-3 w-12" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function SettingsSkeleton() {
+  return (
+    <div className="space-y-6 max-w-2xl">
+      <div>
+        <Skeleton className="h-7 w-24 mb-1" />
+        <Skeleton className="h-4 w-56" />
+      </div>
+      {/* Connected Emails card */}
+      <div className="rounded-xl border border-border bg-card">
+        <div className="p-6 pb-3">
+          <Skeleton className="h-5 w-40 mb-1" />
+          <Skeleton className="h-3 w-72" />
+        </div>
+        <div className="p-6 pt-3 space-y-3">
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-8 w-8 rounded-lg" />
+              <div>
+                <Skeleton className="h-4 w-44 mb-1" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+            </div>
+            <Skeleton className="h-8 w-24 rounded-md" />
+          </div>
+        </div>
+      </div>
+      {/* Notifications card */}
+      <div className="rounded-xl border border-border bg-card">
+        <div className="p-6 pb-3">
+          <Skeleton className="h-5 w-32 mb-1" />
+          <Skeleton className="h-3 w-56" />
+        </div>
+        <div className="p-6 pt-3 space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between">
+              <div>
+                <Skeleton className="h-4 w-36 mb-1" />
+                <Skeleton className="h-3 w-48" />
+              </div>
+              <Skeleton className="h-5 w-9 rounded-full" />
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* Appearance card */}
+      <div className="rounded-xl border border-border bg-card">
+        <div className="p-6 pb-3">
+          <Skeleton className="h-5 w-28" />
+        </div>
+        <div className="p-6 pt-3">
+          <Skeleton className="h-10 w-full rounded-lg" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function OrderDetailSkeleton() {
+  return (
+    <div className="space-y-6">
+      {/* Back button + title */}
+      <div className="flex items-center gap-3">
+        <Skeleton className="h-9 w-9 rounded-lg" />
+        <div>
+          <Skeleton className="h-6 w-48 mb-1" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+      </div>
+      {/* Status/info cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="rounded-xl border border-border bg-card p-4">
+            <Skeleton className="h-3 w-20 mb-2" />
+            <Skeleton className="h-6 w-28" />
+          </div>
+        ))}
+      </div>
+      {/* Timeline */}
+      <div className="rounded-xl border border-border bg-card p-6">
+        <Skeleton className="h-5 w-36 mb-4" />
+        <div className="space-y-4 pl-6 border-l-2 border-border">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="relative pl-6">
+              <Skeleton className="absolute -left-[9px] top-1 h-4 w-4 rounded-full" />
+              <Skeleton className="h-4 w-48 mb-1" />
+              <Skeleton className="h-3 w-32" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

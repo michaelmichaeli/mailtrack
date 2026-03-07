@@ -86,7 +86,8 @@ MailTrack is a universal package tracking dashboard built as a monorepo with thr
 | KanbanBoard | `components/packages/package-kanban.tsx` | Trello-style kanban with unified page scroll |
 | NotificationBell | `components/notifications/notification-bell.tsx` | Floating dropdown notification widget |
 | Sidebar | `components/layout/sidebar.tsx` | App navigation with logo, theme toggle, sign out |
-| Skeletons | `components/ui/skeleton.tsx` | View-specific loading skeletons (table/kanban/timeline) |
+| Skeletons | `components/ui/skeleton.tsx` | View-specific loading skeletons (table/kanban/timeline/profile/notifications/settings/order) |
+| ScrollToTop | `components/ui/scroll-to-top.tsx` | Floating scroll-to-top button, appears after 300px scroll |
 
 ### Shared (`packages/shared`)
 

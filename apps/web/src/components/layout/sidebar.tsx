@@ -21,6 +21,7 @@ import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { useScrollRestore } from "@/lib/use-scroll-restore";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 
 const navItems = [
   { href: "/packages", label: "Orders", icon: Package },
@@ -65,11 +66,13 @@ export function Sidebar() {
     <>
       {/* Logo */}
       <div className="flex items-center gap-3 border-b border-border px-5 py-4">
-        <Image src="/logo.png" alt="MailTrack" width={36} height={36} className="drop-shadow-sm" />
-        <div>
-          <span className="text-base font-bold text-foreground tracking-tight">MailTrack</span>
-          <p className="text-[10px] text-muted-foreground leading-none">Every package. One dashboard.</p>
-        </div>
+        <Link href="/packages" className="flex items-center gap-3 min-w-0">
+          <Image src="/logo.png" alt="MailTrack" width={36} height={36} className="drop-shadow-sm" />
+          <div>
+            <span className="text-base font-bold text-foreground tracking-tight">MailTrack</span>
+            <p className="text-[10px] text-muted-foreground leading-none">Every package. One dashboard.</p>
+          </div>
+        </Link>
         <button
           onClick={() => setMobileOpen(false)}
           className="ml-auto md:hidden p-1 rounded-lg hover:bg-accent"
@@ -161,6 +164,9 @@ export function Sidebar() {
       <aside className="hidden md:flex h-screen w-60 flex-col border-r border-border bg-card flex-shrink-0">
         {sidebarContent}
       </aside>
+
+      {/* Floating scroll-to-top button */}
+      <ScrollToTop />
     </>
   );
 }

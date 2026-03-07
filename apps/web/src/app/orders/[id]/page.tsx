@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton, OrderDetailSkeleton } from "@/components/ui/skeleton";
 import { PackageProgressBar } from "@/components/packages/package-progress-bar";
 import { TrackingTimeline } from "@/components/packages/tracking-timeline";
 import { ArrowLeft, RefreshCw, MapPin, Clock, DollarSign, Store, Package, ShoppingBag, ExternalLink, ChevronRight, Navigation, KeyRound, Trash2 } from "lucide-react";
@@ -71,13 +71,7 @@ export default function OrderDetailPage() {
   });
 
   if (isLoading) {
-    return (
-      <div className="space-y-6 max-w-3xl">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-48 w-full rounded-xl" />
-        <Skeleton className="h-64 w-full rounded-xl" />
-      </div>
-    );
+    return <OrderDetailSkeleton />;
   }
 
   if (!order) {

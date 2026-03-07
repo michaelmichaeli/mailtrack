@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LogoSpinner } from "@/components/ui/logo-spinner";
+import { NotificationsSkeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -194,8 +195,17 @@ export default function NotificationsPage() {
 
           <CardContent className="p-0">
             {isLoading ? (
-              <div className="flex items-center justify-center py-16">
-                <LogoSpinner size={36} />
+              <div className="divide-y divide-border">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-start gap-3 px-5 py-4">
+                    <div className="h-9 w-9 rounded-lg bg-muted/70 animate-pulse shrink-0" />
+                    <div className="flex-1">
+                      <div className="h-4 w-48 rounded bg-muted/70 animate-pulse mb-2" />
+                      <div className="h-3 w-64 rounded bg-muted/70 animate-pulse" />
+                    </div>
+                    <div className="h-3 w-12 rounded bg-muted/70 animate-pulse" />
+                  </div>
+                ))}
               </div>
             ) : allNotifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 px-4">
