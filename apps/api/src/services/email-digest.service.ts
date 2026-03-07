@@ -200,28 +200,28 @@ function statusIcon(status: PackageStatus): string {
 function packageCard(p: PackageSummary): string {
   const items = p.items ? parseItems(p.items) : "";
   return `
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:8px">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:10px">
       <tr>
-        <td style="background:#ffffff;border-radius:12px;border:1px solid #f0f0f5;padding:0;overflow:hidden">
+        <td style="background:#ffffff;border-radius:12px;border:1px solid #e8e8ef;padding:0;overflow:hidden">
           <table width="100%" cellpadding="0" cellspacing="0" border="0">
             <tr>
               <td width="4" style="background:${getStatusAccent(p.status)};border-radius:12px 0 0 12px"></td>
-              <td style="padding:16px 20px">
+              <td style="padding:18px 22px">
                 <table width="100%" cellpadding="0" cellspacing="0" border="0">
                   <tr>
                     <td>
-                      <span style="font-size:20px;vertical-align:middle">${statusIcon(p.status)}</span>
-                      <span style="font-weight:700;color:#1a1a2e;font-size:15px;vertical-align:middle;margin-left:8px">${p.merchant}</span>
+                      <span style="font-size:18px;vertical-align:middle">${statusIcon(p.status)}</span>
+                      <span style="font-weight:700;color:#1a1a2e;font-size:15px;vertical-align:middle;padding-left:8px">${p.merchant}</span>
                     </td>
                     <td align="right" style="vertical-align:top">
                       ${statusBadge(p.status)}
                     </td>
                   </tr>
                   <tr>
-                    <td colspan="2" style="padding-top:8px">
-                      ${items ? `<div style="color:#64748b;font-size:13px;margin-bottom:4px">${items}</div>` : ""}
+                    <td colspan="2" style="padding-top:10px">
+                      ${items ? `<div style="color:#64748b;font-size:13px;margin-bottom:6px">${items}</div>` : ""}
                       <div style="color:#94a3b8;font-size:12px">${p.carrier} &middot; <span style="font-family:monospace;letter-spacing:0.5px">${p.trackingNumber}</span></div>
-                      ${p.lastLocation ? `<div style="color:#94a3b8;font-size:12px;margin-top:2px">📍 ${p.lastLocation}</div>` : ""}
+                      ${p.lastLocation ? `<div style="color:#94a3b8;font-size:12px;margin-top:4px">📍 ${p.lastLocation}</div>` : ""}
                     </td>
                   </tr>
                 </table>
@@ -301,50 +301,54 @@ function buildDigestHtml(data: DigestData): string {
   <!-- Outer wrapper -->
   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f1f5f9">
     <tr>
-      <td align="center" style="padding:32px 16px">
+      <td align="center" style="padding:40px 16px">
         <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%">
 
           <!-- Logo bar -->
           <tr>
-            <td align="center" style="padding-bottom:24px">
-              <a href="${appUrl}" style="text-decoration:none">
-                <img src="${appUrl}/logo.png" alt="MailTrack" width="36" height="36" style="vertical-align:middle;border:0" />
-                <span style="font-size:18px;font-weight:800;color:#1e293b;vertical-align:middle;margin-left:8px;letter-spacing:-0.5px">MailTrack</span>
+            <td align="center" style="padding-bottom:28px">
+              <a href="${appUrl}" style="text-decoration:none;display:inline-block">
+                <table cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td style="background:#4f46e5;width:32px;height:32px;border-radius:8px;text-align:center;vertical-align:middle;font-size:16px;line-height:32px">📦</td>
+                    <td style="padding-left:10px;font-size:19px;font-weight:800;color:#1e293b;letter-spacing:-0.5px;vertical-align:middle">MailTrack</td>
+                  </tr>
+                </table>
               </a>
             </td>
           </tr>
 
           <!-- Hero Card -->
           <tr>
-            <td style="background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#6366f1 100%);border-radius:16px 16px 0 0;padding:40px 32px 36px;text-align:center">
-              <h1 style="color:#ffffff;font-size:26px;font-weight:800;margin:0 0 8px;letter-spacing:-0.5px">Weekly Digest</h1>
-              <p style="color:rgba(255,255,255,0.75);font-size:14px;margin:0;font-weight:500">${data.weekStart} – ${data.weekEnd}</p>
+            <td style="background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#6366f1 100%);border-radius:16px 16px 0 0;padding:44px 36px 40px;text-align:center">
+              <h1 style="color:#ffffff;font-size:28px;font-weight:800;margin:0 0 10px;letter-spacing:-0.5px">Weekly Digest</h1>
+              <p style="color:rgba(255,255,255,0.7);font-size:15px;margin:0;font-weight:500">${data.weekStart} – ${data.weekEnd}</p>
             </td>
           </tr>
 
           <!-- Stats Row -->
           <tr>
-            <td style="background:#ffffff;padding:0 28px;border-left:1px solid #f0f0f5;border-right:1px solid #f0f0f5">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:-20px">
+            <td style="background:#ffffff;padding:0 32px;border-left:1px solid #e8e8ef;border-right:1px solid #e8e8ef">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:-22px">
                 <tr>
                   <td>
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);border:1px solid #f0f0f5;overflow:hidden">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);border:1px solid #e8e8ef;overflow:hidden">
                       <tr>
-                        <td width="25%" align="center" style="padding:20px 12px;border-right:1px solid #f0f0f5">
-                          <div style="font-size:24px;font-weight:800;color:#16a34a;line-height:1">${data.delivered.length}</div>
-                          <div style="font-size:11px;color:#64748b;margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Delivered</div>
+                        <td width="25%" align="center" style="padding:22px 14px;border-right:1px solid #f0f0f5">
+                          <div style="font-size:26px;font-weight:800;color:#16a34a;line-height:1">${data.delivered.length}</div>
+                          <div style="font-size:10px;color:#64748b;margin-top:6px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px">Delivered</div>
                         </td>
-                        <td width="25%" align="center" style="padding:20px 12px;border-right:1px solid #f0f0f5">
-                          <div style="font-size:24px;font-weight:800;color:#2563eb;line-height:1">${data.inTransit.length}</div>
-                          <div style="font-size:11px;color:#64748b;margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">In Transit</div>
+                        <td width="25%" align="center" style="padding:22px 14px;border-right:1px solid #f0f0f5">
+                          <div style="font-size:26px;font-weight:800;color:#2563eb;line-height:1">${data.inTransit.length}</div>
+                          <div style="font-size:10px;color:#64748b;margin-top:6px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px">In Transit</div>
                         </td>
-                        <td width="25%" align="center" style="padding:20px 12px;border-right:1px solid #f0f0f5">
-                          <div style="font-size:24px;font-weight:800;color:#dc2626;line-height:1">${data.exceptions.length}</div>
-                          <div style="font-size:11px;color:#64748b;margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Attention</div>
+                        <td width="25%" align="center" style="padding:22px 14px;border-right:1px solid #f0f0f5">
+                          <div style="font-size:26px;font-weight:800;color:#dc2626;line-height:1">${data.exceptions.length}</div>
+                          <div style="font-size:10px;color:#64748b;margin-top:6px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px">Attention</div>
                         </td>
-                        <td width="25%" align="center" style="padding:20px 12px">
-                          <div style="font-size:24px;font-weight:800;color:#7c3aed;line-height:1">${data.newOrders.length}</div>
-                          <div style="font-size:11px;color:#64748b;margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">New</div>
+                        <td width="25%" align="center" style="padding:22px 14px">
+                          <div style="font-size:26px;font-weight:800;color:#7c3aed;line-height:1">${data.newOrders.length}</div>
+                          <div style="font-size:10px;color:#64748b;margin-top:6px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px">New</div>
                         </td>
                       </tr>
                     </table>
@@ -356,9 +360,9 @@ function buildDigestHtml(data: DigestData): string {
 
           <!-- Main Content -->
           <tr>
-            <td style="background:#ffffff;padding:28px 28px 8px;border-left:1px solid #f0f0f5;border-right:1px solid #f0f0f5">
+            <td style="background:#ffffff;padding:32px 32px 12px;border-left:1px solid #e8e8ef;border-right:1px solid #e8e8ef">
               <!-- Greeting -->
-              <p style="color:#334155;font-size:15px;margin:0 0 28px;line-height:1.6">
+              <p style="color:#334155;font-size:16px;margin:0 0 32px;line-height:1.6">
                 Hi <strong>${data.userName}</strong> 👋<br>
                 Here's what happened with your <strong>${data.totalPackages} package${data.totalPackages !== 1 ? "s" : ""}</strong> this week.
               </p>
@@ -373,10 +377,10 @@ function buildDigestHtml(data: DigestData): string {
 
           <!-- CTA -->
           <tr>
-            <td style="background:#ffffff;padding:8px 28px 36px;text-align:center;border-left:1px solid #f0f0f5;border-right:1px solid #f0f0f5">
+            <td style="background:#ffffff;padding:12px 32px 40px;text-align:center;border-left:1px solid #e8e8ef;border-right:1px solid #e8e8ef">
               <table cellpadding="0" cellspacing="0" border="0" align="center">
                 <tr>
-                  <td style="background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:10px;padding:14px 36px">
+                  <td style="background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:10px;padding:14px 40px">
                     <a href="${appUrl}/packages" style="color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:0.3px;display:inline-block">View All Packages →</a>
                   </td>
                 </tr>
@@ -386,17 +390,19 @@ function buildDigestHtml(data: DigestData): string {
 
           <!-- Footer -->
           <tr>
-            <td style="background:#f8fafc;padding:24px 32px;border-radius:0 0 16px 16px;border:1px solid #f0f0f5;border-top:none;text-align:center">
-              <p style="color:#94a3b8;font-size:12px;margin:0 0 4px;line-height:1.5">
+            <td style="background:#f8fafc;padding:28px 36px;border-radius:0 0 16px 16px;border:1px solid #e8e8ef;border-top:none;text-align:center">
+              <p style="color:#94a3b8;font-size:12px;margin:0 0 8px;line-height:1.5">
                 You're receiving this because you enabled email digests.
               </p>
               <p style="margin:0">
                 <a href="${appUrl}/settings" style="color:#6366f1;font-size:12px;text-decoration:underline">Manage preferences</a>
               </p>
-              <p style="margin:16px 0 0">
-                <img src="${appUrl}/logo.png" alt="MailTrack" width="20" height="20" style="vertical-align:middle;border:0;opacity:0.4" />
-                <span style="color:#cbd5e1;font-size:11px;font-weight:600;letter-spacing:0.5px;vertical-align:middle;margin-left:4px">MAILTRACK</span>
-              </p>
+              <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin-top:20px">
+                <tr>
+                  <td style="background:#e2e8f0;width:24px;height:24px;border-radius:6px;text-align:center;vertical-align:middle;font-size:12px;line-height:24px">📦</td>
+                  <td style="padding-left:8px;color:#94a3b8;font-size:11px;font-weight:700;letter-spacing:0.8px;vertical-align:middle">MAILTRACK</td>
+                </tr>
+              </table>
             </td>
           </tr>
 
