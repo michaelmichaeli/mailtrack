@@ -45,7 +45,7 @@ These are permanent instructions from the user. Follow them in EVERY session:
 | **No batch changes** | Don't chain multiple unrelated tasks without review. |
 | **Update docs after every change** | `agent-memory.md`, `dev-log.md`, `architecture.md` — every time, no exceptions. |
 | **Add features to onboarding wizard** | When adding a new user-facing feature, add it to the `FEATURES` array in `apps/web/src/app/onboarding/page.tsx` |
-| **Verify changes yourself** | Don't ask the user for screenshots. Check the running app via `curl` or by reading the rendered output. |
+| **Verify changes visually** | Don't ask the user for screenshots. Use Playwright to open pages in a real browser, take screenshots, and verify UI changes yourself. See "Visual Verification Protocol" below. |
 | **Hebrew/RTL awareness** | User is Israel-based. Hebrew text appears in tracking locations. Ensure UI handles `dir="auto"`. |
 | **Kanban style** | User wants Trello/Jira-style board — unified page scroll, NO per-column scrolling. Never revert this. |
 | **Dev servers** | API: port 3002, Web: port 3003. Dev login: `POST /api/auth/dev-login` with `{"email":"michaelmichaeli888@gmail.com"}` |
@@ -202,3 +202,70 @@ If you lose context or are starting a new session:
 2. Update `docs/agent-memory.md` with completed tasks, new issues, new preferences
 3. Update `docs/architecture.md` if architecture changed
 4. Check if any new feature should be added to the onboarding wizard
+
+---
+
+## 🚨 Visual Verification Protocol (HARD RULE)
+
+**You MUST visually verify UI changes using Playwright.** Do NOT rely on `curl` for HTML output or ask the user for screenshots.
+
+### How to Verify
+
+```bash
+# Install Playwright if not available
+npx playwright install chromium
+
+# Use a Playwright script to screenshot pages
+node -e "
+const { chromium } = require('playwright');
+(async () => {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  await page.goto('http://localhost:3003/packages');
+  await page.screenshot({ path: '/tmp/verify.png', fullPage: true });
+  await browser.close();
+  console.log('Screenshot saved to /tmp/verify.png');
+})();
+"
+```
+
+### When to Use
+- After ANY UI/frontend change (skeletons, layouts, styling, new components)
+- After fixing CSS or visual bugs
+- Before telling the user a UI task is "done"
+
+### What to Check
+- Page loads without errors (no Server Error screens)
+- Layout looks correct (no broken elements)
+- New components render properly
+- Loading states and skeletons appear correctly
+
+### View Screenshots
+Use the `view` tool to inspect saved screenshot images (they render as base64).
+
+---
+
+## 🚨 Next.js Cache Recovery
+
+Next.js 14's `.next` cache frequently corrupts when source files change during dev server runtime, causing "Cannot find module './XXX.js'" errors.
+
+### Prevention
+- After editing frontend files, restart the dev server: `kill <PID> && cd apps/web && npx next dev --port 3003`
+- If errors persist, delete the cache: `rm -rf apps/web/.next`
+
+### Recovery
+```bash
+# 1. Kill dev server
+lsof -i :3003 -t | xargs kill 2>/dev/null
+
+# 2. Delete stale cache
+rm -rf apps/web/.next
+
+# 3. Clean rebuild
+npx turbo build --filter=@mailtrack/web --force
+
+# 4. Restart dev
+cd apps/web && npx next dev --port 3003
+```
+
+**This is a known Next.js 14 issue.** Always suspect stale cache when you see module-not-found errors at runtime.
