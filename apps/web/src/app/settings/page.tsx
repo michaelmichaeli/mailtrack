@@ -457,14 +457,23 @@ function ScanMessagesSection() {
               <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2 text-xs text-muted-foreground">
                 <p className="font-medium text-foreground text-sm">iOS — Using Shortcuts</p>
                 <ol className="list-decimal list-inside space-y-1.5">
-                  <li>Open <strong>Shortcuts</strong> app → Automation tab</li>
-                  <li>Tap <strong>+</strong> → Personal Automation → <strong>Message</strong></li>
-                  <li>Keywords: <code className="bg-muted px-1 rounded">tracking, shipped, delivered, חבילה</code></li>
-                  <li>Add action: <strong>Get Contents of URL</strong></li>
-                  <li>URL: your webhook URL (copied above)</li>
-                  <li>Method: POST, Body: JSON, key <code className="bg-muted px-1 rounded">text</code> = Shortcut Input</li>
-                  <li>Turn off &quot;Ask Before Running&quot;</li>
+                  <li>Open <strong>Shortcuts</strong> app → <strong>Automation</strong> tab</li>
+                  <li>Tap <strong>+</strong> → <strong>Message</strong> → choose <strong>&quot;Message Contains&quot;</strong></li>
+                  <li>Add keywords: <code className="bg-muted px-1 rounded">tracking, shipped, delivered, package, parcel, חבילה, משלוח</code></li>
+                  <li>Choose <strong>&quot;Run Immediately&quot;</strong> and tap <strong>Next</strong></li>
+                  <li>Tap <strong>&quot;New Blank Automation&quot;</strong></li>
+                  <li>Add action: <strong>&quot;Get Contents of URL&quot;</strong></li>
+                  <li>Tap the URL field and paste your <strong>webhook URL</strong> (copied above)</li>
+                  <li>Tap <strong>&quot;Show More&quot;</strong> on the action</li>
+                  <li>Set Method: <strong>POST</strong></li>
+                  <li>Set Request Body: <strong>JSON</strong></li>
+                  <li>Add a key: <code className="bg-muted px-1 rounded">text</code></li>
+                  <li>For the value: tap the field → tap <strong>&quot;Shortcut Input&quot;</strong> at the top → it inserts as a variable</li>
+                  <li>Tap <strong>Done</strong></li>
                 </ol>
+                <p className="text-xs mt-2 text-amber-600 dark:text-amber-400">
+                  ⚠️ If &quot;Shortcut Input&quot; isn&apos;t available, add a <strong>&quot;Get Text from Input&quot;</strong> action first (input = Shortcut Input), then use its output as the <code className="bg-muted px-1 rounded">text</code> value.
+                </p>
               </div>
             )}
           </div>

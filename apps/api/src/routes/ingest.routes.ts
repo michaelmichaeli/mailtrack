@@ -241,6 +241,11 @@ export const ingestRoutes: FastifyPluginAsync = async (app) => {
       text = (request.query as any)?.text;
     }
 
+    // Log for debugging (especially Apple Shortcuts)
+    request.server.log.info(
+      `[ingest/sms] method=${request.method} content-type=${request.headers['content-type'] ?? 'none'} body-type=${typeof request.body} text-len=${text?.length ?? 0} has-text=${!!text}`
+    );
+
     const result = await handleSmsIngest(app, key, text ?? '', source);
     return reply.status(result.status).send(result.body);
   };

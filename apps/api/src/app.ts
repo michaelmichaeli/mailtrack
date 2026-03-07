@@ -56,6 +56,18 @@ export async function buildApp() {
     done(null, body);
   });
 
+  // Accept form-urlencoded bodies (some iOS Shortcuts send this format)
+  app.addContentTypeParser("application/x-www-form-urlencoded", { parseAs: "string" }, (_req, body, done) => {
+    try {
+      const params = new URLSearchParams(body as string);
+      const obj: Record<string, string> = {};
+      for (const [k, v] of params) obj[k] = v;
+      done(null, obj);
+    } catch {
+      done(null, body);
+    }
+  });
+
   // Routes
   await app.register(registerRoutes, { prefix: "/api" });
 
