@@ -129,7 +129,7 @@ export default function ProfilePage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Profile</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Your account information</p>
+          <p className="text-sm text-muted-foreground/80 mt-0.5">Your account information</p>
         </div>
         <div className="hidden md:block">
           <NotificationBell />
@@ -138,54 +138,61 @@ export default function ProfilePage() {
 
       {/* Avatar + Name */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-4">
+        <div className="relative">
+          {/* Gradient banner */}
+          <div className="h-24 rounded-t-xl bg-gradient-to-r from-primary/20 via-violet-500/15 to-indigo-400/10">
+            <div className="absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_30%_50%,rgba(99,102,241,0.15),transparent_70%)] rounded-t-xl" />
+          </div>
+          {/* Avatar — positioned to overlap the banner */}
+          <div className="absolute left-5 bottom-0 translate-y-1/2 z-10">
             {user.avatar ? (
               <img
                 src={user.avatar}
                 alt={user.name}
-                width={64}
-                height={64}
-                className="h-16 w-16 rounded-full border-2 border-border shadow-sm object-cover"
+                width={80}
+                height={80}
+                className="h-20 w-20 rounded-full border-4 border-card shadow-lg object-cover"
                 referrerPolicy="no-referrer"
               />
             ) : (
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center border-2 border-border">
-                <User className="h-8 w-8 text-primary" />
+              <div className="h-20 w-20 rounded-full bg-gradient-to-br from-primary/20 to-violet-500/20 flex items-center justify-center border-4 border-card shadow-lg">
+                <User className="h-9 w-9 text-primary" />
               </div>
             )}
-            <div className="flex-1 min-w-0">
-              {editing ? (
-                <div className="flex items-center gap-2">
-                  <Input
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="h-9"
-                    autoFocus
-                    onKeyDown={(e) => e.key === "Enter" && handleSaveName()}
-                  />
-                  <Button size="sm" onClick={handleSaveName} disabled={saving}>
-                    <Save className="h-4 w-4" />
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => { setEditing(false); setEditName(user.name); }}>
-                    Cancel
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-semibold truncate">{user.name}</h2>
-                  <button
-                    onClick={() => setEditing(true)}
-                    className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                    title="Edit name"
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              )}
-              <p className="text-sm text-muted-foreground truncate">{user.email}</p>
-            </div>
           </div>
+        </div>
+        <CardContent className="pt-14 pb-5">
+          <div className="flex items-center gap-2">
+            {editing ? (
+              <div className="flex items-center gap-2 flex-1">
+                <Input
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="h-9"
+                  autoFocus
+                  onKeyDown={(e) => e.key === "Enter" && handleSaveName()}
+                />
+                <Button size="sm" onClick={handleSaveName} disabled={saving}>
+                  <Save className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => { setEditing(false); setEditName(user.name); }}>
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <>
+                <h2 className="text-xl font-semibold truncate">{user.name}</h2>
+                <button
+                  onClick={() => setEditing(true)}
+                  className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                  title="Edit name"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+              </>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground truncate mt-0.5">{user.email}</p>
         </CardContent>
       </Card>
 
@@ -297,33 +304,45 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-4">
-              <div className="rounded-lg border border-border p-3 text-center">
-                <Package className="h-5 w-5 mx-auto mb-1 text-primary" />
+              <div className="rounded-xl border border-border/60 p-3 text-center hover:shadow-sm transition-shadow">
+                <div className="mx-auto mb-2 h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Package className="h-4 w-4 text-primary" />
+                </div>
                 <p className="text-2xl font-bold">{stats.totalOrders}</p>
                 <p className="text-[11px] text-muted-foreground">Orders</p>
               </div>
-              <div className="rounded-lg border border-border p-3 text-center">
-                <Truck className="h-5 w-5 mx-auto mb-1 text-blue-500" />
+              <div className="rounded-xl border border-border/60 p-3 text-center hover:shadow-sm transition-shadow">
+                <div className="mx-auto mb-2 h-9 w-9 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <Truck className="h-4 w-4 text-blue-500" />
+                </div>
                 <p className="text-2xl font-bold">{stats.totalPackages}</p>
                 <p className="text-[11px] text-muted-foreground">Packages</p>
               </div>
-              <div className="rounded-lg border border-border p-3 text-center">
-                <CheckCircle2 className="h-5 w-5 mx-auto mb-1 text-green-500" />
+              <div className="rounded-xl border border-border/60 p-3 text-center hover:shadow-sm transition-shadow">
+                <div className="mx-auto mb-2 h-9 w-9 rounded-lg bg-green-500/10 flex items-center justify-center">
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                </div>
                 <p className="text-2xl font-bold">{stats.deliveredPackages}</p>
                 <p className="text-[11px] text-muted-foreground">Delivered</p>
               </div>
-              <div className="rounded-lg border border-border p-3 text-center">
-                <Store className="h-5 w-5 mx-auto mb-1 text-orange-500" />
+              <div className="rounded-xl border border-border/60 p-3 text-center hover:shadow-sm transition-shadow">
+                <div className="mx-auto mb-2 h-9 w-9 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                  <Store className="h-4 w-4 text-orange-500" />
+                </div>
                 <p className="text-2xl font-bold">{stats.uniqueStores}</p>
                 <p className="text-[11px] text-muted-foreground">Stores</p>
               </div>
-              <div className="rounded-lg border border-border p-3 text-center">
-                <Truck className="h-5 w-5 mx-auto mb-1 text-violet-500" />
+              <div className="rounded-xl border border-border/60 p-3 text-center hover:shadow-sm transition-shadow">
+                <div className="mx-auto mb-2 h-9 w-9 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                  <Truck className="h-4 w-4 text-violet-500" />
+                </div>
                 <p className="text-2xl font-bold">{stats.uniqueCarriers}</p>
                 <p className="text-[11px] text-muted-foreground">Carriers</p>
               </div>
-              <div className="rounded-lg border border-border p-3 text-center">
-                <Bell className="h-5 w-5 mx-auto mb-1 text-yellow-500" />
+              <div className="rounded-xl border border-border/60 p-3 text-center hover:shadow-sm transition-shadow">
+                <div className="mx-auto mb-2 h-9 w-9 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+                  <Bell className="h-4 w-4 text-yellow-500" />
+                </div>
                 <p className="text-2xl font-bold">{stats.totalNotifications}</p>
                 <p className="text-[11px] text-muted-foreground">Notifications</p>
               </div>

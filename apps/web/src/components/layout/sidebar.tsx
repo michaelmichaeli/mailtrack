@@ -66,7 +66,7 @@ export function Sidebar() {
   const sidebarContent = (
     <>
       {/* Logo */}
-      <div className="flex items-center gap-3 border-b border-border px-5 py-4">
+      <div className="flex items-center gap-3 border-b border-border/60 px-5 py-4">
         <Link href="/packages" className="flex items-center gap-3 min-w-0">
           <Image src="/logo.png" alt="MailTrack" width={36} height={36} className="drop-shadow-sm" />
           <div>
@@ -85,7 +85,7 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1">
-        <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Menu</p>
+        <p className="px-3 mb-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Menu</p>
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname.startsWith(item.href);
@@ -94,13 +94,16 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
+                "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
                 isActive
-                  ? "bg-accent text-accent-foreground shadow-sm"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "bg-gradient-to-r from-primary/15 to-violet-500/10 text-foreground shadow-sm border border-primary/20"
+                  : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
               )}
             >
-              <Icon className={cn("h-[18px] w-[18px]", isActive && "text-primary")} />
+              {isActive && (
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-full bg-primary" />
+              )}
+              <Icon className={cn("h-[18px] w-[18px] transition-colors", isActive ? "text-primary" : "")} />
               {item.label}
             </Link>
           );
@@ -108,17 +111,17 @@ export function Sidebar() {
       </nav>
 
       {/* Bottom actions */}
-      <div className="border-t border-border px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] space-y-0.5">
+      <div className="border-t border-border/60 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] space-y-0.5">
         <button
           onClick={cycleTheme}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all duration-200"
         >
           <ThemeIcon className="h-[18px] w-[18px]" />
           Theme: {themeLabel}
         </button>
         <button
           onClick={handleSignOut}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-destructive transition-colors"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
         >
           <LogOut className="h-[18px] w-[18px]" />
           Sign out
@@ -162,7 +165,7 @@ export function Sidebar() {
       </aside>
 
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex h-screen w-60 flex-col border-r border-border bg-card flex-shrink-0">
+      <aside className="hidden md:flex h-screen w-60 flex-col border-r border-border/40 bg-gradient-to-b from-card via-card to-accent/30 flex-shrink-0">
         {sidebarContent}
       </aside>
 

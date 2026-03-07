@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { PackageProgressBar } from "./package-progress-bar";
 import { Package, MapPin, Clock, ShoppingBag, ChevronRight, Hash, Navigation } from "lucide-react";
 import { getCarrierDisplayName } from "@/lib/carrier-urls";
@@ -60,9 +61,22 @@ export function PackageCard({ order }: OrderCardProps) {
       ? `${order.currency === "EUR" ? "€" : order.currency === "GBP" ? "£" : "$"}${Number(order.totalAmount).toFixed(2)}`
       : null;
 
+  const statusColors: Record<string, string> = {
+    ORDERED: "bg-status-ordered",
+    PROCESSING: "bg-status-processing",
+    SHIPPED: "bg-status-shipped",
+    IN_TRANSIT: "bg-status-in-transit",
+    OUT_FOR_DELIVERY: "bg-status-out-for-delivery",
+    DELIVERED: "bg-status-delivered",
+    EXCEPTION: "bg-status-exception",
+    RETURNED: "bg-status-returned",
+  };
+
   return (
     <Link href={`/orders/${order.id}`}>
-      <Card className="flex flex-col h-full p-4 hover:shadow-lg hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group">
+      <Card className="relative flex flex-col h-full p-4 pl-5 hover:shadow-lg hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group border-border/60 overflow-hidden">
+        {/* Status accent bar */}
+        <div className={cn("absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl", statusColors[status] || "bg-muted")} />
         {/* Row 1: Merchant + badge */}
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="flex items-center gap-2.5 min-w-0">

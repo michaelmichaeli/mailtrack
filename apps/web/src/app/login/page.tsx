@@ -36,11 +36,22 @@ function LoginForm() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-50 via-background to-violet-50 dark:from-indigo-950/20 dark:via-background dark:to-violet-950/20 p-4">
-      <Card className="w-full max-w-md shadow-xl border-border/50">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-50 via-background to-violet-50 dark:from-indigo-950/30 dark:via-background dark:to-violet-950/30 p-4 relative overflow-hidden">
+      {/* Decorative background orbs */}
+      <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] rounded-full bg-primary/[0.07] blur-3xl animate-shimmer" />
+      <div className="absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] rounded-full bg-violet-500/[0.07] blur-3xl animate-shimmer" style={{ animationDelay: '3s' }} />
+      <div className="absolute top-[30%] right-[15%] w-[250px] h-[250px] rounded-full bg-indigo-400/[0.06] blur-2xl animate-float" />
+      <div className="absolute bottom-[30%] left-[10%] w-[200px] h-[200px] rounded-full bg-violet-400/[0.05] blur-2xl animate-float" style={{ animationDelay: '2s' }} />
+
+      <Card className="w-full max-w-md shadow-2xl border-border/30 backdrop-blur-sm relative z-10 overflow-hidden">
+        {/* Top gradient strip */}
+        <div className="h-1 w-full bg-gradient-to-r from-primary via-violet-500 to-primary" />
         <CardHeader className="text-center pb-2">
           <div className="flex justify-center mb-4">
-            <Image src="/logo.png" alt="MailTrack" width={56} height={56} className="drop-shadow-lg" />
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl scale-[2]" />
+              <Image src="/logo.png" alt="MailTrack" width={56} height={56} className="drop-shadow-lg relative" />
+            </div>
           </div>
           <CardTitle className="text-2xl font-bold tracking-tight">Welcome to MailTrack</CardTitle>
           <CardDescription className="text-sm">

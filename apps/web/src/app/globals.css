@@ -185,3 +185,39 @@
   animation: logo-spin 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   perspective: 600px;
 }
+
+/* Shimmer animation for decorative elements */
+@keyframes shimmer {
+  0% { opacity: 0.5; transform: translateX(-10px); }
+  50% { opacity: 1; transform: translateX(10px); }
+  100% { opacity: 0.5; transform: translateX(-10px); }
+}
+
+.animate-shimmer {
+  animation: shimmer 6s ease-in-out infinite;
+}
+
+/* Gentle floating animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Soft gradient text utility */
+.text-gradient {
+  background: linear-gradient(135deg, var(--primary), #8B5CF6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dark .text-gradient {
+  background: linear-gradient(135deg, var(--primary), #A78BFA);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

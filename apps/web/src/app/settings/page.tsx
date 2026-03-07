@@ -161,7 +161,7 @@ function SettingsContent() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Settings</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Manage your account and preferences</p>
+          <p className="text-sm text-muted-foreground/80 mt-0.5">Manage your account and preferences</p>
         </div>
         <div className="hidden md:block">
           <NotificationBell />

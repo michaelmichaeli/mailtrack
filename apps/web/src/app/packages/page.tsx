@@ -216,7 +216,7 @@ function PackagesContent() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground">Orders</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">Every package, one dashboard.</p>
+            <p className="text-sm text-muted-foreground/80 mt-0.5">Every package, one dashboard.</p>
           </div>
           <div className="flex items-center gap-2">
             <AddPackageDialog />
@@ -266,10 +266,10 @@ function PackagesContent() {
         </FadeIn>
       ) : stats && stats.total > 0 && (
         <FadeIn delay={0.05}>
-          <Card className="overflow-hidden border-border/60">
+          <Card className="overflow-hidden border-border/60 bg-gradient-to-r from-card via-card to-accent/20">
             <div className="flex flex-col sm:flex-row">
               <div className="flex items-center gap-4 px-5 py-4 sm:border-r border-b sm:border-b-0 border-border/60 sm:min-w-[160px]">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 shrink-0">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 shrink-0 ring-1 ring-primary/20">
                   <TrendingUp className="h-5 w-5 text-primary" />
                 </div>
                 <div>

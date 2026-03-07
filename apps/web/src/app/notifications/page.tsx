@@ -116,7 +116,7 @@ export default function NotificationsPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground">Notifications</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
+            <p className="text-sm text-muted-foreground/80 mt-0.5">
               Stay updated on your package deliveries
             </p>
           </div>
@@ -213,13 +213,14 @@ export default function NotificationsPage() {
               </div>
             ) : allNotifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 px-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted mb-3">
-                  <Bell className="h-6 w-6 text-muted-foreground/50" />
+                <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 to-violet-500/10 mb-4">
+                  <Bell className="h-7 w-7 text-primary/40" />
+                  <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-muted-foreground/20" />
                 </div>
-                <p className="text-sm font-medium text-muted-foreground">
+                <p className="text-sm font-semibold text-foreground/70">
                   {filter === "unread" ? "No unread notifications" : "No notifications yet"}
                 </p>
-                <p className="text-xs text-muted-foreground/70 mt-1 text-center">
+                <p className="text-xs text-muted-foreground/60 mt-1.5 text-center max-w-[240px]">
                   You&apos;ll see updates here when your packages change status
                 </p>
               </div>
@@ -231,17 +232,21 @@ export default function NotificationsPage() {
                       key={n.id}
                       onClick={() => handleClick(n)}
                       className={cn(
-                        "group flex items-start gap-3 px-5 py-4 transition-colors",
+                        "group relative flex items-start gap-3 px-5 py-4 transition-all duration-200",
                         n.orderId && "cursor-pointer",
                         !n.read
                           ? "bg-primary/5 hover:bg-primary/10"
                           : "hover:bg-muted/50"
                       )}
                     >
+                      {/* Unread accent bar */}
+                      {!n.read && (
+                        <div className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full bg-primary" />
+                      )}
                       {/* Icon */}
                       <div className={cn(
                         "flex h-9 w-9 items-center justify-center rounded-lg shrink-0 text-base",
-                        !n.read ? "bg-primary/10" : "bg-muted"
+                        !n.read ? "bg-gradient-to-br from-primary/15 to-violet-500/10" : "bg-muted"
                       )}>
                         {n.icon || "📦"}
                       </div>
