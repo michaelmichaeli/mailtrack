@@ -61,12 +61,13 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(404).send({ error: "Order not found" });
     }
 
-    // Delete events → packages → order (cascade)
+    // Delete events → packages → notifications → order
     const packageIds = order.packages.map((p: any) => p.id);
     if (packageIds.length > 0) {
       await app.prisma.trackingEvent.deleteMany({ where: { packageId: { in: packageIds } } });
       await app.prisma.package.deleteMany({ where: { id: { in: packageIds } } });
     }
+    await app.prisma.notification.deleteMany({ where: { orderId: id, userId } });
     await app.prisma.order.delete({ where: { id } });
 
     return { success: true };

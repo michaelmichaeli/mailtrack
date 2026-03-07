@@ -62,6 +62,8 @@ export default function OrderDetailPage() {
       toast.success("Order deleted");
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["packages"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
       router.push("/packages");
     },
     onError: (err: any) => {
