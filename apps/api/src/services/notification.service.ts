@@ -67,7 +67,10 @@ export async function notifyStatusChange(
     where: { userId },
   });
 
-  if (!pref?.pushEnabled || !pref?.pushSubscription) return;
+  if (!pref?.pushEnabled || !pref?.pushSubscription) {
+    console.log(`[push] Skipping push for user ${userId}: pushEnabled=${pref?.pushEnabled}, hasSubscription=${!!pref?.pushSubscription}`);
+    return;
+  }
 
   const statusLabels: Record<string, string> = {
     ORDERED: "Ordered",

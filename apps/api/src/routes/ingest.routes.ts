@@ -200,7 +200,9 @@ async function handleSmsIngest(app: any, key: string, text: string, source?: str
           metadata: JSON.stringify({ trackingNumber: item.trackingNumber, carrier: item.carrier }),
         },
       });
+      app.log.info(`[ingest/sms] Created notification for ${item.trackingNumber}, attempting push...`);
       await notifyStatusChange(app.prisma, user.id, item.trackingNumber, "NEW", "PROCESSING", order.packages[0].id);
+      app.log.info(`[ingest/sms] Push notification sent for ${item.trackingNumber}`);
     } catch (e) {
       app.log.error(`[ingest/sms] Error sending notification for ${item.trackingNumber}: ${e}`);
     }
