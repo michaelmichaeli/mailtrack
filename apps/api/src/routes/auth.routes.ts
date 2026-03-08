@@ -406,45 +406,52 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
   // POST /api/auth/passkey/register — Verify and store passkey (authenticated)
   app.post("/passkey/register", {
     preHandler: [app.authenticate],
-  }, async (request) => {
+  }, async (request, reply) => {
     const userId = request.user.userId;
     const body = request.body as any;
     const friendlyName = body.friendlyName ?? "Passkey";
 
     const expectedChallenge = await app.redis.get(`passkey:challenge:${userId}`);
-    if (!expectedChallenge) throw new Error("Challenge expired. Please try again.");
-
-    const { verifyRegistrationResponse } = await import("@simplewebauthn/server");
-    const verification = await verifyRegistrationResponse({
-      response: body,
-      expectedChallenge,
-      expectedOrigin: getExpectedOrigin(),
-      expectedRPID: getRpId(),
-    });
-
-    if (!verification.verified || !verification.registrationInfo) {
-      throw new Error("Passkey verification failed");
+    if (!expectedChallenge) {
+      return reply.status(400).send({ message: "Challenge expired. Please try again." });
     }
 
-    const { credential, credentialDeviceType, credentialBackedUp } = verification.registrationInfo;
+    try {
+      const { verifyRegistrationResponse } = await import("@simplewebauthn/server");
+      const verification = await verifyRegistrationResponse({
+        response: body,
+        expectedChallenge,
+        expectedOrigin: getExpectedOrigin(),
+        expectedRPID: getRpId(),
+      });
 
-    await app.prisma.passkey.create({
-      data: {
-        userId,
-        credentialId: credential.id,
-        publicKey: Buffer.from(credential.publicKey).toString("base64url"),
-        counter: BigInt(credential.counter),
-        deviceType: credentialDeviceType,
-        backedUp: credentialBackedUp,
-        transports: body.response?.transports ? JSON.stringify(body.response.transports) : null,
-        friendlyName,
-      },
-    });
+      if (!verification.verified || !verification.registrationInfo) {
+        return reply.status(400).send({ message: "Passkey verification failed" });
+      }
 
-    await app.redis.del(`passkey:challenge:${userId}`);
-    await logAudit(app, userId, "PASSKEY_REGISTER", `Name: ${friendlyName}`, request.ip);
+      const { credential, credentialDeviceType, credentialBackedUp } = verification.registrationInfo;
 
-    return { success: true, message: "Passkey registered successfully" };
+      await app.prisma.passkey.create({
+        data: {
+          userId,
+          credentialId: credential.id,
+          publicKey: Buffer.from(credential.publicKey).toString("base64url"),
+          counter: BigInt(credential.counter),
+          deviceType: credentialDeviceType,
+          backedUp: credentialBackedUp,
+          transports: body.response?.transports ? JSON.stringify(body.response.transports) : null,
+          friendlyName,
+        },
+      });
+
+      await app.redis.del(`passkey:challenge:${userId}`);
+      await logAudit(app, userId, "PASSKEY_REGISTER", `Name: ${friendlyName}`, request.ip);
+
+      return { success: true, message: "Passkey registered successfully" };
+    } catch (err: any) {
+      app.log.error(err, "Passkey registration failed");
+      return reply.status(400).send({ message: err.message ?? "Passkey registration failed" });
+    }
   });
 
   // POST /api/auth/passkey/login-options — Get authentication options (unauthenticated)

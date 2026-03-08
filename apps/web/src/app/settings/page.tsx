@@ -339,7 +339,8 @@ function SettingsContent() {
                 refetchPasskeys();
               } catch (err: any) {
                 if (err?.name !== "NotAllowedError") {
-                  toast.error("Failed to register passkey");
+                  console.error("Passkey registration error:", err);
+                  toast.error(err?.message ?? "Failed to register passkey");
                 }
               } finally {
                 setRegisteringPasskey(false);
