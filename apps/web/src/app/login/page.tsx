@@ -19,6 +19,7 @@ function LoginForm() {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
   const [devLoading, setDevLoading] = useState(false);
+  const [passkeyError, setPasskeyError] = useState<string | null>(null);
   const errorParam = searchParams.get("error");
 
   const handleGoogleLogin = () => {
@@ -38,6 +39,7 @@ function LoginForm() {
 
   const handlePasskeyLogin = async () => {
     setLoading("passkey");
+    setPasskeyError(null);
     try {
       const options = await api.getPasskeyLoginOptions();
       const credential = await startAuthentication({ optionsJSON: options });
@@ -45,9 +47,12 @@ function LoginForm() {
       router.push("/packages");
     } catch (err: any) {
       setLoading(null);
-      // User cancelled or no passkey available — silently ignore
-      if (err?.name === "NotAllowedError") return;
+      if (err?.name === "NotAllowedError") {
+        console.warn("Passkey login dismissed or not available:", err.message);
+        return;
+      }
       console.error("Passkey login failed:", err);
+      setPasskeyError(err?.response?.error ?? err?.message ?? "Passkey login failed");
     }
   };
 
@@ -85,10 +90,10 @@ function LoginForm() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 pt-2">
-          {errorParam && (
+          {(errorParam || passkeyError) && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{errorParam}</AlertDescription>
+              <AlertDescription>{errorParam || passkeyError}</AlertDescription>
             </Alert>
           )}
 

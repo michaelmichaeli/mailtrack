@@ -481,8 +481,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(401).send({ error: "Passkey not recognized" });
     }
 
-    const challengeKey = `passkey:login-challenge:${body.response?.clientDataJSON ? "" : ""}`;
-    // We need to extract challenge from clientDataJSON to verify
+    // Extract challenge from clientDataJSON to verify against stored challenge
     const { verifyAuthenticationResponse } = await import("@simplewebauthn/server");
 
     // Find the challenge — decode clientDataJSON to get it
@@ -788,6 +787,20 @@ function getRpId(): string {
   }
 }
 
-function getExpectedOrigin(): string {
-  return process.env.WEB_URL ?? "http://localhost:3003";
+function getExpectedOrigin(): string[] {
+  const webUrl = process.env.WEB_URL ?? "http://localhost:3003";
+  const origins = [webUrl];
+  // Support both www and non-www variants, and ios/android app origins
+  try {
+    const url = new URL(webUrl);
+    if (url.hostname.startsWith("www.")) {
+      origins.push(`${url.protocol}//${url.hostname.slice(4)}${url.port ? `:${url.port}` : ""}`);
+    } else {
+      origins.push(`${url.protocol}//www.${url.hostname}${url.port ? `:${url.port}` : ""}`);
+    }
+  } catch {}
+  if (process.env.PASSKEY_EXTRA_ORIGINS) {
+    origins.push(...process.env.PASSKEY_EXTRA_ORIGINS.split(",").map(o => o.trim()));
+  }
+  return origins;
 }
