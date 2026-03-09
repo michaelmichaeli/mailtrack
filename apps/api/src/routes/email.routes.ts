@@ -91,7 +91,7 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
         let existingPkg: any = null;
         if (parsed.trackingNumber) {
           existingPkg = await app.prisma.package.findFirst({
-            where: { trackingNumber: parsed.trackingNumber },
+            where: { trackingNumber: parsed.trackingNumber, order: { userId } },
             include: { order: true },
           });
           if (existingPkg && !existingOrder) {
@@ -233,7 +233,7 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
           if (!existingPkg) {
             // Re-check in case another email in this batch already created it
             existingPkg = await app.prisma.package.findFirst({
-              where: { trackingNumber: parsed.trackingNumber },
+              where: { trackingNumber: parsed.trackingNumber, order: { userId } },
             });
           }
 
