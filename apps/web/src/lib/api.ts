@@ -261,7 +261,7 @@ class ApiClient {
   }
 
   async disconnectEmail(id: string) {
-    return this.request(`/email/${id}`, { method: "DELETE" });
+    return this.request(`/email/${id}/disconnect`, { method: "POST" });
   }
 
   // Settings

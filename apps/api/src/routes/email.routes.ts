@@ -449,7 +449,29 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
     };
   });
 
-  // DELETE /api/email/:id — Disconnect email
+  // POST /api/email/:id/disconnect — Disconnect email
+  app.post("/:id/disconnect", {
+    preHandler: [app.authenticate],
+  }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const userId = request.user.userId;
+
+    const email = await app.prisma.connectedEmail.findFirst({
+      where: { id, userId },
+    });
+
+    if (!email) {
+      return reply.status(404).send({ error: "Connected email not found" });
+    }
+
+    await app.prisma.connectedEmail.delete({ where: { id } });
+
+    await logAudit(app, userId, "EMAIL_DISCONNECT", `${email.provider}: ${email.email}`, request.ip);
+
+    return { success: true };
+  });
+
+  // DELETE /api/email/:id — Disconnect email (legacy)
   app.delete("/:id", {
     preHandler: [app.authenticate],
   }, async (request, reply) => {
