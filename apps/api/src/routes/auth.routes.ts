@@ -20,6 +20,17 @@ import { encrypt } from "../lib/encryption.js";
 import { EmailProvider } from "@mailtrack/shared";
 
 const WEB_URL = process.env.WEB_URL ?? "http://localhost:3003";
+const isProduction = process.env.NODE_ENV === "production";
+
+function getRefreshCookieOptions() {
+  return {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "none" as const : "lax" as const,
+    path: "/api/auth",
+    maxAge: 30 * 24 * 60 * 60,
+  };
+}
 
 export const authRoutes: FastifyPluginAsync = async (app) => {
   // GET /api/auth/google — Redirect to Google OAuth consent screen
@@ -36,13 +47,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         authProvider: "GOOGLE" as AuthProvider,
       });
       const tokens = await generateTokens(app, user.id);
-      reply.setCookie("refreshToken", tokens.refreshToken, {
-        httpOnly: true,
-        secure: false,
-        sameSite: "lax",
-        path: "/api/auth",
-        maxAge: 30 * 24 * 60 * 60,
-      });
+      reply.setCookie("refreshToken", tokens.refreshToken, getRefreshCookieOptions());
       return reply.redirect(`${WEB_URL}/auth/callback?token=${tokens.accessToken}`);
     }
 
@@ -149,13 +154,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
 
       await logAudit(app, user.id, "LOGIN", "Provider: GOOGLE (OAuth)", request.ip);
 
-      reply.setCookie("refreshToken", tokens.refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/api/auth",
-        maxAge: 30 * 24 * 60 * 60,
-      });
+      reply.setCookie("refreshToken", tokens.refreshToken, getRefreshCookieOptions());
 
       return reply.redirect(`${WEB_URL}/auth/callback?token=${tokens.accessToken}`);
     } catch (err: any) {
@@ -178,13 +177,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
 
       const tokens = await generateTokens(app, user.id);
 
-      reply.setCookie("refreshToken", tokens.refreshToken, {
-        httpOnly: true,
-        secure: false,
-        sameSite: "lax",
-        path: "/api/auth",
-        maxAge: 30 * 24 * 60 * 60,
-      });
+      reply.setCookie("refreshToken", tokens.refreshToken, getRefreshCookieOptions());
 
       return {
         accessToken: tokens.accessToken,
@@ -235,13 +228,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     await logAudit(app, user.id, "LOGIN", `Provider: ${body.provider}`, request.ip);
 
     // Set refresh token as httpOnly cookie
-    reply.setCookie("refreshToken", tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/api/auth",
-      maxAge: 30 * 24 * 60 * 60, // 30 days
-    });
+    reply.setCookie("refreshToken", tokens.refreshToken, getRefreshCookieOptions());
 
     return {
       accessToken: tokens.accessToken,
@@ -293,13 +280,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       const tokens = await generateTokens(app, user.id);
       await logAudit(app, user.id, "LOGIN", "Provider: GITHUB (OAuth)", request.ip);
 
-      reply.setCookie("refreshToken", tokens.refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/api/auth",
-        maxAge: 30 * 24 * 60 * 60,
-      });
+      reply.setCookie("refreshToken", tokens.refreshToken, getRefreshCookieOptions());
 
       return reply.redirect(`${WEB_URL}/auth/callback?token=${tokens.accessToken}`);
     } catch (err: any) {
@@ -353,13 +334,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       const tokens = await generateTokens(app, user.id);
       await logAudit(app, user.id, "LOGIN", "Provider: APPLE (OAuth)", request.ip);
 
-      reply.setCookie("refreshToken", tokens.refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/api/auth",
-        maxAge: 30 * 24 * 60 * 60,
-      });
+      reply.setCookie("refreshToken", tokens.refreshToken, getRefreshCookieOptions());
 
       return reply.redirect(`${WEB_URL}/auth/callback?token=${tokens.accessToken}`);
     } catch (err: any) {
@@ -519,13 +494,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     const tokens = await generateTokens(app, passkey.userId);
     await logAudit(app, passkey.userId, "LOGIN", "Provider: PASSKEY", request.ip);
 
-    reply.setCookie("refreshToken", tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/api/auth",
-      maxAge: 30 * 24 * 60 * 60,
-    });
+    reply.setCookie("refreshToken", tokens.refreshToken, getRefreshCookieOptions());
 
     return {
       accessToken: tokens.accessToken,

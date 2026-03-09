@@ -34,9 +34,11 @@ export default function NotFound() {
   const [boxes, setBoxes] = useState<Box[]>([]);
   const [score, setScore] = useState(0);
   const [shaking, setShaking] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     setMessage(MESSAGES[Math.floor(Math.random() * MESSAGES.length)]);
+    setIsLoggedIn(!!localStorage.getItem("mailtrack_token"));
   }, []);
 
   // Spawn floating boxes
@@ -85,10 +87,14 @@ export default function NotFound() {
 
   return (
     <div className="flex h-screen">
-      <Sidebar />
-      <div className="fixed top-4 right-4 z-40">
-        <NotificationBell />
-      </div>
+      {isLoggedIn && (
+        <>
+          <Sidebar />
+          <div className="fixed top-4 right-4 z-40">
+            <NotificationBell />
+          </div>
+        </>
+      )}
       <main className="flex-1 overflow-y-auto overflow-x-hidden relative">
         {/* Floating boxes */}
         {boxes.map((box) => (
