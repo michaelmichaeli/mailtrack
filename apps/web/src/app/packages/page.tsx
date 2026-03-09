@@ -98,6 +98,7 @@ function PackagesContent() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState<string | null>(null);
   const [scanOpen, setScanOpen] = useState(false);
+  const [didAutoSync, setDidAutoSync] = useState(false);
   const observerRef = useRef<HTMLDivElement>(null);
   const debouncedQuery = useDebounce(query, 300);
 
@@ -205,6 +206,20 @@ function PackagesContent() {
   };
 
   const busy = isSyncing;
+
+  // Auto-sync when user has connected emails but zero packages
+  useEffect(() => {
+    if (didAutoSync || isSyncing || isLoading || totalCount > 0) return;
+    let cancelled = false;
+    api.getConnectedAccounts().then((accounts: any) => {
+      if (cancelled || !accounts?.emails?.length) return;
+      setDidAutoSync(true);
+      toast.info("Auto-syncing your connected email…");
+      handleFullSync();
+    }).catch(() => {});
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalCount, isLoading, didAutoSync, isSyncing]);
 
   // Toggle status filter — click same pill again to clear
   const toggleStatus = (s: string) => setStatus((prev) => (prev === s ? "" : s));
