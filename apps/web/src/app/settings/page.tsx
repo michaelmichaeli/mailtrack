@@ -116,6 +116,9 @@ function SettingsContent() {
       toast.success("Email disconnected");
       queryClient.invalidateQueries({ queryKey: ["connected-accounts"] });
     },
+    onError: (err: any) => {
+      toast.error(err?.message ?? "Failed to disconnect email");
+    },
   });
 
   const updateNotifications = useMutation({
