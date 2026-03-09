@@ -261,7 +261,17 @@ class ApiClient {
   }
 
   async disconnectEmail(id: string) {
-    return this.request(`/email/${id}/disconnect`, { method: "POST" });
+    // Use same-origin Next.js proxy to avoid CORS preflight with DELETE
+    const authToken = this.loadToken();
+    const res = await fetch(`/api/email/${id}/disconnect`, {
+      method: "POST",
+      headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+    });
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({ message: "Request failed" }));
+      throw new Error(error.message ?? error.error ?? `HTTP ${res.status}`);
+    }
+    return res.json();
   }
 
   // Settings
