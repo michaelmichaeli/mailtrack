@@ -33,6 +33,8 @@ export async function buildApp() {
       /\.vercel\.app$/,
     ],
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   });
 
   // Cookies (for refresh tokens)
