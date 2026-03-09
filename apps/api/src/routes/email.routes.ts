@@ -72,7 +72,11 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
         totalParsed++;
 
         // No tracking number = no actionable data for the user. Skip.
-        if (!parsed.trackingNumber) continue;
+        if (!parsed.trackingNumber) {
+          console.log(`[email-sync] No tracking number found in email from="${email.from}" subject="${email.subject.slice(0, 80)}"`);
+          continue;
+        }
+        console.log(`[email-sync] Found tracking=${parsed.trackingNumber} carrier=${parsed.carrier} from="${email.from}" subject="${email.subject.slice(0, 80)}"`);
 
         // --- Order resolution: find the right order to attach this email to ---
         const externalId = parsed.orderId ?? `gmail-${email.id}`;
