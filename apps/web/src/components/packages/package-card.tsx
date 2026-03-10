@@ -130,6 +130,20 @@ export function PackageCard({ order }: OrderCardProps) {
               <p className="text-xs font-medium" style={{ color: '#ffffff' }}>{status === "DELIVERED" ? "Picked up" : "Ready for pickup"}</p>
               <p className="text-[11px] truncate" style={{ color: '#d1fae5' }}>{pickup.address || pickup.name}</p>
             </div>
+            {(pickup.address || pickup.name) && status !== "DELIVERED" && (
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(pickup.address || pickup.name)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="shrink-0 flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium transition-colors"
+                style={{ backgroundColor: '#065f46', color: '#d1fae5' }}
+                title="Navigate to pickup location"
+              >
+                <MapPin className="h-3 w-3" />
+                Navigate
+              </a>
+            )}
           </div>
         )}
 

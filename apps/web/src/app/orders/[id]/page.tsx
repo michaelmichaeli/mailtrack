@@ -606,7 +606,7 @@ export default function OrderDetailPage() {
                   />
                   <div className="p-3 bg-muted/30">
                     <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pickup.address)}`}
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(pickup.address)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                     >

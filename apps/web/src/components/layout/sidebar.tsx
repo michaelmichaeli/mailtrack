@@ -94,14 +94,14 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 overflow-hidden",
                 isActive
                   ? "bg-gradient-to-r from-primary/15 to-violet-500/10 text-foreground shadow-sm border border-primary/20"
                   : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
               )}
             >
               {isActive && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-full bg-primary" />
+                <span className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl bg-primary" />
               )}
               <Icon className={cn("h-[18px] w-[18px] transition-colors", isActive ? "text-primary" : "")} />
               {item.label}

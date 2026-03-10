@@ -140,10 +140,24 @@ export async function trackPackage(
       console.error(`[tracking] 17track error for ${trackingNumber}:`, error?.message);
     }
 
+    // Try parcelsapp as last resort for Israeli packages
+    try {
+      const { trackParcelsApp } = await import("./parcelsapp.service.js");
+      const resultParcels = await trackParcelsApp(trackingNumber, carrier);
+      if (resultParcels && resultParcels.events.length > 0) {
+        const cleaned = stripForeignLocations(resultParcels);
+        console.log(`[tracking] parcelsapp (location-stripped): ${cleaned.events.length} events for ${trackingNumber}`);
+        lastFetchMap.set(trackingNumber, Date.now());
+        return cleaned;
+      }
+    } catch (error: any) {
+      console.error(`[tracking] parcelsapp error for ${trackingNumber}:`, error?.message);
+    }
+
     return null;
   }
 
-  // Non-Israeli package → 17track first, Cainiao fallback (unchanged)
+  // Non-Israeli package → 17track first, parcelsapp second, Cainiao fallback
   try {
     console.log(`[tracking] Trying 17track for ${trackingNumber}...`);
     const { track17Single } = await import("./tracking17.service.js");
@@ -153,9 +167,23 @@ export async function trackPackage(
       lastFetchMap.set(trackingNumber, Date.now());
       return result17;
     }
-    console.log(`[tracking] 17track: no data for ${trackingNumber}, trying Cainiao...`);
+    console.log(`[tracking] 17track: no data for ${trackingNumber}, trying parcelsapp...`);
   } catch (error: any) {
     console.error(`[tracking] 17track error for ${trackingNumber}:`, error?.message);
+  }
+
+  // Try parcelsapp.com API
+  try {
+    const { trackParcelsApp } = await import("./parcelsapp.service.js");
+    const resultParcels = await trackParcelsApp(trackingNumber, carrier);
+    if (resultParcels && resultParcels.events.length > 0) {
+      console.log(`[tracking] parcelsapp: ${resultParcels.events.length} events for ${trackingNumber}`);
+      lastFetchMap.set(trackingNumber, Date.now());
+      return resultParcels;
+    }
+    console.log(`[tracking] parcelsapp: no data for ${trackingNumber}, trying Cainiao...`);
+  } catch (error: any) {
+    console.error(`[tracking] parcelsapp error for ${trackingNumber}:`, error?.message);
   }
 
   // Fallback to Cainiao direct API

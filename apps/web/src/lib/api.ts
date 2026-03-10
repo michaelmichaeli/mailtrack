@@ -166,6 +166,10 @@ class ApiClient {
     return this.request(`/orders/${id}`, { method: "DELETE" });
   }
 
+  async deleteAllOrders() {
+    return this.request<{ success: boolean; deleted: number }>("/orders", { method: "DELETE" });
+  }
+
   async exportData() {
     return this.request<any>("/auth/export");
   }

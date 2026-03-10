@@ -102,6 +102,13 @@ function PackagesContent() {
   const observerRef = useRef<HTMLDivElement>(null);
   const debouncedQuery = useDebounce(query, 300);
 
+  const { data: connectedAccounts } = useQuery({
+    queryKey: ["connected-accounts"],
+    queryFn: () => api.getConnectedAccounts(),
+    staleTime: 60_000,
+  });
+  const hasConnectedEmail = (connectedAccounts?.emails?.length ?? 0) > 0;
+
   // Fetch stats for the stats bar
   const { data: dashData, refetch: refetchStats, isPending: statsLoading } = useQuery({
     queryKey: ["dashboard", period],
@@ -127,6 +134,7 @@ function PackagesContent() {
   const {
     data,
     isLoading,
+    isFetching,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -150,6 +158,7 @@ function PackagesContent() {
     getNextPageParam: (lastPage: any) =>
       lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
     initialPageParam: 1,
+    placeholderData: (prev) => prev,
   });
 
   const handleObserver = useCallback(
@@ -172,54 +181,88 @@ function PackagesContent() {
   const allItems = data?.pages.flatMap((p: any) => p.items) ?? [];
   const totalCount = data?.pages[0]?.total ?? 0;
 
+  const finishSync = () => {
+    localStorage.removeItem("mailtrack_syncing");
+    setSyncProgress(null);
+    setIsSyncing(false);
+  };
+
+  const startSyncPolling = (emailCount?: number) => {
+    const poll = setInterval(async () => {
+      try {
+        const s = await api.getSyncStatus();
+        if (s.status === "running") {
+          const pct = s.total > 0 ? Math.round((s.synced / s.total) * 100) : 0;
+          setSyncProgress(`Tracking… ${pct}%`);
+        } else {
+          clearInterval(poll);
+          finishSync();
+          if (s.status === "done") {
+            const msg = emailCount != null
+              ? `Synced ${emailCount} email${emailCount !== 1 ? "s" : ""}, updated ${s.synced} package${s.synced !== 1 ? "s" : ""}`
+              : `Updated ${s.synced} package${s.synced !== 1 ? "s" : ""}`;
+            toast.success(msg);
+          } else {
+            toast.error("Tracking sync failed");
+          }
+          refetchStats();
+        }
+      } catch { clearInterval(poll); finishSync(); }
+    }, 3000);
+  };
+
   const handleFullSync = async () => {
     setIsSyncing(true);
+    localStorage.setItem("mailtrack_syncing", "true");
     try {
       setSyncProgress("Scanning emails…");
       const emailResult = await api.syncEmails();
       const emailCount = emailResult.emailsParsed ?? 0;
       setSyncProgress(emailCount > 0 ? `Found ${emailCount} emails, tracking packages…` : "Tracking packages…");
       await api.syncAllTracking();
-      const poll = setInterval(async () => {
-        try {
-          const s = await api.getSyncStatus();
-          if (s.status === "running") {
-            const pct = s.total > 0 ? Math.round((s.synced / s.total) * 100) : 0;
-            setSyncProgress(`Tracking… ${pct}%`);
-          } else {
-            clearInterval(poll);
-            setSyncProgress(null);
-            setIsSyncing(false);
-            if (s.status === "done") {
-              toast.success(`Synced ${emailCount} email${emailCount !== 1 ? "s" : ""}, updated ${s.synced} package${s.synced !== 1 ? "s" : ""}`);
-            } else {
-              toast.error("Tracking sync failed");
-            }
-            refetchStats();
-          }
-        } catch { clearInterval(poll); setSyncProgress(null); setIsSyncing(false); }
-      }, 3000);
+      startSyncPolling(emailCount);
     } catch {
-      toast.error("Failed to sync. Connect your email first.");
-      setIsSyncing(false);
+      toast.error("Failed to sync. Redirecting to connect your email…");
+      finishSync();
+      setTimeout(() => router.push("/settings"), 1500);
     }
   };
 
   const busy = isSyncing;
 
-  // Auto-sync when user has connected emails but zero packages
+  // Resume sync polling if a sync was running before page refresh
   useEffect(() => {
-    if (didAutoSync || isSyncing || isLoading || totalCount > 0) return;
+    const wasSyncing = localStorage.getItem("mailtrack_syncing");
+    if (!wasSyncing) return;
     let cancelled = false;
-    api.getConnectedAccounts().then((accounts: any) => {
-      if (cancelled || !accounts?.emails?.length) return;
-      setDidAutoSync(true);
-      toast.info("Auto-syncing your connected email…");
-      handleFullSync();
-    }).catch(() => {});
+    api.getSyncStatus().then((s) => {
+      if (cancelled) return;
+      if (s.status === "running") {
+        // Server is still tracking — resume the polling UI
+        setIsSyncing(true);
+        const pct = s.total > 0 ? Math.round((s.synced / s.total) * 100) : 0;
+        setSyncProgress(`Tracking… ${pct}%`);
+        startSyncPolling();
+      } else if (s.status === "idle") {
+        // Refresh interrupted the sync before tracking started — restart it
+        handleFullSync();
+      } else {
+        // Sync finished while we were refreshing
+        localStorage.removeItem("mailtrack_syncing");
+      }
+    }).catch(() => { localStorage.removeItem("mailtrack_syncing"); });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [totalCount, isLoading, didAutoSync, isSyncing]);
+  }, []);
+
+  // Auto-sync when user has connected emails but zero packages
+  useEffect(() => {
+    if (didAutoSync || isSyncing || isLoading || totalCount > 0 || !hasConnectedEmail) return;
+    setDidAutoSync(true);
+    toast.info("Auto-syncing your connected email…");
+    handleFullSync();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalCount, isLoading, didAutoSync, isSyncing, hasConnectedEmail]);
 
   // Toggle status filter — click same pill again to clear
   const toggleStatus = (s: string) => setStatus((prev) => (prev === s ? "" : s));
@@ -410,6 +453,7 @@ function PackagesContent() {
           <div className="flex items-center gap-3">
             {!isLoading && totalCount > 0 && (
               <p className="text-xs text-muted-foreground">
+                {isFetching && !isFetchingNextPage ? <Loader2 className="inline h-3 w-3 animate-spin mr-1" /> : null}
                 {allItems.length} of {totalCount}
               </p>
             )}
@@ -447,9 +491,15 @@ function PackagesContent() {
       ) : allItems.length === 0 ? (
         <FadeIn>
           <EmptyState
-            title="No orders found"
-            description={query || status ? "Try adjusting your search or filters" : "Connect your email to start tracking orders"}
-            action={!query && !status ? { label: "Connect email", href: "/settings" } : undefined}
+            title={query || status ? "No orders found" : hasConnectedEmail ? "No packages yet" : "No orders found"}
+            description={
+              query || status
+                ? "Try adjusting your search or filters"
+                : hasConnectedEmail
+                ? "Hit Sync All to scan your email for orders, or add a package manually"
+                : "Connect your email to start tracking orders"
+            }
+            action={!query && !status && !hasConnectedEmail ? { label: "Connect email", href: "/settings" } : undefined}
           />
         </FadeIn>
       ) : (

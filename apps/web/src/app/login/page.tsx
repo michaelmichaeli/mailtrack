@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense } from "react";
 import Image from "next/image";
@@ -21,6 +21,15 @@ function LoginForm() {
   const [devLoading, setDevLoading] = useState(false);
   const [passkeyError, setPasskeyError] = useState<string | null>(null);
   const errorParam = searchParams.get("error");
+  const [displayError, setDisplayError] = useState<string | null>(errorParam);
+
+  // Clear error from URL after capturing it so it doesn't persist on navigation
+  useEffect(() => {
+    if (errorParam) {
+      setDisplayError(errorParam);
+      router.replace("/login", { scroll: false });
+    }
+  }, [errorParam, router]);
 
   const handleGoogleLogin = () => {
     setLoading("google");
@@ -69,10 +78,10 @@ function LoginForm() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-50 via-background to-violet-50 dark:from-indigo-950/30 dark:via-background dark:to-violet-950/30 p-4 relative overflow-hidden">
       {/* Decorative background orbs */}
-      <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] rounded-full bg-primary/[0.07] blur-3xl animate-shimmer" />
-      <div className="absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] rounded-full bg-violet-500/[0.07] blur-3xl animate-shimmer" style={{ animationDelay: '3s' }} />
-      <div className="absolute top-[30%] right-[15%] w-[250px] h-[250px] rounded-full bg-indigo-400/[0.06] blur-2xl animate-float" />
-      <div className="absolute bottom-[30%] left-[10%] w-[200px] h-[200px] rounded-full bg-violet-400/[0.05] blur-2xl animate-float" style={{ animationDelay: '2s' }} />
+      <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] rounded-full bg-primary/[0.04] blur-3xl animate-float will-change-transform" style={{ animationDuration: '8s' }} />
+      <div className="absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] rounded-full bg-violet-500/[0.04] blur-3xl animate-float will-change-transform" style={{ animationDuration: '10s', animationDelay: '3s' }} />
+      <div className="absolute top-[30%] right-[15%] w-[250px] h-[250px] rounded-full bg-indigo-400/[0.03] blur-2xl animate-float will-change-transform" style={{ animationDuration: '12s' }} />
+      <div className="absolute bottom-[30%] left-[10%] w-[200px] h-[200px] rounded-full bg-violet-400/[0.03] blur-2xl animate-float will-change-transform" style={{ animationDuration: '14s', animationDelay: '2s' }} />
 
       <Card className="w-full max-w-md shadow-2xl border-border/30 backdrop-blur-sm relative z-10 overflow-hidden">
         {/* Top gradient strip */}
@@ -90,10 +99,10 @@ function LoginForm() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 pt-2">
-          {(errorParam || passkeyError) && (
+          {(displayError || passkeyError) && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{errorParam || passkeyError}</AlertDescription>
+              <AlertDescription>{displayError || passkeyError}</AlertDescription>
             </Alert>
           )}
 

@@ -34,12 +34,14 @@ import {
   LogOut,
   RotateCcw,
   KeyRound,
+  Globe,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { NotificationBell } from "@/components/notifications/notification-bell";
@@ -66,6 +68,22 @@ function SettingsContent() {
   const successParam = searchParams.get("success");
   const autoSync = searchParams.get("autoSync");
   const [didAutoSync, setDidAutoSync] = useState(false);
+  const [language, setLanguage] = useState(() => {
+    if (typeof window !== "undefined") return localStorage.getItem("mailtrack_language") ?? "en";
+    return "en";
+  });
+  const [displayError, setDisplayError] = useState<string | null>(errorParam);
+  const [displaySuccess, setDisplaySuccess] = useState<string | null>(successParam);
+
+  // Clear error/success from URL after capturing so they don't persist on navigation
+  useEffect(() => {
+    if (errorParam || successParam) {
+      if (errorParam) setDisplayError(errorParam);
+      if (successParam) setDisplaySuccess(successParam);
+      const cleanUrl = autoSync ? "/settings" : "/settings";
+      router.replace(cleanUrl, { scroll: false });
+    }
+  }, [errorParam, successParam, autoSync, router]);
 
   const { data: accounts } = useQuery({
     queryKey: ["connected-accounts"],
@@ -148,10 +166,11 @@ function SettingsContent() {
     }
   };
 
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
+  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
+  const [deletePackagesOpen, setDeletePackagesOpen] = useState(false);
+
   const handleDeleteAccount = async () => {
-    if (!confirm("Are you sure? This will permanently delete your account and all data. This cannot be undone.")) {
-      return;
-    }
     setIsDeleting(true);
     try {
       await api.deleteAccount();
@@ -159,6 +178,21 @@ function SettingsContent() {
     } catch {
       toast.error("Failed to delete account");
       setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteAllOrders = async () => {
+    setIsDeletingAll(true);
+    try {
+      const result = await api.deleteAllOrders();
+      toast.success(`Removed ${result.deleted} order${result.deleted !== 1 ? "s" : ""} and all packages`);
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["packages"] });
+      setDeletePackagesOpen(false);
+    } catch {
+      toast.error("Failed to remove packages");
+    } finally {
+      setIsDeletingAll(false);
     }
   };
 
@@ -180,17 +214,17 @@ function SettingsContent() {
         </div>
       </div>
 
-      {successParam && (
+      {displaySuccess && (
         <Alert className="border-green-600 bg-green-50 text-green-800 dark:border-green-500 dark:bg-green-950 dark:text-green-200">
           <CheckCircle2 className="h-4 w-4" />
-          <AlertDescription>{successParam}</AlertDescription>
+          <AlertDescription>{displaySuccess}</AlertDescription>
         </Alert>
       )}
 
-      {errorParam && (
+      {displayError && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{errorParam}</AlertDescription>
+          <AlertDescription>{displayError}</AlertDescription>
         </Alert>
       )}
 
@@ -262,7 +296,7 @@ function SettingsContent() {
             Appearance
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-5">
           <div className="flex items-center justify-between">
             <div>
               <Label className="text-sm font-medium">Theme</Label>
@@ -282,6 +316,35 @@ function SettingsContent() {
                 System
               </ToggleGroupItem>
             </ToggleGroup>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-sm font-medium flex items-center gap-1.5">
+                <Globe className="h-3.5 w-3.5" />
+                Language
+              </Label>
+              <p className="text-xs text-muted-foreground">Choose your preferred language</p>
+            </div>
+            <Select
+              value={language}
+              onValueChange={(v) => {
+                setLanguage(v);
+                localStorage.setItem("mailtrack_language", v);
+                document.documentElement.lang = v;
+                document.documentElement.dir = v === "he" || v === "ar" ? "rtl" : "ltr";
+              }}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en">English</SelectItem>
+                <SelectItem value="he">עברית</SelectItem>
+                <SelectItem value="ar">العربية</SelectItem>
+                <SelectItem value="ru">Русский</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -375,17 +438,73 @@ function SettingsContent() {
             <Shield className="h-4 w-4 text-primary" />
             Data & Privacy
           </CardTitle>
-          <CardDescription>Export your data or delete your account</CardDescription>
+          <CardDescription>Export your data or manage your account</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <Button variant="outline" className="w-full" onClick={handleExport} disabled={isExporting}>
             <Download className={`h-4 w-4 ${isExporting ? "animate-spin" : ""}`} />
             {isExporting ? "Exporting…" : "Export all data (JSON)"}
           </Button>
-          <Button variant="destructive" className="w-full" onClick={handleDeleteAccount} disabled={isDeleting}>
-            <Trash2 className={`h-4 w-4 ${isDeleting ? "animate-spin" : ""}`} />
-            {isDeleting ? "Deleting…" : "Delete account"}
-          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Danger Zone */}
+      <Card className="border-destructive/30">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base text-destructive">
+            <AlertCircle className="h-4 w-4" />
+            Danger Zone
+          </CardTitle>
+          <CardDescription>Irreversible actions — proceed with caution</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Dialog open={deletePackagesOpen} onOpenChange={setDeletePackagesOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="w-full border-destructive/30 text-destructive hover:bg-destructive/10">
+                <Trash2 className="h-4 w-4" />
+                Remove all packages
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Remove all packages?</DialogTitle>
+                <DialogDescription>
+                  This will permanently delete all your orders, packages, tracking events, and notifications. Your account and connected emails will remain.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setDeletePackagesOpen(false)}>Cancel</Button>
+                <Button variant="destructive" onClick={handleDeleteAllOrders} disabled={isDeletingAll}>
+                  <Trash2 className={`h-4 w-4 ${isDeletingAll ? "animate-spin" : ""}`} />
+                  {isDeletingAll ? "Removing…" : "Remove all packages"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={deleteAccountOpen} onOpenChange={setDeleteAccountOpen}>
+            <DialogTrigger asChild>
+              <Button variant="destructive" className="w-full">
+                <Trash2 className="h-4 w-4" />
+                Delete account
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delete your account?</DialogTitle>
+                <DialogDescription>
+                  This will permanently delete your account, all data, connected emails, and preferences. This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setDeleteAccountOpen(false)}>Cancel</Button>
+                <Button variant="destructive" onClick={handleDeleteAccount} disabled={isDeleting}>
+                  <Trash2 className={`h-4 w-4 ${isDeleting ? "animate-spin" : ""}`} />
+                  {isDeleting ? "Deleting…" : "Delete account permanently"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </CardContent>
       </Card>
     </div>

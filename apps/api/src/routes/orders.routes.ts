@@ -72,6 +72,20 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
 
     return { success: true };
   });
+
+  // DELETE /api/orders — Delete ALL orders and their packages/events for current user
+  app.delete("/", {
+    preHandler: [app.authenticate],
+  }, async (request, reply) => {
+    const userId = request.user.userId;
+
+    // Delete notifications that reference orders first (no FK cascade)
+    await app.prisma.notification.deleteMany({ where: { userId } });
+    // Delete orders — packages and tracking events cascade via onDelete: Cascade
+    const result = await app.prisma.order.deleteMany({ where: { userId } });
+
+    return { success: true, deleted: result.count };
+  });
 };
 
 function formatOrder(order: any, relatedOrders: any[]) {
