@@ -95,10 +95,10 @@ export function PackageCard({ order }: OrderCardProps) {
                 {pkg
                   ? `${getCarrierDisplayName(pkg.carrier)} · ${pkg.trackingNumber}`
                   : status === "DELIVERED"
-                  ? "Delivered"
+                  ? t("card.delivered")
                   : status === "SHIPPED" || status === "IN_TRANSIT"
-                  ? "Shipped — tracking pending"
-                  : "Awaiting shipment"}
+                  ? t("card.shippedPending")
+                  : t("card.awaitingShipment")}
               </p>
             </div>
           </div>
@@ -116,11 +116,11 @@ export function PackageCard({ order }: OrderCardProps) {
                 </li>
               ))}
               {items.length > 2 && (
-                <li className="text-xs text-muted-foreground pl-3">+{items.length - 2} more</li>
+                <li className="text-xs text-muted-foreground pl-3">{t("card.moreItems").replace("{count}", String(items.length - 2))}</li>
               )}
             </ul>
           ) : (
-            <p className="text-xs text-muted-foreground italic">No item details</p>
+            <p className="text-xs text-muted-foreground italic">{t("card.noItemDetails")}</p>
           )}
         </div>
 

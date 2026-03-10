@@ -62,7 +62,7 @@ export function Sidebar() {
     else setTheme("light");
   };
 
-  const themeLabel = !mounted ? "" : theme === "system" ? "System" : theme === "dark" ? "Dark" : "Light";
+  const themeLabel = !mounted ? "" : theme === "system" ? t("settings.system") : theme === "dark" ? t("settings.dark") : t("settings.light");
   const ThemeIcon = !mounted ? Sun : theme === "dark" ? Moon : theme === "system" ? Monitor : Sun;
 
   const sidebarContent = (
@@ -73,13 +73,13 @@ export function Sidebar() {
           <Image src="/logo.png" alt="MailTrack" width={36} height={36} className="drop-shadow-sm" />
           <div>
             <span className="text-base font-bold text-foreground tracking-tight">MailTrack</span>
-            <p className="text-[10px] text-muted-foreground leading-none">Every package. One dashboard.</p>
+            <p className="text-[10px] text-muted-foreground leading-none">{t("nav.tagline")}</p>
           </div>
         </Link>
         <button
           onClick={() => setMobileOpen(false)}
           className="ml-auto md:hidden p-1 rounded-lg hover:bg-accent"
-          aria-label="Close menu"
+          aria-label={t("nav.closeMenu")}
         >
           <X className="h-5 w-5" />
         </button>
@@ -87,7 +87,7 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1">
-        <p className="px-3 mb-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Menu</p>
+        <p className="px-3 mb-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">{t("nav.menu")}</p>
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname.startsWith(item.href);
@@ -119,7 +119,7 @@ export function Sidebar() {
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all duration-200"
         >
           <ThemeIcon className="h-[18px] w-[18px]" />
-          Theme: {themeLabel}
+          {t("nav.theme")} {themeLabel}
         </button>
         <button
           onClick={handleSignOut}
@@ -138,7 +138,7 @@ export function Sidebar() {
       <button
         onClick={() => setMobileOpen(true)}
         className="fixed top-4 left-4 z-40 md:hidden p-2 rounded-lg bg-card border border-border shadow-md"
-        aria-label="Open menu"
+        aria-label={t("nav.openMenu")}
       >
         <Menu className="h-5 w-5" />
       </button>

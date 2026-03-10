@@ -235,7 +235,7 @@ function SettingsContent() {
             {t("settings.connectedEmails")}
           </CardTitle>
           <CardDescription>
-            Connect your email to automatically track packages from order confirmations
+            {t("settings.connectEmailDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -251,7 +251,7 @@ function SettingsContent() {
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">{email.email}</p>
                   <p className="text-xs text-muted-foreground">
-                    {email.provider} · Last synced:{" "}
+                    {email.provider} · {t("settings.lastSynced")}{" "}
                     {email.lastSyncAt
                       ? new Date(email.lastSyncAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
                       : t("settings.never")}
@@ -365,7 +365,7 @@ function SettingsContent() {
                       <p className="text-sm font-medium">{pk.friendlyName}</p>
                       <p className="text-xs text-muted-foreground">
                         Added {new Date(pk.createdAt).toLocaleDateString()}
-                        {pk.backedUp && " · Synced"}
+                        {pk.backedUp && ` · ${t("settings.synced")}`}
                       </p>
                     </div>
                   </div>
@@ -396,7 +396,7 @@ function SettingsContent() {
                 const { startRegistration } = await import("@simplewebauthn/browser");
                 const options = await api.getPasskeyRegisterOptions();
                 const credential = await startRegistration({ optionsJSON: options });
-                await api.registerPasskey(credential, `Passkey ${(passkeys?.length ?? 0) + 1}`);
+                await api.registerPasskey(credential, `${t("settings.passkey")} ${(passkeys?.length ?? 0) + 1}`);
                 toast.success(t("toast.passkeyRegistered"));
                 refetchPasskeys();
               } catch (err: any) {

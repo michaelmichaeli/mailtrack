@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { getCarrierDisplayName } from "@/lib/carrier-urls";
 import { Package, ChevronRight, Navigation } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
+import type { TranslationKey } from "@/lib/i18n";
 
 interface Order {
   id: string;
@@ -28,17 +30,19 @@ interface Order {
 }
 
 const KANBAN_COLUMNS = [
-  { status: "ORDERED", label: "Ordered", color: "bg-slate-500" },
-  { status: "PROCESSING", label: "Processing", color: "bg-slate-500" },
-  { status: "SHIPPED", label: "Shipped", color: "bg-blue-500" },
-  { status: "IN_TRANSIT", label: "In Transit", color: "bg-indigo-500" },
-  { status: "OUT_FOR_DELIVERY", label: "Out for Delivery", color: "bg-purple-500" },
-  { status: "DELIVERED", label: "Delivered", color: "bg-emerald-500" },
-  { status: "EXCEPTION", label: "Exception", color: "bg-amber-500" },
-  { status: "RETURNED", label: "Returned", color: "bg-red-500" },
+  { status: "ORDERED", color: "bg-slate-500" },
+  { status: "PROCESSING", color: "bg-slate-500" },
+  { status: "SHIPPED", color: "bg-blue-500" },
+  { status: "IN_TRANSIT", color: "bg-indigo-500" },
+  { status: "OUT_FOR_DELIVERY", color: "bg-purple-500" },
+  { status: "DELIVERED", color: "bg-emerald-500" },
+  { status: "EXCEPTION", color: "bg-amber-500" },
+  { status: "RETURNED", color: "bg-red-500" },
 ];
 
 export function PackageKanban({ orders }: { orders: Order[] }) {
+  const { t, locale } = useI18n();
+  const dateLocale = locale === "he" ? "he-IL" : locale === "ar" ? "ar" : locale === "ru" ? "ru-RU" : "en-US";
   const safeParse = (v: any): string[] => {
     if (!v) return [];
     if (Array.isArray(v)) return v;
@@ -68,7 +72,7 @@ export function PackageKanban({ orders }: { orders: Order[] }) {
   if (activeColumns.length === 0) {
     return (
       <div className="flex items-center justify-center py-12 text-muted-foreground">
-        No packages to display
+        {t("kanban.noPackages")}
       </div>
     );
   }
@@ -83,7 +87,7 @@ export function PackageKanban({ orders }: { orders: Order[] }) {
           {/* Column header */}
           <div className="flex items-center gap-2 px-3 py-3 border-b border-border/50">
             <div className={`h-2.5 w-2.5 rounded-full ${col.color}`} />
-            <h3 className="text-sm font-semibold text-foreground">{col.label}</h3>
+            <h3 className="text-sm font-semibold text-foreground">{t(`status.${col.status}` as TranslationKey)}</h3>
             <span className="ml-auto text-xs font-medium text-muted-foreground bg-background/80 rounded-full px-2 py-0.5 border border-border/50">
               {grouped[col.status].length}
             </span>
@@ -124,13 +128,13 @@ export function PackageKanban({ orders }: { orders: Order[] }) {
                     {pickup && ((!pickup.carrierOnly && pickup.address) || pkg?.status === "DELIVERED") && (
                       <div className="flex items-center gap-1.5 mt-2 px-2 py-1.5 rounded-md text-xs bg-emerald-600 text-white">
                         <Navigation className="h-3 w-3 shrink-0" />
-                        <span className="truncate">{pkg?.status === "DELIVERED" ? "Picked up" : "Pickup ready"}</span>
+                        <span className="truncate">{pkg?.status === "DELIVERED" ? t("card.pickedUp") : t("card.pickupReady")}</span>
                       </div>
                     )}
 
                     {order.orderDate && (
                       <p className="text-[11px] text-muted-foreground mt-1.5 pl-9">
-                        {new Date(order.orderDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                        {new Date(order.orderDate).toLocaleDateString(dateLocale, { month: "short", day: "numeric" })}
                       </p>
                     )}
                   </Card>

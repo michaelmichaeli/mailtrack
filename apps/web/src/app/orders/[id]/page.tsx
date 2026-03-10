@@ -19,8 +19,7 @@ import { CopyButton } from "@/components/ui/copy-button";
 import { PageTransition, FadeIn } from "@/components/ui/motion";
 
 export default function OrderDetailPage() {
-  const { t } = useI18n();
-  const params = useParams();
+  const { t, locale } = useI18n();  const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
   const id = params.id as string;
@@ -90,7 +89,7 @@ export default function OrderDetailPage() {
         <Link href="/packages">
           <Button variant="outline" size="sm" className="cursor-pointer">
             <ArrowLeft className="h-4 w-4" />
-            Back to Orders
+            {t("detail.backToOrders")}
           </Button>
         </Link>
       </div>
@@ -103,8 +102,10 @@ export default function OrderDetailPage() {
     try { return JSON.parse(v); } catch { return []; }
   };
 
+  const dateLocale = locale === "he" ? "he-IL" : locale === "ar" ? "ar" : locale === "ru" ? "ru-RU" : "en-US";
+
   const formattedDate = order.orderDate
-    ? new Date(order.orderDate).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+    ? new Date(order.orderDate).toLocaleDateString(dateLocale, { month: "short", day: "numeric", year: "numeric" })
     : null;
   const formattedAmount =
     order.totalAmount != null
@@ -162,7 +163,7 @@ export default function OrderDetailPage() {
         </div>
         {confirmDelete ? (
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-xs text-destructive font-medium">Delete?</span>
+            <span className="text-xs text-destructive font-medium">{t("detail.deleteConfirm")}</span>
             <Button
               variant="destructive"
               size="sm"
@@ -179,7 +180,7 @@ export default function OrderDetailPage() {
               onClick={() => setConfirmDelete(false)}
               disabled={deleteMutation.isPending}
             >
-              No
+              {t("detail.no")}
             </Button>
           </div>
         ) : (
@@ -199,7 +200,7 @@ export default function OrderDetailPage() {
         <CardContent className="p-5">
           <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Platform</p>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{t("detail.platform")}</p>
               <p className="text-sm font-medium text-foreground mt-0.5 flex items-center gap-1.5">
                 <Store className="h-3.5 w-3.5 text-muted-foreground" />
                 {order.shopPlatform}
@@ -207,7 +208,7 @@ export default function OrderDetailPage() {
             </div>
             {formattedDate && (
               <div>
-                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Order Date</p>
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{t("detail.orderDate")}</p>
                 <p className="text-sm font-medium text-foreground mt-0.5 flex items-center gap-1.5">
                   <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                   {formattedDate}
@@ -216,7 +217,7 @@ export default function OrderDetailPage() {
             )}
             {formattedAmount && (
               <div>
-                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Amount</p>
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{t("detail.amount")}</p>
                 <p className="text-sm font-medium text-foreground mt-0.5 flex items-center gap-1.5">
                   <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
                   {formattedAmount}
@@ -233,7 +234,7 @@ export default function OrderDetailPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <ShoppingBag className="h-4 w-4 text-primary" />
-              Items ({allItems.length})
+              {t("detail.items")} ({allItems.length})
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
@@ -257,9 +258,9 @@ export default function OrderDetailPage() {
             <div className="flex items-center justify-between flex-wrap gap-2">
               <CardTitle className="text-base flex items-center gap-2">
                 <Package className="h-4 w-4 text-primary" />
-                Tracking & Shipment
+                {t("detail.trackingAndShipment")}
                 {order.packages.length > 1 && (
-                  <span className="text-xs font-normal text-muted-foreground">({order.packages.length} shipments)</span>
+                  <span className="text-xs font-normal text-muted-foreground">({order.packages.length} {t("detail.shipments")})</span>
                 )}
               </CardTitle>
             </div>
@@ -287,7 +288,7 @@ export default function OrderDetailPage() {
                     <div className="flex items-center gap-2">
                       <Badge variant="status" status={pkg.status} />
                       {order.packages.length > 1 && (
-                        <span className="text-xs text-muted-foreground">Shipment {pkgIdx + 1}</span>
+                        <span className="text-xs text-muted-foreground">{t("detail.shipment")} {pkgIdx + 1}</span>
                       )}
                     </div>
                     {pkg.trackingNumber && (
@@ -298,30 +299,30 @@ export default function OrderDetailPage() {
                         disabled={refreshMutation.isPending}
                       >
                         <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
-                        Refresh
+                        {t("detail.refresh")}
                       </Button>
                     )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
                     <div>
-                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Tracking</p>
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{t("detail.tracking")}</p>
                       <p className="text-sm font-medium font-mono text-foreground mt-0.5 flex items-center gap-1">
                         {pkg.trackingNumber}
                         <CopyButton value={pkg.trackingNumber} />
                       </p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Carrier</p>
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{t("detail.carrier")}</p>
                       <p className="text-sm font-medium text-foreground mt-0.5">{getCarrierDisplayName(pkg.carrier)}</p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Status</p>
-                      <p className="text-sm font-medium text-foreground mt-0.5 capitalize">{pkg.status.toLowerCase().replace(/_/g, " ")}</p>
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{t("detail.status")}</p>
+                      <p className="text-sm font-medium text-foreground mt-0.5 capitalize">{t(`status.${pkg.status}` as any)}</p>
                     </div>
                     {pkg.lastLocation && (
                       <div>
-                        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Location</p>
+                        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{t("detail.location")}</p>
                         <p className="text-sm font-medium text-foreground mt-0.5 flex items-center gap-1">
                           <MapPin className="h-3 w-3 text-muted-foreground" />
                           {pkg.lastLocation}
@@ -330,10 +331,10 @@ export default function OrderDetailPage() {
                     )}
                     {pkg.estimatedDelivery && (
                       <div>
-                        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Est. Delivery</p>
+                        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{t("detail.estDelivery")}</p>
                         <p className="text-sm font-medium text-foreground mt-0.5 flex items-center gap-1">
                           <Clock className="h-3 w-3 text-muted-foreground" />
-                          {new Date(pkg.estimatedDelivery).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                          {new Date(pkg.estimatedDelivery).toLocaleDateString(dateLocale, { month: "short", day: "numeric" })}
                         </p>
                       </div>
                     )}
@@ -343,7 +344,7 @@ export default function OrderDetailPage() {
                     <a href={carrierUrl} target="_blank" rel="noopener noreferrer" className="block mt-3">
                       <Button variant="outline" size="sm" className="w-full">
                         <ExternalLink className="h-3.5 w-3.5" />
-                        Track on {getCarrierDisplayName(pkg.carrier)}
+                        {t("detail.trackOn").replace("{carrier}", getCarrierDisplayName(pkg.carrier))}
                       </Button>
                     </a>
                   )}
@@ -403,7 +404,7 @@ export default function OrderDetailPage() {
               return (
                 <div className="border-t border-border pt-5">
                   <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-1.5">
-                    <MapPin className="h-3.5 w-3.5" /> Location Journey
+                    <MapPin className="h-3.5 w-3.5" /> {t("detail.locationJourney")}
                   </p>
                   <div className="space-y-0">
                     {allLocations.map((loc: any, idx: number) => (
@@ -417,7 +418,7 @@ export default function OrderDetailPage() {
                         <div className="pb-4 min-w-0">
                           <p className="text-sm font-medium text-foreground" dir="auto">{loc.location}</p>
                           <p className="text-xs text-muted-foreground">
-                            {new Date(loc.timestamp).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                            {new Date(loc.timestamp).toLocaleDateString(dateLocale, { month: "short", day: "numeric" })}
                             {" · "}
                             {new Date(loc.timestamp).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
                           </p>
@@ -443,7 +444,7 @@ export default function OrderDetailPage() {
                       >
                         <Button variant="outline" size="sm" className="w-full text-xs gap-1.5">
                           <Navigation className="h-3 w-3" />
-                          View Full Route on Maps
+                          {t("detail.viewFullRoute")}
                         </Button>
                       </a>
                     </div>
@@ -470,9 +471,9 @@ export default function OrderDetailPage() {
           // But show it for delivered packages as historical context
           const isDelivered = pkgWithPickup.status === "DELIVERED";
           if (pickup.carrierOnly && !isDelivered) return null;
-          const headerText = isDelivered ? "✅ Picked Up" : "📦 Ready for Pickup";
+          const headerText = isDelivered ? t("detail.pickedUpHeader") : t("detail.readyForPickupHeader");
           const subText = isDelivered
-            ? `Delivered by ${pickup.name || 'carrier'}`
+            ? t("detail.deliveredBy").replace("{name}", pickup.name || 'carrier')
             : t("detail.packageWaiting");
 
           return (
@@ -496,7 +497,7 @@ export default function OrderDetailPage() {
                       <KeyRound className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Pickup Code</p>
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{t("detail.pickupCode")}</p>
                       <p className="text-lg font-mono font-black text-foreground tracking-widest flex items-center gap-2">
                         {pickup.pickupCode}
                         <CopyButton value={pickup.pickupCode} />
@@ -549,7 +550,7 @@ export default function OrderDetailPage() {
                       <Clock className="h-4 w-4 mt-0.5 shrink-0" style={{ color: '#047857' }} />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Opening Hours</p>
+                          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{t("detail.openingHours")}</p>
                           {pickup.openNow != null && (
                             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={
                               pickup.openNow
@@ -563,7 +564,7 @@ export default function OrderDetailPage() {
                         {pickup.weekdayText ? (
                           <div className="mt-1 space-y-0.5">
                             {pickup.weekdayText.map((line: string, i: number) => {
-                              const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+                              const today = new Date().toLocaleDateString(dateLocale, { weekday: 'long' });
                               const isToday = line.startsWith(today);
                               return (
                                 <p key={i} className={`text-xs leading-relaxed ${
@@ -629,7 +630,7 @@ export default function OrderDetailPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Package className="h-4 w-4 text-primary" />
-              Tracking & Shipment
+              {t("detail.trackingAndShipment")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 pt-0">
@@ -637,14 +638,14 @@ export default function OrderDetailPage() {
 
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
               <div>
-                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Status</p>
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{t("detail.status")}</p>
                 <p className="text-sm font-medium text-foreground mt-0.5 capitalize">
-                  {(order.status ?? "ORDERED").toLowerCase().replace(/_/g, " ")}
+                  {t(`status.${order.status ?? "ORDERED"}` as any)}
                 </p>
               </div>
               <div>
-                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Tracking</p>
-                <p className="text-sm text-muted-foreground mt-0.5">Not found in emails</p>
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{t("detail.tracking")}</p>
+                <p className="text-sm text-muted-foreground mt-0.5">{t("detail.notFoundInEmails")}</p>
               </div>
             </div>
 
@@ -656,7 +657,7 @@ export default function OrderDetailPage() {
               >
                 <Button variant="outline" size="sm" className="w-full">
                   <ExternalLink className="h-3.5 w-3.5" />
-                  View order on AliExpress
+                  {t("detail.viewOrderOnPlatform").replace("{platform}", "AliExpress")}
                 </Button>
               </a>
             )}
@@ -668,7 +669,7 @@ export default function OrderDetailPage() {
       {order.relatedOrders && order.relatedOrders.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Related Orders</CardTitle>
+            <CardTitle className="text-base">{t("detail.relatedOrders")}</CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-2">

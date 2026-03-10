@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { getCarrierDisplayName } from "@/lib/carrier-urls";
 import { MapPin, ExternalLink } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 interface Order {
   id: string;
@@ -28,6 +29,8 @@ interface Order {
 }
 
 export function PackageTable({ orders }: { orders: Order[] }) {
+  const { t, locale } = useI18n();
+  const dateLocale = locale === "he" ? "he-IL" : locale === "ar" ? "ar" : locale === "ru" ? "ru-RU" : "en-US";
   const safeParse = (v: any): string[] => {
     if (!v) return [];
     if (Array.isArray(v)) return v;
@@ -42,7 +45,7 @@ export function PackageTable({ orders }: { orders: Order[] }) {
 
   const formatDate = (d: string | null) => {
     if (!d) return "—";
-    return new Date(d).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+    return new Date(d).toLocaleDateString(dateLocale, { month: "short", day: "numeric", year: "numeric" });
   };
 
   return (
@@ -51,14 +54,14 @@ export function PackageTable({ orders }: { orders: Order[] }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-muted/50 border-b border-border">
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">Merchant</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">Items</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">Tracking</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">Carrier</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">Status</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">Location</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">Date</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">Amount</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">{t("table.merchant")}</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">{t("table.items")}</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">{t("table.tracking")}</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">{t("table.carrier")}</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">{t("table.status")}</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">{t("table.location")}</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">{t("table.date")}</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">{t("table.amount")}</th>
               <th className="px-4 py-3"></th>
             </tr>
           </thead>

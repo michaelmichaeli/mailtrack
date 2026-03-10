@@ -31,15 +31,15 @@ interface Notification {
 
 const LIMIT = 20;
 
-function formatTime(iso: string) {
+function formatTime(iso: string, t: (key: any) => string) {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t("time.justNow");
+  if (mins < 60) return t("time.mAgo").replace("{count}", String(mins));
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
+  if (hrs < 24) return t("time.hAgo").replace("{count}", String(hrs));
   const days = Math.floor(hrs / 24);
-  if (days < 7) return `${days}d ago`;
+  if (days < 7) return t("time.dAgo").replace("{count}", String(days));
   return new Date(iso).toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
@@ -162,11 +162,11 @@ export default function NotificationsPage() {
               <div className="flex items-center gap-2">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Bell className="h-4 w-4 text-primary" />
-                  Activity
+                  {t("notifications.activity")}
                 </CardTitle>
                 {unreadCount > 0 && (
                   <Badge variant="secondary" className="text-xs font-bold">
-                    {unreadCount} new
+                    {unreadCount} {t("notifications.new")}
                   </Badge>
                 )}
               </div>
@@ -193,7 +193,7 @@ export default function NotificationsPage() {
               </ToggleGroup>
             </div>
             <CardDescription>
-              Package status updates and delivery alerts
+              {t("notifications.statusUpdates")}
             </CardDescription>
           </CardHeader>
 
@@ -263,14 +263,14 @@ export default function NotificationsPage() {
                             {n.title}
                           </p>
                           <span className="text-[10px] text-muted-foreground/70 whitespace-nowrap shrink-0 mt-0.5">
-                            {formatTime(n.createdAt)}
+                            {formatTime(n.createdAt, t)}
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>
                         {n.orderId && (
                           <p className="text-xs text-primary mt-1.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <ExternalLink className="h-3 w-3" />
-                            View order
+                            {t("notifications.viewOrder")}
                           </p>
                         )}
                       </div>
@@ -314,7 +314,7 @@ export default function NotificationsPage() {
                       disabled={isFetchingNextPage}
                     >
                       {isFetchingNextPage && <div className="animate-logo-spin inline-block mr-1.5"><img src="/logo.png" alt="" width={16} height={16} /></div>}
-                      Load more
+                      {t("notifications.loadMore")}
                     </Button>
                   </div>
                 )}

@@ -15,7 +15,8 @@ import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 
 export default function PackageDetailPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const dateLocale = locale === "he" ? "he-IL" : locale === "ar" ? "ar" : locale === "ru" ? "ru-RU" : "en-US";
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -47,11 +48,11 @@ export default function PackageDetailPage() {
           <Package className="h-12 w-12 text-muted-foreground/40" />
         </div>
         <h2 className="text-xl font-semibold mb-1">{t("detail.packageNotFoundTitle")}</h2>
-        <p className="text-sm text-muted-foreground mb-6">This package may have been deleted or the link is invalid.</p>
+        <p className="text-sm text-muted-foreground mb-6">{t("detail.invalidLinkPkg")}</p>
         <Link href="/packages">
           <Button variant="outline" size="sm" className="cursor-pointer">
             <ArrowLeft className="h-4 w-4" />
-            Back to Orders
+            {t("detail.backToOrders")}
           </Button>
         </Link>
       </div>
@@ -79,7 +80,7 @@ export default function PackageDetailPage() {
           disabled={refreshMutation.isPending}
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${refreshMutation.isPending ? "animate-spin" : ""}`} />
-          Refresh tracking
+          {t("detail.refreshTracking")}
         </Button>
       </div>
 
@@ -98,11 +99,11 @@ export default function PackageDetailPage() {
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <div>
-              <p className="text-xs text-muted-foreground">Carrier</p>
+              <p className="text-xs text-muted-foreground">{t("detail.carrier")}</p>
               <p className="text-sm font-medium">{pkg.carrier}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Last location</p>
+              <p className="text-xs text-muted-foreground">{t("detail.lastLocation")}</p>
               <p className="text-sm font-medium flex items-center gap-1">
                 {pkg.lastLocation ? (
                   <>
@@ -115,12 +116,12 @@ export default function PackageDetailPage() {
               </p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Estimated delivery</p>
+              <p className="text-xs text-muted-foreground">{t("detail.estimatedDelivery")}</p>
               <p className="text-sm font-medium flex items-center gap-1">
                 {pkg.estimatedDelivery ? (
                   <>
                     <Clock className="h-3 w-3" />
-                    {new Date(pkg.estimatedDelivery).toLocaleDateString()}
+                    {new Date(pkg.estimatedDelivery).toLocaleDateString(dateLocale)}
                   </>
                 ) : (
                   "—"
@@ -128,7 +129,7 @@ export default function PackageDetailPage() {
               </p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Order total</p>
+              <p className="text-xs text-muted-foreground">{t("detail.orderTotal")}</p>
               <p className="text-sm font-medium flex items-center gap-1">
                 {pkg.order.totalAmount ? (
                   <>
@@ -162,24 +163,24 @@ export default function PackageDetailPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <p className="text-xs text-muted-foreground">Platform</p>
+              <p className="text-xs text-muted-foreground">{t("detail.platform")}</p>
               <p className="text-sm font-medium">{pkg.order.shopPlatform}</p>
             </div>
             {pkg.order.externalOrderId && (
               <div>
-                <p className="text-xs text-muted-foreground">Order ID</p>
+                <p className="text-xs text-muted-foreground">{t("detail.orderID")}</p>
                 <p className="text-sm font-medium font-mono">{pkg.order.externalOrderId}</p>
               </div>
             )}
             {pkg.order.orderDate && (
               <div>
-                <p className="text-xs text-muted-foreground">Order date</p>
-                <p className="text-sm font-medium">{new Date(pkg.order.orderDate).toLocaleDateString()}</p>
+                <p className="text-xs text-muted-foreground">{t("detail.orderDateLabel")}</p>
+                <p className="text-sm font-medium">{new Date(pkg.order.orderDate).toLocaleDateString(dateLocale)}</p>
               </div>
             )}
             {items.length > 0 && (
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Items</p>
+                <p className="text-xs text-muted-foreground mb-1">{t("detail.items")}</p>
                 <ul className="space-y-1">
                   {items.map((item: string, i: number) => (
                     <li key={i} className="text-sm">{item}</li>

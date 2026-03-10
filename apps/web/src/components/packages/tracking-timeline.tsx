@@ -31,9 +31,10 @@ function formatStatus(s: string): string {
   return s.toLowerCase().replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 }
 
-function TimelineRow({ event, isFirst, isLast, colors }: {
+function TimelineRow({ event, isFirst, isLast, colors, dateLocale }: {
   event: TrackingEvent; isFirst: boolean; isLast: boolean;
   colors: { dot: string; ring: string; badgeStyle: { backgroundColor: string; color: string } };
+  dateLocale: string;
 }) {
   const dt = new Date(event.timestamp);
   return (
@@ -41,11 +42,11 @@ function TimelineRow({ event, isFirst, isLast, colors }: {
       <div className="w-16 sm:w-20 shrink-0 pt-[3px] pr-3 text-right">
         <div className="text-[11px] tabular-nums leading-tight text-muted-foreground">
           <span className={cn(isFirst && "font-medium text-foreground")}>
-            {dt.toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+            {dt.toLocaleDateString(dateLocale, { month: "short", day: "numeric" })}
           </span>
         </div>
         <div className="text-[10px] tabular-nums text-muted-foreground/50">
-          {dt.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+          {dt.toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" })}
         </div>
       </div>
       <div className="relative flex flex-col items-center shrink-0 w-5">
@@ -78,13 +79,14 @@ function TimelineRow({ event, isFirst, isLast, colors }: {
 
 export function TrackingTimeline({ events }: TrackingTimelineProps) {
   const [expanded, setExpanded] = useState(false);
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const dateLocale = locale === "he" ? "he-IL" : locale === "ar" ? "ar" : locale === "ru" ? "ru-RU" : "en-US";
 
   if (events.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
         <Package className="h-10 w-10 mx-auto mb-3 opacity-30" />
-        <p className="text-sm">No tracking events yet</p>
+        <p className="text-sm">{t("timeline.noEvents")}</p>
       </div>
     );
   }
@@ -100,7 +102,7 @@ export function TrackingTimeline({ events }: TrackingTimelineProps) {
         const isFirst = index === 0;
         const isLast = index === alwaysVisible.length - 1 && !showToggle;
         const colors = statusColors[event.status] ?? defaultColors;
-        return <TimelineRow key={event.id} event={event} isFirst={isFirst} isLast={isLast} colors={colors} />;
+        return <TimelineRow key={event.id} event={event} isFirst={isFirst} isLast={isLast} colors={colors} dateLocale={dateLocale} />;
       })}
 
       {showToggle && (
@@ -114,7 +116,7 @@ export function TrackingTimeline({ events }: TrackingTimelineProps) {
               {collapsible.map((event, index) => {
                 const isLast = index === collapsible.length - 1;
                 const colors = statusColors[event.status] ?? defaultColors;
-                return <TimelineRow key={event.id} event={event} isFirst={false} isLast={isLast} colors={colors} />;
+                return <TimelineRow key={event.id} event={event} isFirst={false} isLast={isLast} colors={colors} dateLocale={dateLocale} />;
               })}
             </div>
           </div>

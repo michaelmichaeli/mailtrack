@@ -32,7 +32,7 @@ interface UserProfile {
 }
 
 export default function ProfilePage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<{
     totalOrders: number;
@@ -98,7 +98,7 @@ export default function ProfilePage() {
               <WifiOff className="h-7 w-7 text-destructive" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold">Couldn&apos;t load your profile</h2>
+              <h2 className="text-lg font-semibold">{t("profile.couldntLoad")}</h2>
               <p className="text-sm text-muted-foreground mt-1">
                 {error || t("profile.somethingWentWrong")}
               </p>
@@ -106,10 +106,10 @@ export default function ProfilePage() {
             <div className="flex gap-3 justify-center">
               <Button onClick={loadProfile}>
                 <RefreshCw className="h-4 w-4" />
-                Try Again
+                {t("profile.tryAgain")}
               </Button>
               <Button variant="outline" onClick={() => window.location.href = "/packages"}>
-                Go to Orders
+                {t("profile.goToOrders")}
               </Button>
             </div>
           </CardContent>
@@ -119,6 +119,7 @@ export default function ProfilePage() {
   }
 
   const joinDate = new Date(user.createdAt);
+  const dateLocale = locale === "he" ? "he-IL" : locale === "ar" ? "ar" : locale === "ru" ? "ru-RU" : "en-US";
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -197,7 +198,7 @@ export default function ProfilePage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Shield className="h-4 w-4 text-primary" />
-            Account Details
+            {t("profile.accountDetails")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -208,7 +209,7 @@ export default function ProfilePage() {
                 <p className="text-sm font-medium truncate">{user.email}</p>
                 {user.emailVerified && (
                   <span className="inline-flex items-center rounded-full bg-green-100 px-1.5 py-0.5 text-[10px] font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                    Verified
+                    {t("profile.verified")}
                   </span>
                 )}
               </div>
@@ -238,7 +239,7 @@ export default function ProfilePage() {
             <div>
               <Label className="text-xs text-muted-foreground">{t("profile.memberSince")}</Label>
               <p className="text-sm font-medium">
-                {joinDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                {joinDate.toLocaleDateString(dateLocale, { month: "long", day: "numeric", year: "numeric" })}
               </p>
             </div>
             {user.googleId && (
@@ -261,7 +262,7 @@ export default function ProfilePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <BarChart3 className="h-4 w-4 text-primary" />
-              Usage Stats
+              {t("profile.usageStats")}
             </CardTitle>
             <CardDescription>{t("profile.activityDesc")}</CardDescription>
           </CardHeader>
@@ -272,60 +273,60 @@ export default function ProfilePage() {
                   <Package className="h-4 w-4 text-primary" />
                 </div>
                 <p className="text-2xl font-bold">{stats.totalOrders}</p>
-                <p className="text-[11px] text-muted-foreground">Orders</p>
+                <p className="text-[11px] text-muted-foreground">{t("profile.orders")}</p>
               </div>
               <div className="rounded-xl border border-border/60 p-3 text-center hover:shadow-sm transition-shadow">
                 <div className="mx-auto mb-2 h-9 w-9 rounded-lg bg-blue-500/10 flex items-center justify-center">
                   <Truck className="h-4 w-4 text-blue-500" />
                 </div>
                 <p className="text-2xl font-bold">{stats.totalPackages}</p>
-                <p className="text-[11px] text-muted-foreground">Packages</p>
+                <p className="text-[11px] text-muted-foreground">{t("profile.packages")}</p>
               </div>
               <div className="rounded-xl border border-border/60 p-3 text-center hover:shadow-sm transition-shadow">
                 <div className="mx-auto mb-2 h-9 w-9 rounded-lg bg-green-500/10 flex items-center justify-center">
                   <CheckCircle2 className="h-4 w-4 text-green-500" />
                 </div>
                 <p className="text-2xl font-bold">{stats.deliveredPackages}</p>
-                <p className="text-[11px] text-muted-foreground">Delivered</p>
+                <p className="text-[11px] text-muted-foreground">{t("profile.delivered")}</p>
               </div>
               <div className="rounded-xl border border-border/60 p-3 text-center hover:shadow-sm transition-shadow">
                 <div className="mx-auto mb-2 h-9 w-9 rounded-lg bg-orange-500/10 flex items-center justify-center">
                   <Store className="h-4 w-4 text-orange-500" />
                 </div>
                 <p className="text-2xl font-bold">{stats.uniqueStores}</p>
-                <p className="text-[11px] text-muted-foreground">Stores</p>
+                <p className="text-[11px] text-muted-foreground">{t("profile.stores")}</p>
               </div>
               <div className="rounded-xl border border-border/60 p-3 text-center hover:shadow-sm transition-shadow">
                 <div className="mx-auto mb-2 h-9 w-9 rounded-lg bg-violet-500/10 flex items-center justify-center">
                   <Truck className="h-4 w-4 text-violet-500" />
                 </div>
                 <p className="text-2xl font-bold">{stats.uniqueCarriers}</p>
-                <p className="text-[11px] text-muted-foreground">Carriers</p>
+                <p className="text-[11px] text-muted-foreground">{t("profile.carriers")}</p>
               </div>
               <div className="rounded-xl border border-border/60 p-3 text-center hover:shadow-sm transition-shadow">
                 <div className="mx-auto mb-2 h-9 w-9 rounded-lg bg-yellow-500/10 flex items-center justify-center">
                   <Bell className="h-4 w-4 text-yellow-500" />
                 </div>
                 <p className="text-2xl font-bold">{stats.totalNotifications}</p>
-                <p className="text-[11px] text-muted-foreground">Notifications</p>
+                <p className="text-[11px] text-muted-foreground">{t("profile.notifications")}</p>
               </div>
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-2 text-sm">
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">In transit</span>
+                <span className="text-muted-foreground">{t("profile.inTransit")}</span>
                 <span className="font-medium">{stats.inTransitPackages}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Tracking events</span>
+                <span className="text-muted-foreground">{t("profile.trackingEvents")}</span>
                 <span className="font-medium">{stats.totalEvents}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Connected emails</span>
+                <span className="text-muted-foreground">{t("profile.connectedEmails")}</span>
                 <span className="font-medium">{stats.connectedEmailCount}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Member since</span>
-                <span className="font-medium">{joinDate.toLocaleDateString("en-US", { month: "short", year: "numeric" })}</span>
+                <span className="text-muted-foreground">{t("profile.memberSince")}</span>
+                <span className="font-medium">{joinDate.toLocaleDateString(dateLocale, { month: "short", year: "numeric" })}</span>
               </div>
             </div>
           </CardContent>

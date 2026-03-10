@@ -43,7 +43,7 @@ export function NotificationBell() {
         // Show toast when new notifications arrive (not on first load)
         if (!initialLoad.current && count > prev) {
           const newCount = count - prev;
-          toast.info(`${newCount} new notification${newCount > 1 ? "s" : ""}`, {
+          toast.info(newCount > 1 ? t("notificationBell.newCountPlural").replace("{count}", String(newCount)) : t("notificationBell.newCount").replace("{count}", String(newCount)), {
             description: t("notificationBell.tapToView"),
             duration: 4000,
             id: "new-notifications",
@@ -166,12 +166,12 @@ export function NotificationBell() {
   const formatTime = (iso: string) => {
     const diff = Date.now() - new Date(iso).getTime();
     const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "just now";
-    if (mins < 60) return `${mins}m ago`;
+    if (mins < 1) return t("time.justNow");
+    if (mins < 60) return t("time.mAgo").replace("{count}", String(mins));
     const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
+    if (hrs < 24) return t("time.hAgo").replace("{count}", String(hrs));
     const days = Math.floor(hrs / 24);
-    if (days < 7) return `${days}d ago`;
+    if (days < 7) return t("time.dAgo").replace("{count}", String(days));
     return new Date(iso).toLocaleDateString();
   };
 
@@ -220,7 +220,7 @@ export function NotificationBell() {
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-foreground">Notifications</h3>
+                <h3 className="text-sm font-semibold text-foreground">{t("notificationBell.title")}</h3>
                 {unreadCount > 0 && (
                   <span
                     className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
@@ -268,9 +268,9 @@ export function NotificationBell() {
               ) : notifications.length === 0 ? (
                 <div className="p-8 text-center">
                   <Bell className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">No notifications yet</p>
+                  <p className="text-sm text-muted-foreground">{t("notificationBell.noNotifications")}</p>
                   <p className="text-xs text-muted-foreground/70 mt-1">
-                    You&apos;ll see updates here when your packages change status
+                    {t("notificationBell.emptyHint")}
                   </p>
                 </div>
               ) : (
@@ -355,7 +355,7 @@ export function NotificationBell() {
                 }}
                 className="w-full text-center text-xs font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer"
               >
-                See all notifications
+                {t("notificationBell.seeAll")}
               </button>
             </div>
           </motion.div>

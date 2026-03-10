@@ -20,6 +20,12 @@ const en = {
   "orders.table": "Table",
   "orders.board": "Board",
   "orders.timeline": "Timeline",
+  "orders.total": "Total",
+  "orders.of": "of",
+  "orders.allStatuses": "All statuses",
+  "orders.noOrdersFound": "No orders found",
+  "orders.connectEmail": "Connect email",
+  "orders.syncTooltip": "Sync emails from Gmail and update all tracking statuses",
 
   // Time filters
   "filter.7d": "7D",
@@ -54,6 +60,7 @@ const en = {
   "stat.processing": "Processing",
   "stat.delivered": "Delivered",
   "stat.issues": "Issues",
+  "stat.active": "Active",
 
   // Notifications
   "notifications.title": "Notifications",
@@ -206,7 +213,6 @@ const en = {
   "addPackage.add": "Add",
 
   // Packages page extras
-  "orders.allStatuses": "All Statuses",
   "orders.sortBy": "Sort by",
   "orders.adjustFilters": "Try adjusting your search or filters",
   "orders.loadingMore": "Loading more…",
@@ -251,12 +257,18 @@ const en = {
   "notificationBell.markAsRead": "Mark as read",
 
   // Scan SMS dialog
-  "scanSms.title": "Scan Text",
   "scanSms.placeholder": "Paste your messages here…\n\nExample:\nYour package has shipped! Track it: LP00123456789012\nIsrael Post: RR123456789IL",
   "scanSms.noTrackingFound": "No tracking numbers found in the text",
   "scanSms.failedScan": "Failed to scan text",
   "scanSms.failedAdd": "Failed to add package",
   "scanSms.unknownCarrier": "Unknown carrier",
+  "scanSms.title": "Scan Messages for Tracking",
+  "scanSms.description": "Paste SMS messages, WhatsApp texts, or any text containing tracking numbers. We'll find and extract them automatically.",
+  "scanSms.found": "Found {count} tracking number:",
+  "scanSms.foundPlural": "Found {count} tracking numbers:",
+  "scanSms.track": "Track",
+  "scanSms.trackAll": "Track All ({count})",
+  "scanSms.noResults": "No tracking numbers found. Try pasting more text or a different message.",
   "scanSms.rescan": "Re-scan",
   "scanSms.scanText": "Scan Text",
 
@@ -387,6 +399,124 @@ const en = {
 
   // Package detail page extras
   "detail.packageDetailsTitle": "Package Details",
+
+  // Order detail page
+  "detail.backToOrders": "Back to Orders",
+  "detail.deleteConfirm": "Delete?",
+  "detail.no": "No",
+  "detail.platform": "Platform",
+  "detail.orderDate": "Order Date",
+  "detail.amount": "Amount",
+  "detail.items": "Items",
+  "detail.trackingAndShipment": "Tracking & Shipment",
+  "detail.shipments": "shipments",
+  "detail.shipment": "Shipment",
+  "detail.refresh": "Refresh",
+  "detail.tracking": "Tracking",
+  "detail.carrier": "Carrier",
+  "detail.status": "Status",
+  "detail.location": "Location",
+  "detail.estDelivery": "Est. Delivery",
+  "detail.trackOn": "Track on {carrier}",
+  "detail.locationJourney": "Location Journey",
+  "detail.viewFullRoute": "View Full Route on Maps",
+  "detail.pickedUpHeader": "✅ Picked Up",
+  "detail.readyForPickupHeader": "📦 Ready for Pickup",
+  "detail.deliveredBy": "Delivered by {name}",
+  "detail.pickupCode": "Pickup Code",
+  "detail.address": "Address",
+  "detail.phone": "Phone",
+  "detail.trackOnCarrierSite": "Track on Carrier Site",
+  "detail.openingHours": "Opening Hours",
+  "detail.verificationCode": "Verification Code",
+  "detail.notFoundInEmails": "Not found in emails",
+  "detail.viewOrderOnPlatform": "View order on {platform}",
+  "detail.relatedOrders": "Related Orders",
+  "detail.orderID": "Order ID",
+  "detail.orderDateLabel": "Order date",
+
+  // Packages/[id] page (standalone package detail)
+  "detail.lastLocation": "Last location",
+  "detail.estimatedDelivery": "Estimated delivery",
+  "detail.orderTotal": "Order total",
+  "detail.invalidLinkPkg": "This package may have been deleted or the link is invalid.",
+
+  // Package card
+  "card.delivered": "Delivered",
+  "card.shippedPending": "Shipped — tracking pending",
+  "card.awaitingShipment": "Awaiting shipment",
+  "card.moreItems": "+{count} more",
+  "card.noItemDetails": "No item details",
+  "card.pickedUp": "Picked up",
+  "card.pickupReady": "Pickup ready",
+
+  // Package kanban
+  "kanban.noPackages": "No packages to display",
+
+  // Package table headers
+  "table.merchant": "Merchant",
+  "table.items": "Items",
+  "table.tracking": "Tracking",
+  "table.carrier": "Carrier",
+  "table.status": "Status",
+  "table.location": "Location",
+  "table.date": "Date",
+  "table.amount": "Amount",
+
+  // Tracking timeline
+  "timeline.noEvents": "No tracking events yet",
+
+  // Notification bell dropdown
+  "notificationBell.title": "Notifications",
+  "notificationBell.noNotifications": "No notifications yet",
+  "notificationBell.emptyHint": "You'll see updates here when your packages change status",
+  "notificationBell.seeAll": "See all notifications",
+  "notificationBell.newCount": "{count} new notification",
+  "notificationBell.newCountPlural": "{count} new notifications",
+
+  // Notifications page extras
+  "notifications.activity": "Activity",
+  "notifications.new": "new",
+  "notifications.statusUpdates": "Package status updates and delivery alerts",
+  "notifications.viewOrder": "View order",
+  "notifications.loadMore": "Load more",
+
+  // Time formatting
+  "time.justNow": "just now",
+  "time.mAgo": "{count}m ago",
+  "time.hAgo": "{count}h ago",
+  "time.dAgo": "{count}d ago",
+
+  // Profile page extras
+  "profile.accountDetails": "Account Details",
+  "profile.usageStats": "Usage Stats",
+  "profile.verified": "Verified",
+  "profile.couldntLoad": "Couldn't load your profile",
+  "profile.tryAgain": "Try Again",
+  "profile.goToOrders": "Go to Orders",
+  "profile.orders": "Orders",
+  "profile.packages": "Packages",
+  "profile.delivered": "Delivered",
+  "profile.stores": "Stores",
+  "profile.carriers": "Carriers",
+  "profile.notifications": "Notifications",
+  "profile.inTransit": "In transit",
+  "profile.trackingEvents": "Tracking events",
+  "profile.connectedEmails": "Connected emails",
+
+  // Settings extras
+  "settings.connectEmailDesc": "Connect your email to automatically track packages from order confirmations",
+  "settings.lastSynced": "Last synced:",
+  "settings.passkey": "Passkey",
+  "settings.added": "Added",
+  "settings.synced": "Synced",
+
+  // Sidebar extras
+  "nav.menu": "Menu",
+  "nav.tagline": "Every package. One dashboard.",
+  "nav.theme": "Theme:",
+  "nav.openMenu": "Open menu",
+  "nav.closeMenu": "Close menu",
 } as const;
 
 export type TranslationKey = keyof typeof en;

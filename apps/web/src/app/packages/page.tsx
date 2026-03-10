@@ -36,23 +36,23 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 const STATUS_OPTIONS = [
-  { value: "", label: "All statuses" },
-  { value: "ORDERED", label: "Ordered" },
-  { value: "PROCESSING", label: "Processing" },
-  { value: "SHIPPED", label: "Shipped" },
-  { value: "IN_TRANSIT", label: "In Transit" },
-  { value: "OUT_FOR_DELIVERY", label: "Out for Delivery" },
-  { value: "DELIVERED", label: "Delivered" },
-  { value: "EXCEPTION", label: "Exception" },
-  { value: "RETURNED", label: "Returned" },
+  { value: "", labelKey: "orders.allStatuses" },
+  { value: "ORDERED", labelKey: "status.ORDERED" },
+  { value: "PROCESSING", labelKey: "status.PROCESSING" },
+  { value: "SHIPPED", labelKey: "status.SHIPPED" },
+  { value: "IN_TRANSIT", labelKey: "status.IN_TRANSIT" },
+  { value: "OUT_FOR_DELIVERY", labelKey: "status.OUT_FOR_DELIVERY" },
+  { value: "DELIVERED", labelKey: "status.DELIVERED" },
+  { value: "EXCEPTION", labelKey: "status.EXCEPTION" },
+  { value: "RETURNED", labelKey: "status.RETURNED" },
 ];
 
 const TIME_PERIODS = [
-  { value: "7d", label: "7D", days: 7 },
-  { value: "30d", label: "30D", days: 30 },
-  { value: "6m", label: "6M", days: 180 },
-  { value: "1y", label: "1Y", days: 365 },
-  { value: "all", label: "All", days: 0 },
+  { value: "7d", labelKey: "filter.7d", days: 7 },
+  { value: "30d", labelKey: "filter.30d", days: 30 },
+  { value: "6m", labelKey: "filter.6m", days: 180 },
+  { value: "1y", labelKey: "filter.1y", days: 365 },
+  { value: "all", labelKey: "filter.all", days: 0 },
 ];
 
 const SORT_OPTIONS = [
@@ -282,9 +282,9 @@ function PackagesContent() {
             <AddPackageDialog />
             <Button onClick={() => setScanOpen(true)} variant="outline" size="sm" className="cursor-pointer" title={t("settings.scanPasteText")}>
               <MessageSquare className="h-4 w-4" />
-              <span className="hidden sm:inline">Scan Messages</span>
+              <span className="hidden sm:inline">{t("orders.scanMessages")}</span>
             </Button>
-            <Button onClick={handleFullSync} variant="outline" size="sm" disabled={busy} className="cursor-pointer" title="Sync emails from Gmail and update all tracking statuses">
+            <Button onClick={handleFullSync} variant="outline" size="sm" disabled={busy} className="cursor-pointer" title={t("orders.syncTooltip")}>
               <RefreshCw className={`h-4 w-4 transition-transform ${busy ? "animate-spin" : ""}`} />
               {syncProgress || (isSyncing ? t("orders.syncing") : t("orders.syncAll"))}
             </Button>
@@ -336,7 +336,7 @@ function PackagesContent() {
                   <p className="text-2xl font-extrabold text-foreground leading-none">
                     <AnimatedNumber value={activeCount} />
                   </p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Active</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{t("stat.active")}</p>
                 </div>
               </div>
               <div className="flex-1 flex items-center px-4 py-3 sm:px-5">
@@ -373,7 +373,7 @@ function PackagesContent() {
                   <p className="text-xl font-bold text-foreground leading-none">
                     <AnimatedNumber value={stats.total} />
                   </p>
-                  <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider">Total</p>
+                  <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider">{t("orders.total")}</p>
                 </div>
               </div>
             </div>
@@ -447,7 +447,7 @@ function PackagesContent() {
                   size="sm"
                   className="rounded-md px-2.5 py-1 text-xs font-medium data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:shadow-sm"
                 >
-                  {p.label}
+                  {t(p.labelKey as any)}
                 </ToggleGroupItem>
               ))}
             </ToggleGroup>
@@ -456,7 +456,7 @@ function PackagesContent() {
             {!isLoading && totalCount > 0 && (
               <p className="text-xs text-muted-foreground">
                 {isFetching && !isFetchingNextPage ? <Loader2 className="inline h-3 w-3 animate-spin mr-1" /> : null}
-                {allItems.length} of {totalCount}
+                {allItems.length} {t("orders.of")} {totalCount}
               </p>
             )}
             <ToggleGroup type="single" value={view} onValueChange={(v) => v && setView(v as ViewMode)} className="bg-muted rounded-lg p-1 gap-0 shrink-0">
@@ -493,7 +493,7 @@ function PackagesContent() {
       ) : allItems.length === 0 ? (
         <FadeIn>
           <EmptyState
-            title={query || status ? "No orders found" : t("orders.noPackages")}
+            title={query || status ? t("orders.noOrdersFound") : t("orders.noPackages")}
             description={
               query || status
                 ? t("orders.adjustFilters")
@@ -501,7 +501,7 @@ function PackagesContent() {
                 ? t("orders.emptyConnected")
                 : t("orders.emptyNotConnected")
             }
-            action={!query && !status && !hasConnectedEmail ? { label: "Connect email", href: "/settings" } : undefined}
+            action={!query && !status && !hasConnectedEmail ? { label: t("orders.connectEmail"), href: "/settings" } : undefined}
           />
         </FadeIn>
       ) : (

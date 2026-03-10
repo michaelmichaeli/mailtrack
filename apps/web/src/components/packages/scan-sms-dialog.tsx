@@ -109,11 +109,10 @@ export function ScanSmsDialog({ open, onOpenChange }: ScanSmsDialogProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-primary" />
-            Scan Messages for Tracking
+            {t("scanSms.title")}
           </DialogTitle>
           <DialogDescription>
-            Paste SMS messages, WhatsApp texts, or any text containing tracking numbers.
-            We&apos;ll find and extract them automatically.
+            {t("scanSms.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -132,7 +131,7 @@ export function ScanSmsDialog({ open, onOpenChange }: ScanSmsDialogProps) {
           {results && results.length > 0 && (
             <div className="space-y-2">
               <p className="text-sm font-medium text-foreground">
-                Found {results.length} tracking number{results.length !== 1 ? "s" : ""}:
+                {results.length !== 1 ? t("scanSms.foundPlural").replace("{count}", String(results.length)) : t("scanSms.found").replace("{count}", String(results.length))}
               </p>
               <div className="space-y-1.5 max-h-[200px] overflow-y-auto">
                 {results.map((r, i) => (
@@ -167,7 +166,7 @@ export function ScanSmsDialog({ open, onOpenChange }: ScanSmsDialogProps) {
                         ) : (
                           <Plus className="h-3 w-3" />
                         )}
-                        Track
+                         {t("scanSms.track")}
                       </Button>
                     )}
                   </div>
@@ -178,7 +177,7 @@ export function ScanSmsDialog({ open, onOpenChange }: ScanSmsDialogProps) {
 
           {results && results.length === 0 && (
             <div className="text-center py-4 text-sm text-muted-foreground">
-              No tracking numbers found. Try pasting more text or a different message.
+              {t("scanSms.noResults")}
             </div>
           )}
         </div>
@@ -187,7 +186,7 @@ export function ScanSmsDialog({ open, onOpenChange }: ScanSmsDialogProps) {
           {results && newCount > 0 && (
             <Button variant="default" onClick={handleAddAll} className="gap-1.5">
               <Plus className="h-4 w-4" />
-              Track All ({newCount})
+              {t("scanSms.trackAll").replace("{count}", String(newCount))}
             </Button>
           )}
           <Button
