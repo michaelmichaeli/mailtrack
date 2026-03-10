@@ -527,6 +527,21 @@ export default function OrderDetailPage() {
                         <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Phone</p>
                         <p className="text-sm font-medium text-foreground mt-0.5">
                           <a href={`tel:${pickup.phone}`} className="hover:underline">{pickup.phone}</a>
+                          {pickup.phoneNotes && (
+                            <span className="text-xs text-muted-foreground ms-1.5">({pickup.phoneNotes})</span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {pickup.email && (
+                    <div className="flex items-start gap-2.5">
+                      <MapPin className="h-4 w-4 mt-0.5 shrink-0" style={{ color: '#047857' }} />
+                      <div>
+                        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Email</p>
+                        <p className="text-sm font-medium text-foreground mt-0.5">
+                          <a href={`mailto:${pickup.email}`} className="hover:underline">{pickup.email}</a>
                         </p>
                       </div>
                     </div>

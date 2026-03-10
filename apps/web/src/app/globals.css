@@ -55,6 +55,7 @@
   --color-status-shipped: #3B82F6;
   --color-status-in-transit: #6366F1;
   --color-status-out-for-delivery: #8B5CF6;
+  --color-status-picked-up: #14B8A6;
   --color-status-delivered: #10B981;
   --color-status-exception: #F59E0B;
   --color-status-returned: #EF4444;

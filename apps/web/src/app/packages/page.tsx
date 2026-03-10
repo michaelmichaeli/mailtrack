@@ -42,16 +42,17 @@ const STATUS_OPTIONS = [
   { value: "SHIPPED", labelKey: "status.SHIPPED" },
   { value: "IN_TRANSIT", labelKey: "status.IN_TRANSIT" },
   { value: "OUT_FOR_DELIVERY", labelKey: "status.OUT_FOR_DELIVERY" },
+  { value: "PICKED_UP", labelKey: "status.PICKED_UP" },
   { value: "DELIVERED", labelKey: "status.DELIVERED" },
   { value: "EXCEPTION", labelKey: "status.EXCEPTION" },
   { value: "RETURNED", labelKey: "status.RETURNED" },
 ];
 
 const TIME_PERIODS = [
-  { value: "7d", labelKey: "filter.7d", days: 7 },
-  { value: "30d", labelKey: "filter.30d", days: 30 },
-  { value: "6m", labelKey: "filter.6m", days: 180 },
-  { value: "1y", labelKey: "filter.1y", days: 365 },
+  { value: "day", labelKey: "filter.day", days: 1 },
+  { value: "week", labelKey: "filter.week", days: 7 },
+  { value: "month", labelKey: "filter.month", days: 30 },
+  { value: "year", labelKey: "filter.year", days: 365 },
   { value: "all", labelKey: "filter.all", days: 0 },
 ];
 
@@ -88,7 +89,7 @@ function PackagesContent() {
   const router = useRouter();
   const { t } = useI18n();
   const initialStatus = searchParams.get("status") ?? "";
-  const initialPeriod = searchParams.get("period") ?? "30d";
+  const initialPeriod = searchParams.get("period") ?? "month";
   const initialQuery = searchParams.get("q") ?? "";
   const initialView = (searchParams.get("view") as ViewMode) || "grid";
   const initialSort = searchParams.get("sort") ?? "updatedAt:desc";
@@ -126,7 +127,7 @@ function PackagesContent() {
     const params = new URLSearchParams();
     if (debouncedQuery) params.set("q", debouncedQuery);
     if (status) params.set("status", status);
-    if (period && period !== "30d") params.set("period", period);
+    if (period && period !== "month") params.set("period", period);
     if (view && view !== "grid") params.set("view", view);
     if (sort && sort !== "updatedAt:desc") params.set("sort", sort);
     const qs = params.toString();
@@ -180,7 +181,15 @@ function PackagesContent() {
     return () => observer.disconnect();
   }, [handleObserver]);
 
-  const allItems = data?.pages.flatMap((p: any) => p.items) ?? [];
+  const allItems = (() => {
+    const items = data?.pages.flatMap((p: any) => p.items) ?? [];
+    const seen = new Set<string>();
+    return items.filter((item: any) => {
+      if (seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    });
+  })();
   const totalCount = data?.pages[0]?.total ?? 0;
 
   const finishSync = () => {

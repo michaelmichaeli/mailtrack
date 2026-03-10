@@ -24,10 +24,10 @@ const ru: Record<TranslationKey, string> = {
   "orders.timeline": "Хронология",
 
   // Time filters
-  "filter.7d": "7Д",
-  "filter.30d": "30Д",
-  "filter.6m": "6М",
-  "filter.1y": "1Г",
+  "filter.day": "День",
+  "filter.week": "Неделя",
+  "filter.month": "Месяц",
+  "filter.year": "Год",
   "filter.all": "Все",
 
   // Sort options
@@ -46,6 +46,7 @@ const ru: Record<TranslationKey, string> = {
   "status.SHIPPED": "Отправлено",
   "status.IN_TRANSIT": "В пути",
   "status.OUT_FOR_DELIVERY": "На доставке",
+  "status.PICKED_UP": "Получено",
   "status.DELIVERED": "Доставлено",
   "status.EXCEPTION": "Проблема",
   "status.RETURNED": "Возвращено",
@@ -499,6 +500,7 @@ const ru: Record<TranslationKey, string> = {
   "progress.shipped": "Отправлено",
   "progress.inTransit": "В пути",
   "progress.ready": "Готово",
+  "progress.pickedUp": "Получено",
   "progress.delivered": "Доставлено",
   "notifTitle.newOrder": "Обнаружен новый заказ",
   "notifTitle.packageDelivered": "Посылка доставлена! 🎉",

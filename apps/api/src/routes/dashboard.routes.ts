@@ -13,8 +13,8 @@ export const dashboardRoutes: FastifyPluginAsync = async (app) => {
     const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
 
     // Time range filter
-    const periodDays: Record<string, number> = { "7d": 7, "30d": 30, "90d": 90, "180d": 180, "365d": 365 };
-    const days = periodDays[period ?? "30d"];
+    const periodDays: Record<string, number> = { "day": 1, "week": 7, "month": 30, "year": 365, "7d": 7, "30d": 30, "90d": 90, "180d": 180, "365d": 365 };
+    const days = periodDays[period ?? "month"];
     const cutoff = days ? new Date(now.getTime() - days * 24 * 60 * 60 * 1000) : undefined;
 
     // Check if older data exists
@@ -64,7 +64,8 @@ export const dashboardRoutes: FastifyPluginAsync = async (app) => {
           (pkg.estimatedDelivery &&
             pkg.estimatedDelivery >= todayStart &&
             pkg.estimatedDelivery < todayEnd &&
-            pkg.status !== PackageStatus.DELIVERED)
+            pkg.status !== PackageStatus.DELIVERED &&
+            pkg.status !== PackageStatus.PICKED_UP)
         ) {
           arrivingToday.push(order);
         } else if (
@@ -73,7 +74,8 @@ export const dashboardRoutes: FastifyPluginAsync = async (app) => {
         ) {
           inTransit.push(order);
         } else if (
-          pkg.status === PackageStatus.DELIVERED
+          pkg.status === PackageStatus.DELIVERED ||
+          pkg.status === PackageStatus.PICKED_UP
         ) {
           delivered.push(order);
         } else if (
@@ -85,7 +87,7 @@ export const dashboardRoutes: FastifyPluginAsync = async (app) => {
           processing.push(order);
         }
       } else {
-        if (orderStatus === PackageStatus.DELIVERED) {
+        if (orderStatus === PackageStatus.DELIVERED || orderStatus === PackageStatus.PICKED_UP) {
           delivered.push(order);
         } else if (orderStatus === PackageStatus.IN_TRANSIT || orderStatus === PackageStatus.SHIPPED) {
           inTransit.push(order);
@@ -136,7 +138,7 @@ export const dashboardRoutes: FastifyPluginAsync = async (app) => {
       processing: processing.map(formatOrder),
       delivered: delivered.map(formatOrder),
       exceptions: exceptions.map(formatOrder),
-      period: period ?? "30d",
+      period: period ?? "month",
       hasOlderData,
       stats: {
         total: orders.length,

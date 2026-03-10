@@ -7,6 +7,7 @@ const steps = [
   { key: "SHIPPED", labelKey: "progress.shipped" },
   { key: "IN_TRANSIT", labelKey: "progress.inTransit" },
   { key: "OUT_FOR_DELIVERY", labelKey: "progress.ready" },
+  { key: "PICKED_UP", labelKey: "progress.pickedUp" },
   { key: "DELIVERED", labelKey: "progress.delivered" },
 ] as const;
 
@@ -16,7 +17,8 @@ const statusIndex: Record<string, number> = {
   SHIPPED: 1,
   IN_TRANSIT: 2,
   OUT_FOR_DELIVERY: 3,
-  DELIVERED: 4,
+  PICKED_UP: 4,
+  DELIVERED: 5,
 };
 
 interface PackageProgressBarProps {

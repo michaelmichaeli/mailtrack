@@ -24,10 +24,10 @@ const ar: Record<TranslationKey, string> = {
   "orders.timeline": "الجدول الزمني",
 
   // Time filters
-  "filter.7d": "7أ",
-  "filter.30d": "30ي",
-  "filter.6m": "6أ",
-  "filter.1y": "سنة",
+  "filter.day": "يوم",
+  "filter.week": "أسبوع",
+  "filter.month": "شهر",
+  "filter.year": "سنة",
   "filter.all": "الكل",
 
   // Sort options
@@ -46,6 +46,7 @@ const ar: Record<TranslationKey, string> = {
   "status.SHIPPED": "تم الشحن",
   "status.IN_TRANSIT": "في الطريق",
   "status.OUT_FOR_DELIVERY": "خرج للتوصيل",
+  "status.PICKED_UP": "تم الاستلام",
   "status.DELIVERED": "تم التوصيل",
   "status.EXCEPTION": "استثناء",
   "status.RETURNED": "تم الإرجاع",
@@ -499,6 +500,7 @@ const ar: Record<TranslationKey, string> = {
   "progress.shipped": "تم الشحن",
   "progress.inTransit": "في الطريق",
   "progress.ready": "جاهز",
+  "progress.pickedUp": "تم الاستلام",
   "progress.delivered": "تم التسليم",
   "notifTitle.newOrder": "تم اكتشاف طلب جديد",
   "notifTitle.packageDelivered": "تم تسليم الطرد! 🎉",

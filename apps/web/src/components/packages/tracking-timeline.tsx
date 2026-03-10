@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { MapPin, Package, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, type TranslationKey } from "@/lib/i18n";
 
 interface TrackingEvent {
   id: string;
@@ -18,6 +18,7 @@ interface TrackingTimelineProps {
 const statusColors: Record<string, { dot: string; ring: string; badgeStyle: { backgroundColor: string; color: string } }> = {
   DELIVERED:        { dot: "bg-emerald-500", ring: "ring-emerald-500/20", badgeStyle: { backgroundColor: '#d1fae5', color: '#047857' } },
   OUT_FOR_DELIVERY: { dot: "bg-violet-500",  ring: "ring-violet-500/20",  badgeStyle: { backgroundColor: '#ede9fe', color: '#6d28d9' } },
+  PICKED_UP:        { dot: "bg-teal-500",    ring: "ring-teal-500/20",    badgeStyle: { backgroundColor: '#ccfbf1', color: '#0f766e' } },
   IN_TRANSIT:       { dot: "bg-indigo-500",  ring: "ring-indigo-500/20",  badgeStyle: { backgroundColor: '#e0e7ff', color: '#4338ca' } },
   SHIPPED:          { dot: "bg-blue-500",    ring: "ring-blue-500/20",    badgeStyle: { backgroundColor: '#dbeafe', color: '#1d4ed8' } },
   PROCESSING:       { dot: "bg-slate-400",   ring: "ring-slate-400/20",   badgeStyle: { backgroundColor: '#f1f5f9', color: '#334155' } },
@@ -27,14 +28,11 @@ const statusColors: Record<string, { dot: string; ring: string; badgeStyle: { ba
 
 const defaultColors = { dot: "bg-muted-foreground", ring: "ring-muted-foreground/20", badgeStyle: { backgroundColor: '#f1f5f9', color: '#64748b' } };
 
-function formatStatus(s: string): string {
-  return s.toLowerCase().replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-}
-
-function TimelineRow({ event, isFirst, isLast, colors, dateLocale }: {
+function TimelineRow({ event, isFirst, isLast, colors, dateLocale, t }: {
   event: TrackingEvent; isFirst: boolean; isLast: boolean;
   colors: { dot: string; ring: string; badgeStyle: { backgroundColor: string; color: string } };
   dateLocale: string;
+  t: (key: TranslationKey) => string;
 }) {
   const dt = new Date(event.timestamp);
   return (
@@ -63,7 +61,7 @@ function TimelineRow({ event, isFirst, isLast, colors, dateLocale }: {
         </p>
         <div className="flex flex-wrap items-center gap-2 mt-1">
           <span className="inline-block rounded-full px-2 py-px text-[10px] font-medium" style={colors.badgeStyle}>
-            {formatStatus(event.status)}
+            {t(`status.${event.status}` as TranslationKey)}
           </span>
           {event.location && (
             <span className="inline-flex items-center gap-0.5 text-[11px] text-muted-foreground/70">
@@ -102,7 +100,7 @@ export function TrackingTimeline({ events }: TrackingTimelineProps) {
         const isFirst = index === 0;
         const isLast = index === alwaysVisible.length - 1 && !showToggle;
         const colors = statusColors[event.status] ?? defaultColors;
-        return <TimelineRow key={event.id} event={event} isFirst={isFirst} isLast={isLast} colors={colors} dateLocale={dateLocale} />;
+        return <TimelineRow key={event.id} event={event} isFirst={isFirst} isLast={isLast} colors={colors} dateLocale={dateLocale} t={t} />;
       })}
 
       {showToggle && (
@@ -116,7 +114,7 @@ export function TrackingTimeline({ events }: TrackingTimelineProps) {
               {collapsible.map((event, index) => {
                 const isLast = index === collapsible.length - 1;
                 const colors = statusColors[event.status] ?? defaultColors;
-                return <TimelineRow key={event.id} event={event} isFirst={false} isLast={isLast} colors={colors} dateLocale={dateLocale} />;
+                return <TimelineRow key={event.id} event={event} isFirst={false} isLast={isLast} colors={colors} dateLocale={dateLocale} t={t} />;
               })}
             </div>
           </div>

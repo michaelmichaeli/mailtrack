@@ -51,6 +51,8 @@ const STATUS_PATTERNS: Array<{ pattern: RegExp; status: PackageStatus }> = [
   { pattern: /out for delivery|arriving today/i, status: PackageStatus.OUT_FOR_DELIVERY },
   { pattern: /in your country|with local carrier|collected by local carrier/i, status: PackageStatus.OUT_FOR_DELIVERY },
   { pattern: /delivery attempt|attempted delivery/i, status: PackageStatus.OUT_FOR_DELIVERY },
+  // Picked up
+  { pattern: /picked up from|collected from|package collected|has been picked up/i, status: PackageStatus.PICKED_UP },
   // In transit
   { pattern: /has cleared customs|clearing customs/i, status: PackageStatus.IN_TRANSIT },
   { pattern: /left the departure region|in global transit|in transit/i, status: PackageStatus.IN_TRANSIT },

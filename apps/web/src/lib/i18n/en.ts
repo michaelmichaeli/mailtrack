@@ -28,10 +28,10 @@ const en = {
   "orders.syncTooltip": "Sync emails from Gmail and update all tracking statuses",
 
   // Time filters
-  "filter.7d": "7D",
-  "filter.30d": "30D",
-  "filter.6m": "6M",
-  "filter.1y": "1Y",
+  "filter.day": "Day",
+  "filter.week": "Week",
+  "filter.month": "Month",
+  "filter.year": "Year",
   "filter.all": "All",
 
   // Sort options
@@ -50,6 +50,7 @@ const en = {
   "status.SHIPPED": "Shipped",
   "status.IN_TRANSIT": "In Transit",
   "status.OUT_FOR_DELIVERY": "Out for Delivery",
+  "status.PICKED_UP": "Picked Up",
   "status.DELIVERED": "Delivered",
   "status.EXCEPTION": "Exception",
   "status.RETURNED": "Returned",
@@ -294,6 +295,7 @@ const en = {
   "progress.shipped": "Shipped",
   "progress.inTransit": "In Transit",
   "progress.ready": "Ready",
+  "progress.pickedUp": "Picked Up",
   "progress.delivered": "Delivered",
 
   // Server notification titles (translated client-side)

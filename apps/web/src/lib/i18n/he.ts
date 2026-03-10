@@ -24,10 +24,10 @@ const he: Record<TranslationKey, string> = {
   "orders.timeline": "ציר זמן",
 
   // Time filters
-  "filter.7d": "7י",
-  "filter.30d": "30י",
-  "filter.6m": "6ח",
-  "filter.1y": "שנה",
+  "filter.day": "יום",
+  "filter.week": "שבוע",
+  "filter.month": "חודש",
+  "filter.year": "שנה",
   "filter.all": "הכל",
 
   // Sort options
@@ -46,6 +46,7 @@ const he: Record<TranslationKey, string> = {
   "status.SHIPPED": "נשלח",
   "status.IN_TRANSIT": "בדרך",
   "status.OUT_FOR_DELIVERY": "בחלוקה",
+  "status.PICKED_UP": "נאסף",
   "status.DELIVERED": "נמסר",
   "status.EXCEPTION": "חריגה",
   "status.RETURNED": "הוחזר",
@@ -499,6 +500,7 @@ const he: Record<TranslationKey, string> = {
   "progress.shipped": "נשלח",
   "progress.inTransit": "בדרך",
   "progress.ready": "מוכן",
+  "progress.pickedUp": "נאסף",
   "progress.delivered": "נמסר",
   "notifTitle.newOrder": "הזמנה חדשה זוהתה",
   "notifTitle.packageDelivered": "החבילה נמסרה! 🎉",

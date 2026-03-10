@@ -4,6 +4,7 @@ export const PACKAGE_STATUS_LABELS: Record<string, string> = {
   SHIPPED: "Shipped",
   IN_TRANSIT: "In Transit",
   OUT_FOR_DELIVERY: "Out for Delivery",
+  PICKED_UP: "Picked Up",
   DELIVERED: "Delivered",
   EXCEPTION: "Exception",
   RETURNED: "Returned",
@@ -15,6 +16,7 @@ export const PACKAGE_STATUS_COLORS: Record<string, string> = {
   SHIPPED: "blue",
   IN_TRANSIT: "blue",
   OUT_FOR_DELIVERY: "indigo",
+  PICKED_UP: "teal",
   DELIVERED: "green",
   EXCEPTION: "orange",
   RETURNED: "red",
@@ -26,6 +28,7 @@ export const PACKAGE_STATUS_ORDER = [
   "SHIPPED",
   "IN_TRANSIT",
   "OUT_FOR_DELIVERY",
+  "PICKED_UP",
   "DELIVERED",
 ] as const;
 
@@ -37,7 +40,7 @@ export const CARRIER_PATTERNS: Record<string, RegExp> = {
   DHL: /\b(\d{10,11}|[A-Z]{3}\d{7,20}|JJD\d{18})\b/i,
   DPD: /\b\d{14}\b/,
   ROYAL_MAIL: /\b[A-Z]{2}\d{9}GB\b/i,
-  CAINIAO: /\b(LP|CAINIAO)\d{12,20}\b/i,
+  CAINIAO: /\b(LP|CAINIAO|AP00)\d{12,20}\b/i,
   YANWEN: /\bY[A-Z]\d{9}[A-Z]{2}\b/i,
   ISRAEL_POST: /\b[A-Z]{2}\d{9}IL\b/i,
   ALIEXPRESS_STANDARD: /\b[A-Z]{2}\d{9,13}[A-Z]?\b/,

@@ -2,10 +2,10 @@ import { notifyStatusChange } from "./notification.service.js";
 
 const STATUS_PRIORITY: Record<string, number> = {
   ORDERED: 0, PROCESSING: 1, SHIPPED: 2, IN_TRANSIT: 3,
-  OUT_FOR_DELIVERY: 4, DELIVERED: 5, RETURNED: 5, EXCEPTION: 3,
+  OUT_FOR_DELIVERY: 4, PICKED_UP: 5, DELIVERED: 6, RETURNED: 6, EXCEPTION: 3,
 };
 
-const TERMINAL_STATUSES = ["DELIVERED", "RETURNED"];
+const TERMINAL_STATUSES = ["DELIVERED", "RETURNED", "PICKED_UP"];
 
 /**
  * Sync tracking result into the database for a given package.
@@ -80,6 +80,23 @@ export async function syncPackageFromResult(prisma: any, packageId: string, resu
       );
     } catch (e) {
       console.error("[notify] Error sending notification:", e);
+    }
+  }
+
+  // If tracking returned a status but no events, create a synthetic event
+  // so the timeline isn't empty
+  if (result.events.length === 0 && result.status && result.status !== oldStatus) {
+    const existingEvents = await prisma.trackingEvent.count({ where: { packageId } });
+    if (existingEvents === 0) {
+      await prisma.trackingEvent.create({
+        data: {
+          packageId,
+          timestamp: new Date(),
+          location: result.lastLocation || null,
+          status: result.status as any,
+          description: `Package status: ${result.status.replace(/_/g, " ").toLowerCase()}`,
+        },
+      });
     }
   }
 

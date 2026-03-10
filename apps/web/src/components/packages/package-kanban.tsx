@@ -35,6 +35,7 @@ const KANBAN_COLUMNS = [
   { status: "SHIPPED", color: "bg-blue-500" },
   { status: "IN_TRANSIT", color: "bg-indigo-500" },
   { status: "OUT_FOR_DELIVERY", color: "bg-purple-500" },
+  { status: "PICKED_UP", color: "bg-teal-500" },
   { status: "DELIVERED", color: "bg-emerald-500" },
   { status: "EXCEPTION", color: "bg-amber-500" },
   { status: "RETURNED", color: "bg-red-500" },

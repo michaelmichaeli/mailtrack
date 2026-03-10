@@ -8,6 +8,9 @@ import { CARRIER_PATTERNS } from "@mailtrack/shared";
 export function detectCarrier(trackingNumber: string): string {
   const n = trackingNumber.trim().toUpperCase();
 
+  // Skip numbers matching common phone patterns before checking carriers
+  if (PHONE_PATTERNS.some((p) => p.test(n))) return "UNKNOWN";
+
   for (const [carrier, pattern] of Object.entries(CARRIER_PATTERNS)) {
     if (pattern.test(n)) return carrier;
   }
@@ -16,7 +19,19 @@ export function detectCarrier(trackingNumber: string): string {
 }
 
 // Words that precede phone numbers — used to filter false positives
-const PHONE_CONTEXT = /(?:phone|tel|mobile|fax|call|whatsapp|\(\+?\d{1,3}\))\s*/i;
+const PHONE_CONTEXT = /(?:phone|tel|mobile|fax|call|whatsapp|contact|סלולרי|טלפון|נייד|\(\+?\d{1,3}\))\s*/i;
+
+// Common phone number patterns that should never be treated as tracking numbers
+// Israeli: 972XXXXXXXXX (12 digits), international: country codes starting with known prefixes
+const PHONE_PATTERNS = [
+  /^972\d{8,9}$/, // Israeli international format: 972-5X-XXX-XXXX
+  /^1[2-9]\d{9}$/, // US/Canada phone: 1XXXXXXXXXX (11 digits)
+  /^44\d{10}$/,    // UK phone: 44XXXXXXXXXX (12 digits)
+  /^49\d{10,11}$/, // German phone
+  /^33\d{9,10}$/,  // French phone
+  /^86\d{11}$/,    // Chinese phone
+  /^91\d{10}$/,    // Indian phone
+];
 
 /**
  * Extract tracking number from AliExpress/Cainiao email subject line.
@@ -61,6 +76,13 @@ export function extractTrackingNumbers(text: string): Array<{ trackingNumber: st
 
       // Filter: skip pure 10-digit numbers (too likely to be phone numbers)
       if (/^\d{10}$/.test(trackingNumber)) continue;
+
+      // Filter: skip numbers matching common international phone patterns
+      if (PHONE_PATTERNS.some((p) => p.test(trackingNumber))) continue;
+
+      // Filter: skip if followed by phone-related context
+      const after = text.substring(match.index + match[0].length, match.index + match[0].length + 30);
+      if (PHONE_CONTEXT.test(after)) continue;
 
       seen.add(trackingNumber);
       results.push({

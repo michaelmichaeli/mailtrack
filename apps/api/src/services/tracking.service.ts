@@ -24,7 +24,7 @@ const CAINIAO_STATUS_MAP: Record<string, PackageStatus> = {
 function actionCodeToStatus(actionCode: string, fallback: PackageStatus): PackageStatus {
   if (!actionCode) return fallback;
   if (actionCode.includes("DELIVERED") || actionCode.includes("SIGN") || actionCode === "GTMS_STA_SIGNED_DELIVER") return PackageStatus.DELIVERED;
-  if (actionCode === "GTMS_STA_SIGNED" || actionCode.includes("PICKUP")) return PackageStatus.OUT_FOR_DELIVERY;
+  if (actionCode === "GTMS_STA_SIGNED" || actionCode.includes("PICKUP")) return PackageStatus.PICKED_UP;
   if (actionCode.includes("GTMS_ACCEPT") || actionCode.includes("DELIVERING")) return PackageStatus.OUT_FOR_DELIVERY;
   if (actionCode.startsWith("CC_")) return PackageStatus.IN_TRANSIT;
   if (actionCode.includes("LH_") || actionCode.includes("SC_")) return PackageStatus.IN_TRANSIT;
@@ -274,11 +274,34 @@ async function trackPackageCainiao(
     // If no real pickup address, store carrier info only (no address to avoid fabrication)
     if (!pickupLocation && module.destCpInfo?.cpName) {
       const cp = module.destCpInfo;
+      // Clean phone: extract digits only, handle emails and extra text
+      let phone = cp.phone || null;
+      let phoneNotes: string | null = null;
+      let email: string | null = null;
+      if (phone) {
+        // If it's an email address, not a phone
+        const emailMatch = phone.match(/[\w.-]+@[\w.-]+/);
+        if (emailMatch) {
+          email = emailMatch[0];
+          phone = null;
+          const remainder = phone?.replace(emailMatch[0], "").trim();
+          if (remainder) phoneNotes = remainder;
+        } else {
+          const phoneMatch = phone.match(/^[\d\s+\-()]+/);
+          if (phoneMatch) {
+            const remainder = phone.slice(phoneMatch[0].length).trim();
+            phone = phoneMatch[0].trim();
+            if (remainder) phoneNotes = remainder;
+          }
+        }
+      }
       pickupLocation = {
         name: cp.cpName || null,
-        phone: cp.phone || null,
+        phone,
+        phoneNotes,
+        email,
         url: cp.url || null,
-        carrierOnly: true, // flag: this is carrier info, not a specific pickup point
+        carrierOnly: true,
       };
     }
 

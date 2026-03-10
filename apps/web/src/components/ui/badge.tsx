@@ -38,20 +38,10 @@ const statusConfig: Record<string, { bg: string; text: string; dot: string; dark
   SHIPPED:          { bg: "#dbeafe", text: "#1d4ed8", dot: "#3b82f6", darkBg: "rgba(30,58,138,0.6)", darkText: "#93c5fd" },
   IN_TRANSIT:       { bg: "#e0e7ff", text: "#4338ca", dot: "#6366f1", darkBg: "rgba(49,46,129,0.6)", darkText: "#a5b4fc" },
   OUT_FOR_DELIVERY: { bg: "#ede9fe", text: "#6d28d9", dot: "#8b5cf6", darkBg: "rgba(76,29,149,0.6)", darkText: "#c4b5fd" },
+  PICKED_UP:        { bg: "#ccfbf1", text: "#0f766e", dot: "#14b8a6", darkBg: "rgba(13,148,136,0.6)", darkText: "#5eead4" },
   DELIVERED:        { bg: "#d1fae5", text: "#047857", dot: "#10b981", darkBg: "rgba(6,78,59,0.6)",   darkText: "#6ee7b7" },
   EXCEPTION:        { bg: "#fef3c7", text: "#92400e", dot: "#f59e0b", darkBg: "rgba(120,53,15,0.6)", darkText: "#fcd34d" },
   RETURNED:         { bg: "#fee2e2", text: "#b91c1c", dot: "#ef4444", darkBg: "rgba(127,29,29,0.6)", darkText: "#fca5a5" },
-};
-
-const statusLabels: Record<string, string> = {
-  ORDERED: "Ordered",
-  PROCESSING: "Processing",
-  SHIPPED: "Shipped",
-  IN_TRANSIT: "In Transit",
-  OUT_FOR_DELIVERY: "Out for Delivery",
-  DELIVERED: "Delivered",
-  EXCEPTION: "Exception",
-  RETURNED: "Returned",
 };
 
 function Badge({

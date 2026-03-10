@@ -78,6 +78,7 @@ export async function notifyStatusChange(
     SHIPPED: "Shipped",
     IN_TRANSIT: "In Transit",
     OUT_FOR_DELIVERY: "Out for Delivery",
+    PICKED_UP: "Picked Up",
     DELIVERED: "Delivered 🎉",
     EXCEPTION: "⚠️ Exception",
     RETURNED: "Returned",

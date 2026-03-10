@@ -55,16 +55,19 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
         // If full sync requested, ignore lastSyncAt
         const since = isFullSync ? undefined : (connEmail.lastSyncAt ?? undefined);
 
+        // Initial sync or full re-sync: skip notifications (these are imports, not updates)
+        const isImport = !connEmail.lastSyncAt || isFullSync;
+
         const emails = await fetchGmailEmails(
           accessToken,
           refreshToken,
           since
         );
 
-      const STATUS_ORDER = ["ORDERED", "PROCESSING", "SHIPPED", "IN_TRANSIT", "OUT_FOR_DELIVERY", "DELIVERED"];
+      const STATUS_ORDER = ["ORDERED", "PROCESSING", "SHIPPED", "IN_TRANSIT", "OUT_FOR_DELIVERY", "PICKED_UP", "DELIVERED"];
       const STATUS_LABELS: Record<string, string> = {
         SHIPPED: "Shipped", IN_TRANSIT: "In Transit", OUT_FOR_DELIVERY: "Out for Delivery",
-        DELIVERED: "Delivered", EXCEPTION: "Exception", RETURNED: "Returned",
+        PICKED_UP: "Picked Up", DELIVERED: "Delivered", EXCEPTION: "Exception", RETURNED: "Returned",
       };
 
       for (const email of emails) {
@@ -145,8 +148,8 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
               where: { id: existingOrder.id },
               data: updateData,
             });
-            // Create notification for status change (only if not already notified)
-            if (updateData.status) {
+            // Create notification for status change (only on incremental syncs, not initial import)
+            if (updateData.status && !isImport) {
               const existingNotif = await app.prisma.notification.findFirst({
                 where: { userId, orderId: existingOrder.id, type: updateData.status === "DELIVERED" ? "DELIVERY" : "STATUS_CHANGE", body: { contains: STATUS_LABELS[updateData.status] ?? updateData.status } },
               });
@@ -154,7 +157,7 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
                 const itemName = parsed.items[0] || parsed.trackingNumber || "Package";
                 const STATUS_ICONS: Record<string, string> = {
                   SHIPPED: "📤", IN_TRANSIT: "🚚", OUT_FOR_DELIVERY: "📬",
-                  DELIVERED: "✅", EXCEPTION: "⚠️", RETURNED: "↩️",
+                  PICKED_UP: "🏪", DELIVERED: "✅", EXCEPTION: "⚠️", RETURNED: "↩️",
                 };
                 await app.prisma.notification.create({
                   data: {
@@ -198,33 +201,35 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
           });
           totalOrders++;
 
-          // Create notification for new order (only if not already notified for this order)
-          const itemName = parsed.items[0] || parsed.trackingNumber || "New package";
-          const existingNewNotif = await app.prisma.notification.findFirst({
-            where: { userId, orderId: order.id, type: "NEW_ORDER" },
-          });
-          if (!existingNewNotif) {
-            await app.prisma.notification.create({
-              data: {
-                userId,
-                type: "NEW_ORDER",
-                title: "New Order Detected",
-                body: `${itemName}${parsed.merchant ? ` from ${parsed.merchant}` : ""}`,
-                icon: "🛍️",
-                orderId: order.id,
-              },
+          // Create notification for new order (only on incremental syncs, not initial import)
+          if (!isImport) {
+            const itemName = parsed.items[0] || parsed.trackingNumber || "New package";
+            const existingNewNotif = await app.prisma.notification.findFirst({
+              where: { userId, orderId: order.id, type: "NEW_ORDER" },
             });
-            // Send push notification
-            try {
-              const pref = await app.prisma.notificationPreference.findUnique({ where: { userId } });
-              if (pref?.pushEnabled && pref?.pushSubscription) {
-                await sendPushNotification(pref.pushSubscription, {
-                  title: "🛍️ New Order Detected",
+            if (!existingNewNotif) {
+              await app.prisma.notification.create({
+                data: {
+                  userId,
+                  type: "NEW_ORDER",
+                  title: "New Order Detected",
                   body: `${itemName}${parsed.merchant ? ` from ${parsed.merchant}` : ""}`,
-                  url: `/orders/${order.id}`,
-                });
-              }
-            } catch (e) { /* non-fatal */ }
+                  icon: "🛍️",
+                  orderId: order.id,
+                },
+              });
+              // Send push notification
+              try {
+                const pref = await app.prisma.notificationPreference.findUnique({ where: { userId } });
+                if (pref?.pushEnabled && pref?.pushSubscription) {
+                  await sendPushNotification(pref.pushSubscription, {
+                    title: "🛍️ New Order Detected",
+                    body: `${itemName}${parsed.merchant ? ` from ${parsed.merchant}` : ""}`,
+                    url: `/orders/${order.id}`,
+                  });
+                }
+              } catch (e) { /* non-fatal */ }
+            }
           }
         }
 
@@ -255,7 +260,7 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
             packageId = existingPkg.id;
             const updateData: any = {};
             if (parsed.status) {
-              const statusOrder = ["ORDERED", "PROCESSING", "SHIPPED", "IN_TRANSIT", "OUT_FOR_DELIVERY", "DELIVERED"];
+              const statusOrder = ["ORDERED", "PROCESSING", "SHIPPED", "IN_TRANSIT", "OUT_FOR_DELIVERY", "PICKED_UP", "DELIVERED"];
               const currentIdx = statusOrder.indexOf(existingPkg.status);
               const newIdx = statusOrder.indexOf(parsed.status);
               if (newIdx > currentIdx) {
@@ -298,6 +303,7 @@ export const emailRoutes: FastifyPluginAsync = async (app) => {
               SHIPPED: "Package has been shipped",
               IN_TRANSIT: "Package is in transit",
               OUT_FOR_DELIVERY: "Package is ready for pickup / out for delivery",
+              PICKED_UP: "Package has been picked up",
               DELIVERED: "Package has been delivered",
             };
             const desc = statusDescriptions[parsed.status] ?? parsed.status;

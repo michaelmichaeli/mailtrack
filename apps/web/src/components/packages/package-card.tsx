@@ -70,6 +70,7 @@ export function PackageCard({ order }: OrderCardProps) {
     SHIPPED: "bg-status-shipped",
     IN_TRANSIT: "bg-status-in-transit",
     OUT_FOR_DELIVERY: "bg-status-out-for-delivery",
+    PICKED_UP: "bg-status-picked-up",
     DELIVERED: "bg-status-delivered",
     EXCEPTION: "bg-status-exception",
     RETURNED: "bg-status-returned",
