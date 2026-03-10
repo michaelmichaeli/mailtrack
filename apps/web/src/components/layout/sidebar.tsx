@@ -36,13 +36,6 @@ export function Sidebar() {
     { code: "ru", label: "Русский" },
   ] as const;
 
-  const cycleLocale = () => {
-    const idx = LOCALES.findIndex((l) => l.code === locale);
-    const next = LOCALES[(idx + 1) % LOCALES.length];
-    setLocale(next.code);
-  };
-
-  const currentLocaleName = LOCALES.find((l) => l.code === locale)?.label ?? "English";
   const pathname = usePathname();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
@@ -71,15 +64,6 @@ export function Sidebar() {
     api.setToken(null);
     window.location.href = "/login";
   };
-
-  const cycleTheme = () => {
-    if (theme === "light") setTheme("dark");
-    else if (theme === "dark") setTheme("system");
-    else setTheme("light");
-  };
-
-  const themeLabel = !mounted ? "" : theme === "system" ? t("settings.system") : theme === "dark" ? t("settings.dark") : t("settings.light");
-  const ThemeIcon = !mounted ? Sun : theme === "dark" ? Moon : theme === "system" ? Monitor : Sun;
 
   const sidebarContent = (
     <>
@@ -129,21 +113,36 @@ export function Sidebar() {
       </nav>
 
       {/* Bottom actions */}
-      <div className="border-t border-border/60 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] space-y-0.5">
-        <button
-          onClick={cycleLocale}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all duration-200"
-        >
-          <Globe className="h-[18px] w-[18px]" />
-          {t("nav.language")}: {currentLocaleName}
-        </button>
-        <button
-          onClick={cycleTheme}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all duration-200"
-        >
-          <ThemeIcon className="h-[18px] w-[18px]" />
-          {t("nav.theme")} {themeLabel}
-        </button>
+      <div className="border-t border-border/60 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] space-y-1.5">
+        {/* Language select */}
+        <div className="flex items-center gap-3 rounded-lg px-3 py-1.5">
+          <Globe className="h-[18px] w-[18px] text-muted-foreground shrink-0" />
+          <select
+            value={locale}
+            onChange={(e) => setLocale(e.target.value)}
+            className="flex-1 bg-transparent text-sm font-medium text-muted-foreground hover:text-foreground cursor-pointer outline-none appearance-none"
+          >
+            {LOCALES.map((l) => (
+              <option key={l.code} value={l.code}>{l.label}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Theme select */}
+        <div className="flex items-center gap-3 rounded-lg px-3 py-1.5">
+          {mounted && (theme === "dark" ? <Moon className="h-[18px] w-[18px] text-muted-foreground shrink-0" /> : theme === "system" ? <Monitor className="h-[18px] w-[18px] text-muted-foreground shrink-0" /> : <Sun className="h-[18px] w-[18px] text-muted-foreground shrink-0" />)}
+          {!mounted && <Sun className="h-[18px] w-[18px] text-muted-foreground shrink-0" />}
+          <select
+            value={mounted ? theme ?? "system" : "system"}
+            onChange={(e) => setTheme(e.target.value)}
+            className="flex-1 bg-transparent text-sm font-medium text-muted-foreground hover:text-foreground cursor-pointer outline-none appearance-none"
+          >
+            <option value="light">{t("settings.light")}</option>
+            <option value="dark">{t("settings.dark")}</option>
+            <option value="system">{t("settings.system")}</option>
+          </select>
+        </div>
+
         <button
           onClick={handleSignOut}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
