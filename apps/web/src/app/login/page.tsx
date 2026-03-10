@@ -6,17 +6,20 @@ import { Suspense } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { AlertCircle, KeyRound } from "lucide-react";
+import { AlertCircle, KeyRound, Globe, Sun, Moon } from "lucide-react";
 import { api } from "@/lib/api";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { startAuthentication } from "@simplewebauthn/browser";
 import { useI18n } from "@/lib/i18n";
+import { useTheme } from "next-themes";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002";
 
 function LoginForm() {
-  const { t } = useI18n();
+  const { t, locale, setLocale } = useI18n();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
@@ -24,6 +27,8 @@ function LoginForm() {
   const [passkeyError, setPasskeyError] = useState<string | null>(null);
   const errorParam = searchParams.get("error");
   const [displayError, setDisplayError] = useState<string | null>(errorParam);
+
+  useEffect(() => { setMounted(true); }, []);
 
   // Clear error from URL after capturing it so it doesn't persist on navigation
   useEffect(() => {
@@ -84,6 +89,31 @@ function LoginForm() {
       <div className="absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] rounded-full bg-violet-500/[0.04] blur-3xl animate-float will-change-transform" style={{ animationDuration: '10s', animationDelay: '3s' }} />
       <div className="absolute top-[30%] right-[15%] w-[250px] h-[250px] rounded-full bg-indigo-400/[0.03] blur-2xl animate-float will-change-transform" style={{ animationDuration: '12s' }} />
       <div className="absolute bottom-[30%] left-[10%] w-[200px] h-[200px] rounded-full bg-violet-400/[0.03] blur-2xl animate-float will-change-transform" style={{ animationDuration: '14s', animationDelay: '2s' }} />
+
+      {/* Theme & language controls */}
+      <div className="absolute top-4 z-20 flex items-center gap-2 ltr:right-4 rtl:left-4">
+        <div className="flex items-center gap-1.5 rounded-full bg-card/80 backdrop-blur-sm border border-border/40 px-2 py-1 shadow-sm">
+          <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+          <select
+            value={locale}
+            onChange={(e) => setLocale(e.target.value)}
+            className="bg-transparent text-xs font-medium text-muted-foreground hover:text-foreground cursor-pointer outline-none appearance-none pe-1"
+          >
+            <option value="en">EN</option>
+            <option value="he">עב</option>
+            <option value="ar">عر</option>
+            <option value="ru">РУ</option>
+          </select>
+        </div>
+        {mounted && (
+          <button
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="flex items-center justify-center h-7 w-7 rounded-full bg-card/80 backdrop-blur-sm border border-border/40 shadow-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+          </button>
+        )}
+      </div>
 
       <Card className="w-full max-w-md shadow-2xl border-border/30 backdrop-blur-sm relative z-10 overflow-hidden">
         {/* Top gradient strip */}
