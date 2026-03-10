@@ -285,7 +285,7 @@ export default function NotificationsPage() {
                             <button
                               onClick={(e) => { e.stopPropagation(); markReadMutation.mutate(n.id); }}
                               className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                              title="Mark as read"
+                              title={t("notifications.markAsRead")}
                             >
                               <Check className="h-3.5 w-3.5" />
                             </button>
@@ -293,7 +293,7 @@ export default function NotificationsPage() {
                           <button
                             onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(n.id); }}
                             className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors"
-                            title="Delete"
+                            title={t("common.delete")}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>

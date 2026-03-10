@@ -265,6 +265,130 @@ const ru: Record<TranslationKey, string> = {
   // Package progress bar
   "progress.returned": "Возвращено",
   "progress.exception": "Проблема",
+
+  // Settings — additional sections
+  "settings.biometricDesc": "Вход с помощью Face ID, Touch ID или ключей безопасности",
+  "settings.dataPrivacyDesc": "Экспорт данных или управление аккаунтом",
+  "settings.dangerZoneDesc": "Необратимые действия — действуйте с осторожностью",
+  "settings.syncingEmails": "Синхронизация писем…",
+  "settings.syncFailed": "Синхронизация не удалась — попробуйте снова с панели",
+  "settings.noValidCsvRows": "В CSV не найдено допустимых строк",
+  "settings.copyApiKey": "Скопировать API-ключ в буфер обмена",
+  "settings.regenerateKey": "Сгенерировать API-ключ заново",
+  "settings.copyWebhookUrl": "Скопировать URL вебхука в буфер обмена",
+  "settings.smsForwardDesc": "Автоматическая пересылка SMS с отслеживанием в MailTrack",
+  "settings.pushNotifications": "Push-уведомления",
+  "settings.pushNotificationsDesc": "Получайте обновления о посылках в реальном времени",
+  "settings.emailDigest": "Дайджест по почте",
+  "settings.bulkImport": "Массовый импорт",
+  "settings.bulkImportDesc": "Импорт номеров отслеживания из CSV-файла",
+  "settings.scanPasteText": "Вставьте текст для поиска номеров отслеживания",
+
+  // Push notifications toasts
+  "toast.pushRequireHttps": "Push-уведомления требуют HTTPS. Попробуйте рабочий URL.",
+  "toast.swRegistrationFailed": "Регистрация Service Worker не удалась. Попробуйте обновить страницу.",
+  "toast.pushNotConfigured": "Push-уведомления не настроены на сервере",
+  "toast.notificationDenied": "Разрешение на уведомления отклонено. Проверьте настройки браузера.",
+  "toast.pushEnabled": "Push-уведомления включены!",
+  "toast.pushUnavailable": "Сервис push недоступен. Этот браузер может не поддерживать push на данном домене.",
+  "toast.failedEnablePush": "Не удалось включить push-уведомления",
+  "toast.pushDisabled": "Push-уведомления отключены",
+  "toast.failedDisablePush": "Не удалось отключить push-уведомления",
+  "toast.testDigestSent": "Тестовый дайджест отправлен!",
+  "toast.failedTestDigest": "Не удалось отправить тестовый дайджест",
+  "toast.webhookCopied": "URL вебхука скопирован! Откройте Shortcuts на iOS → создайте автоматизацию → триггер «Сообщение» → добавьте действие «Get Contents of URL» и вставьте этот URL.",
+  "toast.taskerDownloaded": "Профиль Tasker скачан — импортируйте его в Tasker → Profiles → Import",
+
+  // Profile
+  "profile.activity": "Активность",
+  "profile.activityDesc": "Ваша активность в MailTrack",
+  "profile.email": "Электронная почта",
+  "profile.signInMethod": "Способ входа",
+  "profile.firstName": "Имя",
+  "profile.lastName": "Фамилия",
+  "profile.locale": "Регион",
+  "profile.memberSince": "Участник с",
+  "profile.googleId": "Google ID",
+  "profile.accountId": "ID аккаунта",
+  "profile.editName": "Изменить имя",
+  "profile.somethingWentWrong": "Что-то пошло не так. Возможно, сервер отдыхает.",
+
+  // Package detail page
+  "detail.packageNotFoundTitle": "Посылка не найдена",
+  "detail.packageDetails": "Детали посылки",
+
+  // Push manager component
+  "push.dismiss": "Закрыть",
+  "push.enabling": "Включение...",
+  "push.enable": "Включить",
+
+  // Misc
+  "common.copyToClipboard": "Скопировать в буфер обмена",
+
+  // Notifications page (additional)
+  "notifications.markAsRead": "Отметить как прочитанное",
+
+  // Settings SMS instructions
+  "settings.copyUrlIos": "Скопировать URL для iOS Shortcuts",
+  "settings.downloadTaskerProfile": "Скачать профиль Tasker",
+  "settings.taskerInstructions1": "Импортируйте скачанный профиль или создайте вручную:",
+  "settings.taskerInstructions2": "Profile → Event → Phone → Received Text",
+  "settings.taskerInstructions3": "Task → Net → HTTP Request → POST",
+  "settings.iosInstructions1": "Откройте Shortcuts → вкладка Automation",
+  "settings.iosInstructions2": "Нажмите + → Message → выберите \"Message Contains\"",
+  "settings.iosInstructions3": "Выберите \"Run Immediately\" и нажмите Next",
+  "settings.iosInstructions4": "Нажмите Done",
+
+  // Settings — Notifications section
+  "settings.notificationsTitle": "Уведомления",
+  "settings.notificationsDesc": "Получайте уведомления об обновлениях статуса посылок",
+  "settings.pushNotificationsLabel": "Push-уведомления",
+  "settings.emailDigestDesc": "Еженедельная сводка ваших доставок",
+  "settings.testDigestPrompt": "Отправьте себе тестовый дайджест прямо сейчас",
+  "settings.sendTest": "Отправить тест",
+  "settings.pushActiveAlert": "Push-уведомления активны. Вы будете уведомлены при изменении статуса любой отслеживаемой посылки (отправлено, в пути, доставлено и т.д.)",
+
+  // Settings — Store import section
+  "settings.storeOrders": "Заказы из магазинов",
+  "settings.storeOrdersDesc": "Заказы из этих магазинов автоматически обнаруживаются при подключении почты",
+  "settings.howItWorks": "Как это работает",
+  "settings.howItWorksDesc": "Подключите Gmail выше → мы сканируем подтверждения заказов и уведомления о доставке → отслеживание начинается автоматически. Вход в магазин не нужен.",
+  "settings.whyNotDirect": "Почему не подключиться к магазинам напрямую?",
+  "settings.whyNotDirectDesc": "В отличие от Google, магазины вроде Amazon и eBay не предоставляют потребительские API для чтения заказов. Gmail — самый надёжный автоматический источник: он фиксирует подтверждения из всех магазинов сразу.",
+  "settings.importCsvTitle": "Импорт истории заказов (CSV)",
+  "settings.importCsvDesc": "Если у вас есть CSV или таблица с номерами отслеживания (экспортированная из любого магазина), загрузите её сюда. Мы извлечём номера и начнём отслеживание автоматически.",
+  "settings.importing": "Импорт…",
+  "settings.clickUploadCsv": "Нажмите, чтобы загрузить CSV-файл",
+  "settings.csvExpectedColumns": "Ожидаемые столбцы: номер отслеживания, ID заказа, название магазина, товары, дата (заголовки определяются автоматически)",
+  "settings.failedImportCsv": "Не удалось импортировать CSV",
+
+  // Settings — SMS forward section
+  "settings.smsForwardFullDesc": "Автоматическая пересылка SMS о доставке с телефона для отслеживания посылок без ручной работы",
+  "settings.yourIngestKey": "1. Ваш ключ приёма",
+  "settings.webhookUrl": "2. URL вебхука",
+  "settings.installAutomation": "3. Установите автоматизацию на телефон",
+  "settings.testIt": "Проверить",
+  "settings.manualAndroid": "Ручная настройка Android",
+  "settings.manualIos": "Ручная настройка iOS",
+  "settings.androidTitle": "Android — с помощью Tasker",
+  "settings.androidInstall": "Установите Tasker из Play Store",
+  "settings.androidUrl": "URL: ваш URL вебхука (скопированный выше)",
+  "settings.androidAlternatives": "Альтернативы: MacroDroid или Automate (бесплатно)",
+  "settings.iosTitle": "iOS — с помощью Shortcuts",
+  "settings.iosAddKeywords": "Добавьте ключевые слова:",
+  "settings.iosNewBlank": "Нажмите \"New Blank Automation\"",
+  "settings.iosAddAction": "Добавьте действие: \"Get Contents of URL\"",
+  "settings.iosPasteUrl": "Нажмите на поле URL и вставьте ваш URL вебхука (скопированный выше)",
+  "settings.iosShowMore": "Нажмите \"Show More\" на действии",
+  "settings.iosSetMethod": "Установите Method: POST",
+  "settings.iosSetBody": "Установите Request Body: JSON",
+  "settings.iosAddKey": "Добавьте ключ:",
+  "settings.iosSetValue": "Для значения: нажмите на поле → нажмите \"Shortcut Input\" вверху → оно вставится как переменная",
+  "settings.iosWarning": "Если \"Shortcut Input\" недоступен, сначала добавьте действие \"Get Text from Input\" (вход = Shortcut Input), затем используйте его вывод как значение текста.",
+  "settings.exporting": "Экспорт…",
+
+  // Package detail page extras
+  "detail.packageDetailsTitle": "Детали посылки",
 };
 
 export default ru;

@@ -46,7 +46,7 @@ export default function PackageDetailPage() {
         <div className="rounded-full bg-muted/50 p-5 mb-5">
           <Package className="h-12 w-12 text-muted-foreground/40" />
         </div>
-        <h2 className="text-xl font-semibold mb-1">Package not found</h2>
+        <h2 className="text-xl font-semibold mb-1">{t("detail.packageNotFoundTitle")}</h2>
         <p className="text-sm text-muted-foreground mb-6">This package may have been deleted or the link is invalid.</p>
         <Link href="/packages">
           <Button variant="outline" size="sm" className="cursor-pointer">
@@ -69,7 +69,7 @@ export default function PackageDetailPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">Package Details</h1>
+            <h1 className="text-2xl font-bold">{t("detail.packageDetailsTitle")}</h1>
             <p className="text-muted-foreground">{pkg.trackingNumber}</p>
           </div>
         </div>
@@ -148,7 +148,7 @@ export default function PackageDetailPage() {
         {/* Tracking timeline */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Tracking History</CardTitle>
+            <CardTitle>{t("detail.trackingHistory")}</CardTitle>
           </CardHeader>
           <CardContent>
             <TrackingTimeline events={pkg.events} />
@@ -158,7 +158,7 @@ export default function PackageDetailPage() {
         {/* Order details */}
         <Card>
           <CardHeader>
-            <CardTitle>Order Details</CardTitle>
+            <CardTitle>{t("detail.orderDetails")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>

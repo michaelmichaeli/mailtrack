@@ -265,6 +265,130 @@ const he: Record<TranslationKey, string> = {
   // Package progress bar
   "progress.returned": "הוחזר",
   "progress.exception": "חריגה",
+
+  // Settings — additional sections
+  "settings.biometricDesc": "התחברו עם Face ID, Touch ID או מפתחות אבטחה",
+  "settings.dataPrivacyDesc": "ייצוא הנתונים שלכם או ניהול החשבון",
+  "settings.dangerZoneDesc": "פעולות בלתי הפיכות — המשיכו בזהירות",
+  "settings.syncingEmails": "מסנכרן את המיילים שלכם…",
+  "settings.syncFailed": "הסנכרון נכשל — נסו שוב מלוח הבקרה",
+  "settings.noValidCsvRows": "לא נמצאו שורות תקינות ב-CSV",
+  "settings.copyApiKey": "העתק מפתח API ללוח",
+  "settings.regenerateKey": "צור מפתח API מחדש",
+  "settings.copyWebhookUrl": "העתק כתובת webhook ללוח",
+  "settings.smsForwardDesc": "העבירו הודעות SMS עם מעקב ל-MailTrack אוטומטית",
+  "settings.pushNotifications": "התראות Push",
+  "settings.pushNotificationsDesc": "קבלו עדכונים בזמן אמת על החבילות שלכם",
+  "settings.emailDigest": "סיכום במייל",
+  "settings.bulkImport": "ייבוא בכמות",
+  "settings.bulkImportDesc": "ייבוא מספרי מעקב בכמות באמצעות קובץ CSV",
+  "settings.scanPasteText": "הדביקו טקסט לסריקת מספרי מעקב",
+
+  // Push notifications toasts
+  "toast.pushRequireHttps": "התראות Push דורשות HTTPS. נסו את כתובת הייצור.",
+  "toast.swRegistrationFailed": "רישום Service Worker נכשל. נסו לרענן את הדף.",
+  "toast.pushNotConfigured": "התראות Push לא מוגדרות בשרת",
+  "toast.notificationDenied": "הרשאת התראות נדחתה. בדקו את הגדרות הדפדפן.",
+  "toast.pushEnabled": "התראות Push הופעלו!",
+  "toast.pushUnavailable": "שירות Push לא זמין. ייתכן שהדפדפן לא תומך ב-Push בדומיין זה.",
+  "toast.failedEnablePush": "הפעלת התראות Push נכשלה",
+  "toast.pushDisabled": "התראות Push הושבתו",
+  "toast.failedDisablePush": "השבתת התראות Push נכשלה",
+  "toast.testDigestSent": "סיכום לדוגמה נשלח!",
+  "toast.failedTestDigest": "שליחת סיכום לדוגמה נכשלה",
+  "toast.webhookCopied": "כתובת Webhook הועתקה! פתחו את אפליקציית Shortcuts ב-iOS ← צרו אוטומציה חדשה ← טריגר הודעה ← הוסיפו פעולת 'Get Contents of URL' והדביקו את הכתובת.",
+  "toast.taskerDownloaded": "פרופיל Tasker הורד — ייבאו אותו ב-Tasker ← Profiles ← Import",
+
+  // Profile
+  "profile.activity": "פעילות",
+  "profile.activityDesc": "הפעילות שלכם ב-MailTrack",
+  "profile.email": "אימייל",
+  "profile.signInMethod": "שיטת התחברות",
+  "profile.firstName": "שם פרטי",
+  "profile.lastName": "שם משפחה",
+  "profile.locale": "אזור",
+  "profile.memberSince": "חבר מאז",
+  "profile.googleId": "מזהה Google",
+  "profile.accountId": "מזהה חשבון",
+  "profile.editName": "ערוך שם",
+  "profile.somethingWentWrong": "משהו השתבש. ייתכן שהשרת לוקח הפסקה.",
+
+  // Package detail page
+  "detail.packageNotFoundTitle": "החבילה לא נמצאה",
+  "detail.packageDetails": "פרטי חבילה",
+
+  // Push manager component
+  "push.dismiss": "סגור",
+  "push.enabling": "מפעיל...",
+  "push.enable": "הפעל",
+
+  // Misc
+  "common.copyToClipboard": "העתק ללוח",
+
+  // Notifications page (additional)
+  "notifications.markAsRead": "סמן כנקרא",
+
+  // Settings SMS instructions
+  "settings.copyUrlIos": "העתק כתובת ל-iOS Shortcuts",
+  "settings.downloadTaskerProfile": "הורד פרופיל Tasker",
+  "settings.taskerInstructions1": "ייבאו את הפרופיל שהורד, או צרו ידנית:",
+  "settings.taskerInstructions2": "Profile ← Event ← Phone ← Received Text",
+  "settings.taskerInstructions3": "Task ← Net ← HTTP Request ← POST",
+  "settings.iosInstructions1": "פתחו את אפליקציית Shortcuts ← לשונית Automation",
+  "settings.iosInstructions2": "הקישו + ← Message ← בחרו \"Message Contains\"",
+  "settings.iosInstructions3": "בחרו \"Run Immediately\" והקישו Next",
+  "settings.iosInstructions4": "הקישו Done",
+
+  // Settings — Notifications section
+  "settings.notificationsTitle": "התראות",
+  "settings.notificationsDesc": "קבלו התראות כשיש עדכוני סטטוס לחבילות שלכם",
+  "settings.pushNotificationsLabel": "התראות Push",
+  "settings.emailDigestDesc": "סיכום שבועי של המשלוחים שלכם",
+  "settings.testDigestPrompt": "שלחו לעצמכם מייל סיכום לדוגמה עכשיו",
+  "settings.sendTest": "שלח בדיקה",
+  "settings.pushActiveAlert": "התראות Push פעילות. תקבלו התראה כשסטטוס חבילה במעקב משתנה (נשלח, בדרך, נמסר וכו׳)",
+
+  // Settings — Store import section
+  "settings.storeOrders": "הזמנות מחנויות",
+  "settings.storeOrdersDesc": "הזמנות מחנויות אלו מזוהות אוטומטית כשמחברים את האימייל",
+  "settings.howItWorks": "איך זה עובד",
+  "settings.howItWorksDesc": "חברו את Gmail למעלה ← נסרוק אישורי הזמנה והתראות משלוח ← המעקב מתחיל אוטומטית. לא צריך להתחבר לחנות.",
+  "settings.whyNotDirect": "למה לא להתחבר ישירות לחנויות?",
+  "settings.whyNotDirectDesc": "בניגוד ל-Google, חנויות כמו Amazon ו-eBay לא מספקות ממשקי API לקריאת הזמנות. Gmail הוא המקור האוטומטי האמין ביותר — הוא לוכד אישורים מכל החנויות בבת אחת.",
+  "settings.importCsvTitle": "ייבוא היסטוריית הזמנות (CSV)",
+  "settings.importCsvDesc": "אם יש לכם CSV או גיליון עם מספרי מעקב (מיוצא מכל חנות), העלו אותו כאן. נחלץ מספרי מעקב ונתחיל לעקוב אוטומטית.",
+  "settings.importing": "מייבא…",
+  "settings.clickUploadCsv": "לחצו להעלאת קובץ CSV",
+  "settings.csvExpectedColumns": "עמודות צפויות: מספר מעקב, מזהה הזמנה, שם חנות, פריטים, תאריך (כותרות מזוהות אוטומטית)",
+  "settings.failedImportCsv": "ייבוא ה-CSV נכשל",
+
+  // Settings — SMS forward section
+  "settings.smsForwardFullDesc": "העבירו אוטומטית הודעות SMS של משלוחים מהטלפון כדי לעקוב אחר חבילות ללא עבודה ידנית",
+  "settings.yourIngestKey": "1. מפתח הקליטה שלכם",
+  "settings.webhookUrl": "2. כתובת Webhook",
+  "settings.installAutomation": "3. התקינו אוטומציה בטלפון",
+  "settings.testIt": "בדקו את זה",
+  "settings.manualAndroid": "הגדרה ידנית ל-Android",
+  "settings.manualIos": "הגדרה ידנית ל-iOS",
+  "settings.androidTitle": "Android — באמצעות Tasker",
+  "settings.androidInstall": "התקינו את Tasker מ-Play Store",
+  "settings.androidUrl": "URL: כתובת ה-webhook שלכם (שהועתקה למעלה)",
+  "settings.androidAlternatives": "חלופות: MacroDroid או Automate (חינם)",
+  "settings.iosTitle": "iOS — באמצעות Shortcuts",
+  "settings.iosAddKeywords": "הוסיפו מילות מפתח:",
+  "settings.iosNewBlank": "הקישו \"New Blank Automation\"",
+  "settings.iosAddAction": "הוסיפו פעולה: \"Get Contents of URL\"",
+  "settings.iosPasteUrl": "הקישו על שדה ה-URL והדביקו את כתובת ה-webhook שלכם (שהועתקה למעלה)",
+  "settings.iosShowMore": "הקישו \"Show More\" על הפעולה",
+  "settings.iosSetMethod": "הגדירו Method: POST",
+  "settings.iosSetBody": "הגדירו Request Body: JSON",
+  "settings.iosAddKey": "הוסיפו מפתח:",
+  "settings.iosSetValue": "עבור הערך: הקישו על השדה ← הקישו \"Shortcut Input\" למעלה ← הוא יוכנס כמשתנה",
+  "settings.iosWarning": "אם \"Shortcut Input\" לא זמין, הוסיפו פעולת \"Get Text from Input\" קודם (קלט = Shortcut Input), ואז השתמשו בפלט שלה כערך הטקסט.",
+  "settings.exporting": "מייצא…",
+
+  // Package detail page extras
+  "detail.packageDetailsTitle": "פרטי חבילה",
 };
 
 export default he;

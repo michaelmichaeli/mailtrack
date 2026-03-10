@@ -265,6 +265,130 @@ const ar: Record<TranslationKey, string> = {
   // Package progress bar
   "progress.returned": "تم الإرجاع",
   "progress.exception": "استثناء",
+
+  // Settings — additional sections
+  "settings.biometricDesc": "تسجيل الدخول باستخدام Face ID أو Touch ID أو مفاتيح الأمان",
+  "settings.dataPrivacyDesc": "تصدير بياناتك أو إدارة حسابك",
+  "settings.dangerZoneDesc": "إجراءات لا يمكن التراجع عنها — تابع بحذر",
+  "settings.syncingEmails": "جارٍ مزامنة رسائلك…",
+  "settings.syncFailed": "فشلت المزامنة — حاول مرة أخرى من لوحة التحكم",
+  "settings.noValidCsvRows": "لم يتم العثور على صفوف صالحة في ملف CSV",
+  "settings.copyApiKey": "نسخ مفتاح API إلى الحافظة",
+  "settings.regenerateKey": "إعادة إنشاء مفتاح API",
+  "settings.copyWebhookUrl": "نسخ رابط webhook إلى الحافظة",
+  "settings.smsForwardDesc": "إعادة توجيه رسائل SMS للتتبع إلى MailTrack تلقائياً",
+  "settings.pushNotifications": "إشعارات الدفع",
+  "settings.pushNotificationsDesc": "احصل على تحديثات فورية عن طرودك",
+  "settings.emailDigest": "ملخص بالبريد الإلكتروني",
+  "settings.bulkImport": "استيراد بالجملة",
+  "settings.bulkImportDesc": "استيراد أرقام التتبع بالجملة عبر ملف CSV",
+  "settings.scanPasteText": "الصق نصاً لمسح أرقام التتبع",
+
+  // Push notifications toasts
+  "toast.pushRequireHttps": "إشعارات الدفع تتطلب HTTPS. جرّب رابط الإنتاج.",
+  "toast.swRegistrationFailed": "فشل تسجيل Service Worker. حاول تحديث الصفحة.",
+  "toast.pushNotConfigured": "إشعارات الدفع غير مُعدّة على الخادم",
+  "toast.notificationDenied": "تم رفض إذن الإشعارات. تحقق من إعدادات المتصفح.",
+  "toast.pushEnabled": "تم تفعيل إشعارات الدفع!",
+  "toast.pushUnavailable": "خدمة الدفع غير متاحة. قد لا يدعم هذا المتصفح الدفع على هذا النطاق.",
+  "toast.failedEnablePush": "فشل تفعيل إشعارات الدفع",
+  "toast.pushDisabled": "تم تعطيل إشعارات الدفع",
+  "toast.failedDisablePush": "فشل تعطيل إشعارات الدفع",
+  "toast.testDigestSent": "تم إرسال ملخص تجريبي!",
+  "toast.failedTestDigest": "فشل إرسال الملخص التجريبي",
+  "toast.webhookCopied": "تم نسخ رابط Webhook! افتح تطبيق Shortcuts على iOS ← أنشئ أتمتة جديدة ← مشغّل الرسائل ← أضف إجراء 'Get Contents of URL' والصق هذا الرابط.",
+  "toast.taskerDownloaded": "تم تنزيل ملف Tasker — استورده في Tasker ← Profiles ← Import",
+
+  // Profile
+  "profile.activity": "النشاط",
+  "profile.activityDesc": "نشاطك على MailTrack",
+  "profile.email": "البريد الإلكتروني",
+  "profile.signInMethod": "طريقة تسجيل الدخول",
+  "profile.firstName": "الاسم الأول",
+  "profile.lastName": "اسم العائلة",
+  "profile.locale": "المنطقة",
+  "profile.memberSince": "عضو منذ",
+  "profile.googleId": "معرّف Google",
+  "profile.accountId": "معرّف الحساب",
+  "profile.editName": "تعديل الاسم",
+  "profile.somethingWentWrong": "حدث خطأ ما. قد يكون الخادم يأخذ قيلولة.",
+
+  // Package detail page
+  "detail.packageNotFoundTitle": "الطرد غير موجود",
+  "detail.packageDetails": "تفاصيل الطرد",
+
+  // Push manager component
+  "push.dismiss": "تجاهل",
+  "push.enabling": "جارٍ التفعيل...",
+  "push.enable": "تفعيل",
+
+  // Misc
+  "common.copyToClipboard": "نسخ إلى الحافظة",
+
+  // Notifications page (additional)
+  "notifications.markAsRead": "تعيين كمقروء",
+
+  // Settings SMS instructions
+  "settings.copyUrlIos": "نسخ الرابط لـ iOS Shortcuts",
+  "settings.downloadTaskerProfile": "تنزيل ملف Tasker",
+  "settings.taskerInstructions1": "استورد الملف المُنزّل، أو أنشئ يدوياً:",
+  "settings.taskerInstructions2": "Profile ← Event ← Phone ← Received Text",
+  "settings.taskerInstructions3": "Task ← Net ← HTTP Request ← POST",
+  "settings.iosInstructions1": "افتح تطبيق Shortcuts ← تبويب Automation",
+  "settings.iosInstructions2": "انقر + ← Message ← اختر \"Message Contains\"",
+  "settings.iosInstructions3": "اختر \"Run Immediately\" وانقر Next",
+  "settings.iosInstructions4": "انقر Done",
+
+  // Settings — Notifications section
+  "settings.notificationsTitle": "الإشعارات",
+  "settings.notificationsDesc": "احصل على إشعارات عند تحديث حالة طرودك",
+  "settings.pushNotificationsLabel": "إشعارات الدفع",
+  "settings.emailDigestDesc": "ملخص أسبوعي لعمليات التوصيل الخاصة بك",
+  "settings.testDigestPrompt": "أرسل لنفسك بريد ملخص تجريبي الآن",
+  "settings.sendTest": "إرسال اختبار",
+  "settings.pushActiveAlert": "إشعارات الدفع نشطة. ستتلقى إشعاراً عند تغيّر حالة أي طرد قيد التتبع (تم الشحن، في الطريق، تم التوصيل، إلخ.)",
+
+  // Settings — Store import section
+  "settings.storeOrders": "طلبات المتاجر",
+  "settings.storeOrdersDesc": "يتم اكتشاف الطلبات من هذه المتاجر تلقائياً عند ربط بريدك الإلكتروني",
+  "settings.howItWorks": "كيف يعمل",
+  "settings.howItWorksDesc": "اربط Gmail أعلاه ← نفحص رسائل تأكيد الطلبات وإشعارات الشحن ← يبدأ التتبع تلقائياً. لا حاجة لتسجيل الدخول إلى المتجر.",
+  "settings.whyNotDirect": "لماذا لا نتصل بالمتاجر مباشرة؟",
+  "settings.whyNotDirectDesc": "على عكس Google، لا توفر متاجر مثل Amazon وeBay واجهات API للمستهلكين لقراءة طلباتك. Gmail هو المصدر التلقائي الأكثر موثوقية — فهو يلتقط التأكيدات من جميع المتاجر دفعة واحدة.",
+  "settings.importCsvTitle": "استيراد سجل الطلبات (CSV)",
+  "settings.importCsvDesc": "إذا كان لديك ملف CSV أو جدول بيانات يحتوي على أرقام تتبع (مصدّر من أي متجر)، ارفعه هنا. سنستخرج أرقام التتبع ونبدأ التتبع تلقائياً.",
+  "settings.importing": "جارٍ الاستيراد…",
+  "settings.clickUploadCsv": "انقر لرفع ملف CSV",
+  "settings.csvExpectedColumns": "الأعمدة المتوقعة: رقم التتبع، رقم الطلب، اسم المتجر، العناصر، التاريخ (يتم اكتشاف العناوين تلقائياً)",
+  "settings.failedImportCsv": "فشل استيراد ملف CSV",
+
+  // Settings — SMS forward section
+  "settings.smsForwardFullDesc": "إعادة توجيه رسائل SMS الخاصة بالشحن تلقائياً من هاتفك لتتبع الطرود دون أي عمل يدوي",
+  "settings.yourIngestKey": "1. مفتاح الاستقبال الخاص بك",
+  "settings.webhookUrl": "2. رابط Webhook",
+  "settings.installAutomation": "3. تثبيت الأتمتة على هاتفك",
+  "settings.testIt": "اختبرها",
+  "settings.manualAndroid": "إعداد Android يدوياً",
+  "settings.manualIos": "إعداد iOS يدوياً",
+  "settings.androidTitle": "Android — باستخدام Tasker",
+  "settings.androidInstall": "ثبّت Tasker من Play Store",
+  "settings.androidUrl": "URL: رابط webhook الخاص بك (المنسوخ أعلاه)",
+  "settings.androidAlternatives": "بدائل: MacroDroid أو Automate (مجاني)",
+  "settings.iosTitle": "iOS — باستخدام Shortcuts",
+  "settings.iosAddKeywords": "أضف كلمات مفتاحية:",
+  "settings.iosNewBlank": "انقر \"New Blank Automation\"",
+  "settings.iosAddAction": "أضف إجراء: \"Get Contents of URL\"",
+  "settings.iosPasteUrl": "انقر على حقل URL والصق رابط webhook الخاص بك (المنسوخ أعلاه)",
+  "settings.iosShowMore": "انقر \"Show More\" على الإجراء",
+  "settings.iosSetMethod": "اضبط Method: POST",
+  "settings.iosSetBody": "اضبط Request Body: JSON",
+  "settings.iosAddKey": "أضف مفتاح:",
+  "settings.iosSetValue": "للقيمة: انقر على الحقل ← انقر \"Shortcut Input\" في الأعلى ← يتم إدراجه كمتغير",
+  "settings.iosWarning": "إذا لم يكن \"Shortcut Input\" متاحاً، أضف إجراء \"Get Text from Input\" أولاً (الإدخال = Shortcut Input)، ثم استخدم مخرجاته كقيمة النص.",
+  "settings.exporting": "جارٍ التصدير…",
+
+  // Package detail page extras
+  "detail.packageDetailsTitle": "تفاصيل الطرد",
 };
 
 export default ar;

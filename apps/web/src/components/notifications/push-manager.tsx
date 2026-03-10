@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Bell, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import { useI18n } from "@/lib/i18n";
 
 /**
  * PushNotificationManager — handles service worker registration and push subscription.
@@ -17,6 +18,7 @@ import { toast } from "sonner";
 export function PushNotificationManager() {
   const [showBanner, setShowBanner] = useState(false);
   const [subscribing, setSubscribing] = useState(false);
+  const { t } = useI18n();
 
   const urlBase64ToUint8Array = (base64String: string) => {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -43,7 +45,7 @@ export function PushNotificationManager() {
 
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
-        if (showToast) toast.error("Notification permission denied");
+        if (showToast) toast.error(t("toast.notificationDenied"));
         return;
       }
 
@@ -53,15 +55,15 @@ export function PushNotificationManager() {
       });
 
       await api.subscribePush(subscription);
-      if (showToast) toast.success("Push notifications enabled!");
+      if (showToast) toast.success(t("toast.pushEnabled"));
     } catch (err) {
       console.error("[push-manager] Subscribe error:", err);
-      if (showToast) toast.error("Failed to enable push notifications");
+      if (showToast) toast.error(t("toast.failedEnablePush"));
     } finally {
       setSubscribing(false);
       setShowBanner(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
@@ -115,7 +117,7 @@ export function PushNotificationManager() {
         <button
           onClick={handleDismiss}
           className="absolute top-2 right-2 p-1 rounded-full hover:bg-muted text-muted-foreground"
-          aria-label="Dismiss"
+          aria-label={t("push.dismiss")}
         >
           <X className="h-3.5 w-3.5" />
         </button>
@@ -134,7 +136,7 @@ export function PushNotificationManager() {
                 disabled={subscribing}
                 className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
               >
-                {subscribing ? "Enabling..." : "Enable"}
+                {subscribing ? t("push.enabling") : t("push.enable")}
               </button>
               <button
                 onClick={handleDismiss}

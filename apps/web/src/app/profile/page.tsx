@@ -100,7 +100,7 @@ export default function ProfilePage() {
             <div>
               <h2 className="text-lg font-semibold">Couldn&apos;t load your profile</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                {error || "Something went wrong. The server might be taking a nap."}
+                {error || t("profile.somethingWentWrong")}
               </p>
             </div>
             <div className="flex gap-3 justify-center">
@@ -181,7 +181,7 @@ export default function ProfilePage() {
                 <button
                   onClick={() => setEditing(true)}
                   className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                  title="Edit name"
+                  title={t("profile.editName")}
                 >
                   <Pencil className="h-3.5 w-3.5" />
                 </button>
@@ -203,7 +203,7 @@ export default function ProfilePage() {
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label className="text-xs text-muted-foreground">Email</Label>
+              <Label className="text-xs text-muted-foreground">{t("profile.email")}</Label>
               <div className="flex items-center gap-1.5">
                 <p className="text-sm font-medium truncate">{user.email}</p>
                 {user.emailVerified && (
@@ -214,41 +214,41 @@ export default function ProfilePage() {
               </div>
             </div>
             <div>
-              <Label className="text-xs text-muted-foreground">Sign-in Method</Label>
+              <Label className="text-xs text-muted-foreground">{t("profile.signInMethod")}</Label>
               <p className="text-sm font-medium capitalize">{user.authProvider.toLowerCase().replace("_", " ")}</p>
             </div>
             {user.givenName && (
               <div>
-                <Label className="text-xs text-muted-foreground">First Name</Label>
+                <Label className="text-xs text-muted-foreground">{t("profile.firstName")}</Label>
                 <p className="text-sm font-medium">{user.givenName}</p>
               </div>
             )}
             {user.familyName && (
               <div>
-                <Label className="text-xs text-muted-foreground">Last Name</Label>
+                <Label className="text-xs text-muted-foreground">{t("profile.lastName")}</Label>
                 <p className="text-sm font-medium">{user.familyName}</p>
               </div>
             )}
             {user.locale && (
               <div>
-                <Label className="text-xs text-muted-foreground">Locale</Label>
+                <Label className="text-xs text-muted-foreground">{t("profile.locale")}</Label>
                 <p className="text-sm font-medium uppercase">{user.locale}</p>
               </div>
             )}
             <div>
-              <Label className="text-xs text-muted-foreground">Member Since</Label>
+              <Label className="text-xs text-muted-foreground">{t("profile.memberSince")}</Label>
               <p className="text-sm font-medium">
                 {joinDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
               </p>
             </div>
             {user.googleId && (
               <div>
-                <Label className="text-xs text-muted-foreground">Google ID</Label>
+                <Label className="text-xs text-muted-foreground">{t("profile.googleId")}</Label>
                 <p className="text-sm font-mono text-muted-foreground truncate">{user.googleId}</p>
               </div>
             )}
             <div>
-              <Label className="text-xs text-muted-foreground">Account ID</Label>
+              <Label className="text-xs text-muted-foreground">{t("profile.accountId")}</Label>
               <p className="text-sm font-mono text-muted-foreground truncate">{user.id}</p>
             </div>
           </div>
@@ -263,7 +263,7 @@ export default function ProfilePage() {
               <BarChart3 className="h-4 w-4 text-primary" />
               Usage Stats
             </CardTitle>
-            <CardDescription>Your activity on MailTrack</CardDescription>
+            <CardDescription>{t("profile.activityDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-4">

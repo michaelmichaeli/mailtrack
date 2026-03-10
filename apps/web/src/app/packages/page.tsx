@@ -280,7 +280,7 @@ function PackagesContent() {
           </div>
           <div className="flex items-center gap-2">
             <AddPackageDialog />
-            <Button onClick={() => setScanOpen(true)} variant="outline" size="sm" className="cursor-pointer" title="Paste an SMS or tracking notification to extract tracking numbers">
+            <Button onClick={() => setScanOpen(true)} variant="outline" size="sm" className="cursor-pointer" title={t("settings.scanPasteText")}>
               <MessageSquare className="h-4 w-4" />
               <span className="hidden sm:inline">Scan Messages</span>
             </Button>

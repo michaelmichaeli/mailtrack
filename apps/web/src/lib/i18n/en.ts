@@ -263,6 +263,130 @@ const en = {
   // Package progress bar
   "progress.returned": "Returned",
   "progress.exception": "Exception",
+
+  // Settings — additional sections
+  "settings.biometricDesc": "Sign in with Face ID, Touch ID, or security keys",
+  "settings.dataPrivacyDesc": "Export your data or manage your account",
+  "settings.dangerZoneDesc": "Irreversible actions — proceed with caution",
+  "settings.syncingEmails": "Syncing your emails…",
+  "settings.syncFailed": "Sync failed — try again from dashboard",
+  "settings.noValidCsvRows": "No valid rows found in CSV",
+  "settings.copyApiKey": "Copy API key to clipboard",
+  "settings.regenerateKey": "Regenerate API key",
+  "settings.copyWebhookUrl": "Copy webhook URL to clipboard",
+  "settings.smsForwardDesc": "Forward SMS tracking messages to MailTrack automatically",
+  "settings.pushNotifications": "Push Notifications",
+  "settings.pushNotificationsDesc": "Get real-time updates on your packages",
+  "settings.emailDigest": "Email digest",
+  "settings.bulkImport": "Bulk Import",
+  "settings.bulkImportDesc": "Import tracking numbers in bulk via CSV file",
+  "settings.scanPasteText": "Paste text to scan for tracking numbers",
+
+  // Push notifications toasts
+  "toast.pushRequireHttps": "Push notifications require HTTPS. Try the production URL.",
+  "toast.swRegistrationFailed": "Service worker registration failed. Try refreshing the page.",
+  "toast.pushNotConfigured": "Push notifications not configured on server",
+  "toast.notificationDenied": "Notification permission denied. Check your browser settings.",
+  "toast.pushEnabled": "Push notifications enabled!",
+  "toast.pushUnavailable": "Push service unavailable. This browser may not support push on this domain.",
+  "toast.failedEnablePush": "Failed to enable push notifications",
+  "toast.pushDisabled": "Push notifications disabled",
+  "toast.failedDisablePush": "Failed to disable push notifications",
+  "toast.testDigestSent": "Test digest sent!",
+  "toast.failedTestDigest": "Failed to send test digest",
+  "toast.webhookCopied": "Webhook URL copied! Open iOS Shortcuts app → create new Automation → Message trigger → add 'Get Contents of URL' action and paste this URL.",
+  "toast.taskerDownloaded": "Tasker profile downloaded — import it in Tasker → Profiles → Import",
+
+  // Profile
+  "profile.activity": "Activity",
+  "profile.activityDesc": "Your activity on MailTrack",
+  "profile.email": "Email",
+  "profile.signInMethod": "Sign-in Method",
+  "profile.firstName": "First Name",
+  "profile.lastName": "Last Name",
+  "profile.locale": "Locale",
+  "profile.memberSince": "Member Since",
+  "profile.googleId": "Google ID",
+  "profile.accountId": "Account ID",
+  "profile.editName": "Edit name",
+  "profile.somethingWentWrong": "Something went wrong. The server might be taking a nap.",
+
+  // Package detail page
+  "detail.packageNotFoundTitle": "Package not found",
+  "detail.packageDetails": "Package Details",
+
+  // Push manager component
+  "push.dismiss": "Dismiss",
+  "push.enabling": "Enabling...",
+  "push.enable": "Enable",
+
+  // Misc
+  "common.copyToClipboard": "Copy to clipboard",
+
+  // Notifications page (additional)
+  "notifications.markAsRead": "Mark as read",
+
+  // Settings SMS instructions
+  "settings.copyUrlIos": "Copy URL for iOS Shortcuts",
+  "settings.downloadTaskerProfile": "Download Tasker Profile",
+  "settings.taskerInstructions1": "Import the downloaded profile, or create manually:",
+  "settings.taskerInstructions2": "Profile → Event → Phone → Received Text",
+  "settings.taskerInstructions3": "Task → Net → HTTP Request → POST",
+  "settings.iosInstructions1": "Open Shortcuts app → Automation tab",
+  "settings.iosInstructions2": "Tap + → Message → choose \"Message Contains\"",
+  "settings.iosInstructions3": "Choose \"Run Immediately\" and tap Next",
+  "settings.iosInstructions4": "Tap Done",
+
+  // Settings — Notifications section
+  "settings.notificationsTitle": "Notifications",
+  "settings.notificationsDesc": "Get notified when your packages have status updates",
+  "settings.pushNotificationsLabel": "Push notifications",
+  "settings.emailDigestDesc": "Weekly summary of your deliveries",
+  "settings.testDigestPrompt": "Send yourself a test digest email now",
+  "settings.sendTest": "Send test",
+  "settings.pushActiveAlert": "Push notifications are active. You'll be notified when any tracked package changes status (shipped, in transit, delivered, etc.)",
+
+  // Settings — Store import section
+  "settings.storeOrders": "Store Orders",
+  "settings.storeOrdersDesc": "Orders from these stores are automatically detected when you connect your email",
+  "settings.howItWorks": "How it works",
+  "settings.howItWorksDesc": "Connect your Gmail above → we scan for order confirmations and shipping notifications → tracking starts automatically. No store login needed.",
+  "settings.whyNotDirect": "Why not connect stores directly?",
+  "settings.whyNotDirectDesc": "Unlike Google, stores like Amazon and eBay don't provide consumer APIs to read your orders. Gmail is the most reliable automatic source — it captures confirmations from all stores at once.",
+  "settings.importCsvTitle": "Import order history (CSV)",
+  "settings.importCsvDesc": "If you have a CSV or spreadsheet with tracking numbers (exported from any store), upload it here. We'll extract tracking numbers and start tracking automatically.",
+  "settings.importing": "Importing…",
+  "settings.clickUploadCsv": "Click to upload CSV file",
+  "settings.csvExpectedColumns": "Expected columns: tracking number, order ID, store name, items, date (headers auto-detected)",
+  "settings.failedImportCsv": "Failed to import CSV",
+
+  // Settings — SMS forward section
+  "settings.smsForwardFullDesc": "Automatically forward shipping SMS from your phone to track packages without any manual work",
+  "settings.yourIngestKey": "1. Your Ingest Key",
+  "settings.webhookUrl": "2. Webhook URL",
+  "settings.installAutomation": "3. Install automation on your phone",
+  "settings.testIt": "Test it",
+  "settings.manualAndroid": "Manual Android Setup",
+  "settings.manualIos": "Manual iOS Setup",
+  "settings.androidTitle": "Android — Using Tasker",
+  "settings.androidInstall": "Install Tasker from the Play Store",
+  "settings.androidUrl": "URL: your webhook URL (copied above)",
+  "settings.androidAlternatives": "Alternatives: MacroDroid or Automate (free)",
+  "settings.iosTitle": "iOS — Using Shortcuts",
+  "settings.iosAddKeywords": "Add keywords:",
+  "settings.iosNewBlank": "Tap \"New Blank Automation\"",
+  "settings.iosAddAction": "Add action: \"Get Contents of URL\"",
+  "settings.iosPasteUrl": "Tap the URL field and paste your webhook URL (copied above)",
+  "settings.iosShowMore": "Tap \"Show More\" on the action",
+  "settings.iosSetMethod": "Set Method: POST",
+  "settings.iosSetBody": "Set Request Body: JSON",
+  "settings.iosAddKey": "Add a key:",
+  "settings.iosSetValue": "For the value: tap the field → tap \"Shortcut Input\" at the top → it inserts as a variable",
+  "settings.iosWarning": "If \"Shortcut Input\" isn't available, add a \"Get Text from Input\" action first (input = Shortcut Input), then use its output as the text value.",
+  "settings.exporting": "Exporting…",
+
+  // Package detail page extras
+  "detail.packageDetailsTitle": "Package Details",
 } as const;
 
 export type TranslationKey = keyof typeof en;

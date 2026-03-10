@@ -103,7 +103,7 @@ function SettingsContent() {
   const connectGmail = () => {
     const token = localStorage.getItem("mailtrack_token");
     if (!token) {
-      toast.error("Please log in first");
+      toast.error(t("toast.pleaseLogIn"));
       return;
     }
     window.location.href = `${API_URL}/api/email/connect/gmail?token=${encodeURIComponent(token)}`;
@@ -113,7 +113,7 @@ function SettingsContent() {
   useEffect(() => {
     if (autoSync && !didAutoSync) {
       setDidAutoSync(true);
-      toast.info("Syncing your emails…");
+      toast.info(t("settings.syncingEmails"));
       api.syncEmails().then((r) => {
         toast.success(`Synced ${r.emailsParsed} emails`);
         queryClient.invalidateQueries({ queryKey: ["dashboard"] });
@@ -121,7 +121,7 @@ function SettingsContent() {
       }).then((r) => {
         if (r?.synced) toast.success(`Updated ${r.synced} packages`);
       }).catch(() => {
-        toast.error("Sync failed — try again from dashboard");
+        toast.error(t("settings.syncFailed"));
       });
     }
   }, [autoSync, didAutoSync, queryClient]);
@@ -352,7 +352,7 @@ function SettingsContent() {
             <KeyRound className="h-4 w-4 text-primary" />
             {t("settings.passkeys")}
           </CardTitle>
-          <CardDescription>Sign in with Face ID, Touch ID, or security keys</CardDescription>
+          <CardDescription>{t("settings.biometricDesc")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {passkeys && passkeys.length > 0 && (
@@ -434,12 +434,12 @@ function SettingsContent() {
             <Shield className="h-4 w-4 text-primary" />
             {t("settings.dataPrivacy")}
           </CardTitle>
-          <CardDescription>Export your data or manage your account</CardDescription>
+          <CardDescription>{t("settings.dataPrivacyDesc")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <Button variant="outline" className="w-full" onClick={handleExport} disabled={isExporting}>
             <Download className={`h-4 w-4 ${isExporting ? "animate-spin" : ""}`} />
-            {isExporting ? "Exporting…" : t("settings.exportData")}
+            {isExporting ? t("settings.exporting") : t("settings.exportData")}
           </Button>
         </CardContent>
       </Card>
@@ -451,7 +451,7 @@ function SettingsContent() {
             <AlertCircle className="h-4 w-4" />
             {t("settings.dangerZone")}
           </CardTitle>
-          <CardDescription>Irreversible actions — proceed with caution</CardDescription>
+          <CardDescription>{t("settings.dangerZoneDesc")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <Dialog open={deletePackagesOpen} onOpenChange={setDeletePackagesOpen}>
@@ -527,9 +527,9 @@ function ScanMessagesSection() {
     try {
       const { key } = await api.generateIngestKey();
       setIngestKey(key);
-      toast.success("Ingest key generated");
+      toast.success(t("toast.ingestKeyGenerated"));
     } catch (err: any) {
-      toast.error(err?.message ?? "Failed to generate key");
+      toast.error(err?.message ?? t("toast.failedGenerateKey"));
     } finally {
       setGenerating(false);
     }
@@ -538,7 +538,7 @@ function ScanMessagesSection() {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text.replace(/\s+/g, ' ').trim());
     setCopied(true);
-    toast.success("Copied to clipboard");
+    toast.success(t("toast.copiedToClipboard"));
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -550,13 +550,13 @@ function ScanMessagesSection() {
           {t("settings.autoForwardSMS")}
         </CardTitle>
         <CardDescription>
-          Automatically forward shipping SMS from your phone to track packages without any manual work
+          {t("settings.smsForwardFullDesc")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Step 1: Generate key */}
         <div className="space-y-2">
-          <p className="text-sm font-medium text-foreground">1. Your Ingest Key</p>
+          <p className="text-sm font-medium text-foreground">{t("settings.yourIngestKey")}</p>
           {loading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading…
@@ -566,17 +566,17 @@ function ScanMessagesSection() {
               <code className="flex-1 rounded-md bg-muted px-3 py-2 text-xs font-mono overflow-x-auto whitespace-nowrap">
                 {ingestKey}
               </code>
-              <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={() => copyToClipboard(ingestKey)} title="Copy API key to clipboard">
+              <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={() => copyToClipboard(ingestKey)} title={t("settings.copyApiKey")}>
                 {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
               </Button>
-              <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={handleGenerate} disabled={generating} title="Regenerate API key">
+              <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={handleGenerate} disabled={generating} title={t("settings.regenerateKey")}>
                 <RefreshCw className={`h-3.5 w-3.5 ${generating ? "animate-spin" : ""}`} />
               </Button>
             </div>
           ) : (
             <Button variant="outline" onClick={handleGenerate} disabled={generating} className="gap-1.5">
               {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Key className="h-4 w-4" />}
-              Generate Ingest Key
+              {t("settings.generateIngestKey")}
             </Button>
           )}
         </div>
@@ -584,12 +584,12 @@ function ScanMessagesSection() {
         {/* Step 2: Webhook URL */}
         {ingestKey && (
           <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">2. Webhook URL</p>
+            <p className="text-sm font-medium text-foreground">{t("settings.webhookUrl")}</p>
             <div className="flex items-center gap-2">
               <code className="flex-1 rounded-md bg-muted px-3 py-2 text-xs font-mono overflow-x-auto whitespace-nowrap">
                 {webhookUrl}?key={ingestKey}
               </code>
-              <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={() => copyToClipboard(`${webhookUrl}?key=${ingestKey}`)} title="Copy webhook URL to clipboard">
+              <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={() => copyToClipboard(`${webhookUrl}?key=${ingestKey}`)} title={t("settings.copyWebhookUrl")}>
                 <Copy className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -599,7 +599,7 @@ function ScanMessagesSection() {
         {/* Step 3: Setup guides */}
         {ingestKey && (
           <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">3. Install automation on your phone</p>
+            <p className="text-sm font-medium text-foreground">{t("settings.installAutomation")}</p>
 
             {/* Quick install buttons */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -609,12 +609,12 @@ function ScanMessagesSection() {
                 onClick={() => {
                   const fullUrl = `${webhookUrl}?key=${ingestKey}`;
                   navigator.clipboard.writeText(fullUrl).then(() => {
-                    toast.success("Webhook URL copied! Open iOS Shortcuts app → create new Automation → Message trigger → add 'Get Contents of URL' action and paste this URL.");
+                    toast.success(t("toast.webhookCopied"));
                   });
                 }}
               >
                 <Smartphone className="h-4 w-4" />
-                <span>Copy URL for iOS Shortcuts</span>
+                <span>{t("settings.copyUrlIos")}</span>
               </Button>
               <Button
                 variant="outline"
@@ -629,60 +629,60 @@ function ScanMessagesSection() {
                   a.download = "MailTrack_SMS_Forward.prf.xml";
                   a.click();
                   URL.revokeObjectURL(url);
-                  toast.success("Tasker profile downloaded — import it in Tasker → Profiles → Import");
+                  toast.success(t("toast.taskerDownloaded"));
                 }}
               >
                 <Download className="h-4 w-4" />
-                <span>Download Tasker Profile</span>
+                <span>{t("settings.downloadTaskerProfile")}</span>
               </Button>
             </div>
 
             {/* Expandable manual guides */}
             <div className="grid grid-cols-2 gap-2">
               <Button variant={showGuide === "android" ? "secondary" : "ghost"} className="w-full text-xs gap-1.5" size="sm" onClick={() => setShowGuide(showGuide === "android" ? null : "android")}>
-                Manual Android Setup {showGuide === "android" ? "▲" : "▼"}
+                {t("settings.manualAndroid")} {showGuide === "android" ? "▲" : "▼"}
               </Button>
               <Button variant={showGuide === "ios" ? "secondary" : "ghost"} className="w-full text-xs gap-1.5" size="sm" onClick={() => setShowGuide(showGuide === "ios" ? null : "ios")}>
-                Manual iOS Setup {showGuide === "ios" ? "▲" : "▼"}
+                {t("settings.manualIos")} {showGuide === "ios" ? "▲" : "▼"}
               </Button>
             </div>
 
             {showGuide === "android" && (
               <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2 text-xs text-muted-foreground">
-                <p className="font-medium text-foreground text-sm">Android — Using Tasker</p>
+                <p className="font-medium text-foreground text-sm">{t("settings.androidTitle")}</p>
                 <ol className="list-decimal list-inside space-y-1.5">
-                  <li>Install <strong>Tasker</strong> from the Play Store</li>
-                  <li>Import the downloaded profile, or create manually:</li>
-                  <li>Profile → Event → Phone → Received Text</li>
+                  <li>{t("settings.androidInstall")}</li>
+                  <li>{t("settings.taskerInstructions1")}</li>
+                  <li>{t("settings.taskerInstructions2")}</li>
                   <li>Content filter: <code className="bg-muted px-1 rounded">shipped|tracking|delivery|parcel|חבילה|משלוח</code></li>
-                  <li>Task → Net → HTTP Request → POST</li>
-                  <li>URL: your webhook URL (copied above)</li>
+                  <li>{t("settings.taskerInstructions3")}</li>
+                  <li>{t("settings.androidUrl")}</li>
                   <li>Body: <code className="bg-muted px-1 rounded">{`{"text": "%SMSRB", "source": "SMS from %SMSRF"}`}</code></li>
                 </ol>
-                <p className="text-xs mt-2">Alternatives: <strong>MacroDroid</strong> or <strong>Automate</strong> (free)</p>
+                <p className="text-xs mt-2">{t("settings.androidAlternatives")}</p>
               </div>
             )}
 
             {showGuide === "ios" && (
               <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2 text-xs text-muted-foreground">
-                <p className="font-medium text-foreground text-sm">iOS — Using Shortcuts</p>
+                <p className="font-medium text-foreground text-sm">{t("settings.iosTitle")}</p>
                 <ol className="list-decimal list-inside space-y-1.5">
-                  <li>Open <strong>Shortcuts</strong> app → <strong>Automation</strong> tab</li>
-                  <li>Tap <strong>+</strong> → <strong>Message</strong> → choose <strong>&quot;Message Contains&quot;</strong></li>
-                  <li>Add keywords: <code className="bg-muted px-1 rounded">tracking, shipped, delivered, package, parcel, חבילה, משלוח</code></li>
-                  <li>Choose <strong>&quot;Run Immediately&quot;</strong> and tap <strong>Next</strong></li>
-                  <li>Tap <strong>&quot;New Blank Automation&quot;</strong></li>
-                  <li>Add action: <strong>&quot;Get Contents of URL&quot;</strong></li>
-                  <li>Tap the URL field and paste your <strong>webhook URL</strong> (copied above)</li>
-                  <li>Tap <strong>&quot;Show More&quot;</strong> on the action</li>
-                  <li>Set Method: <strong>POST</strong></li>
-                  <li>Set Request Body: <strong>JSON</strong></li>
-                  <li>Add a key: <code className="bg-muted px-1 rounded">text</code></li>
-                  <li>For the value: tap the field → tap <strong>&quot;Shortcut Input&quot;</strong> at the top → it inserts as a variable</li>
-                  <li>Tap <strong>Done</strong></li>
+                  <li>{t("settings.iosInstructions1")}</li>
+                  <li>{t("settings.iosInstructions2")}</li>
+                  <li>{t("settings.iosAddKeywords")} <code className="bg-muted px-1 rounded">tracking, shipped, delivered, package, parcel, חבילה, משלוח</code></li>
+                  <li>{t("settings.iosInstructions3")}</li>
+                  <li>{t("settings.iosNewBlank")}</li>
+                  <li>{t("settings.iosAddAction")}</li>
+                  <li>{t("settings.iosPasteUrl")}</li>
+                  <li>{t("settings.iosShowMore")}</li>
+                  <li>{t("settings.iosSetMethod")}</li>
+                  <li>{t("settings.iosSetBody")}</li>
+                  <li>{t("settings.iosAddKey")} <code className="bg-muted px-1 rounded">text</code></li>
+                  <li>{t("settings.iosSetValue")}</li>
+                  <li>{t("settings.iosInstructions4")}</li>
                 </ol>
                 <p className="text-xs mt-2 text-amber-600 dark:text-amber-400">
-                  ⚠️ If &quot;Shortcut Input&quot; isn&apos;t available, add a <strong>&quot;Get Text from Input&quot;</strong> action first (input = Shortcut Input), then use its output as the <code className="bg-muted px-1 rounded">text</code> value.
+                  ⚠️ {t("settings.iosWarning")}
                 </p>
               </div>
             )}
@@ -692,7 +692,7 @@ function ScanMessagesSection() {
         {/* Curl test */}
         {ingestKey && (
           <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">Test it</p>
+            <p className="text-sm font-medium text-foreground">{t("settings.testIt")}</p>
             <div className="flex items-center gap-2">
               <code className="flex-1 rounded-md bg-muted px-3 py-2 text-[10px] font-mono overflow-x-auto whitespace-nowrap leading-relaxed">
                 curl -X POST &quot;{webhookUrl}?key={ingestKey}&quot; -H &quot;Content-Type: application/json&quot; -d &apos;{`{"text":"Your package LP00123456789012 has shipped"}`}&apos;
@@ -737,7 +737,7 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
     try {
       // Check secure context
       if (!window.isSecureContext) {
-        toast.error("Push notifications require HTTPS. Try the production URL.");
+        toast.error(t("toast.pushRequireHttps"));
         setPushState("idle");
         return;
       }
@@ -749,7 +749,7 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
         await navigator.serviceWorker.ready;
       } catch (swErr: any) {
         console.error("SW registration error:", swErr);
-        toast.error("Service worker registration failed. Try refreshing the page.");
+        toast.error(t("toast.swRegistrationFailed"));
         setPushState("idle");
         return;
       }
@@ -757,7 +757,7 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
       // Get VAPID key
       const { publicKey } = await api.getVapidKey();
       if (!publicKey) {
-        toast.error("Push notifications not configured on server");
+        toast.error(t("toast.pushNotConfigured"));
         setPushState("idle");
         return;
       }
@@ -773,7 +773,7 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
       // Request permission
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
-        toast.error("Notification permission denied. Check your browser settings.");
+        toast.error(t("toast.notificationDenied"));
         setPushState("idle");
         return;
       }
@@ -787,14 +787,14 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
       // Send subscription to server
       await api.subscribePush(subscription);
       setIsSubscribed(true);
-      toast.success("Push notifications enabled!");
+      toast.success(t("toast.pushEnabled"));
     } catch (err: any) {
       console.error("Push subscribe error:", err);
       const msg = err?.message ?? "";
       if (msg.includes("push service") || msg.includes("AbortError")) {
-        toast.error("Push service unavailable. This browser may not support push on this domain.");
+        toast.error(t("toast.pushUnavailable"));
       } else {
-        toast.error(msg || "Failed to enable push notifications");
+        toast.error(msg || t("toast.failedEnablePush"));
       }
     } finally {
       setPushState("idle");
@@ -811,9 +811,9 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
       }
       await api.unsubscribePush();
       setIsSubscribed(false);
-      toast.success("Push notifications disabled");
+      toast.success(t("toast.pushDisabled"));
     } catch (err: any) {
-      toast.error(err?.message ?? "Failed to disable push notifications");
+      toast.error(err?.message ?? t("toast.failedDisablePush"));
     } finally {
       setPushState("idle");
     }
@@ -824,17 +824,17 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <Bell className="h-4 w-4 text-primary" />
-          Notifications
+          {t("settings.notificationsTitle")}
         </CardTitle>
         <CardDescription>
-          Get notified when your packages have status updates
+          {t("settings.notificationsDesc")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         {/* Push Notifications */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-foreground">Push notifications</p>
+            <p className="text-sm font-medium text-foreground">{t("settings.pushNotificationsLabel")}</p>
             <p className="text-xs text-muted-foreground">
               {!mounted
                 ? t("settings.checkingBrowser")
@@ -870,8 +870,8 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
         {/* Email Notifications */}
         <div className="flex items-center justify-between">
           <div>
-            <Label htmlFor="email-digest" className="text-sm font-medium">Email digest</Label>
-            <p className="text-xs text-muted-foreground">Weekly summary of your deliveries</p>
+            <Label htmlFor="email-digest" className="text-sm font-medium">{t("settings.emailDigest")}</Label>
+            <p className="text-xs text-muted-foreground">{t("settings.emailDigestDesc")}</p>
           </div>
           <Switch
             id="email-digest"
@@ -882,20 +882,20 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
 
         {notifPrefs?.emailEnabled && (
           <div className="flex items-center justify-between rounded-md border border-dashed p-3">
-            <p className="text-xs text-muted-foreground">Send yourself a test digest email now</p>
+            <p className="text-xs text-muted-foreground">{t("settings.testDigestPrompt")}</p>
             <Button
               variant="outline"
               size="sm"
               onClick={async () => {
                 try {
                   const res = await api.sendTestDigest();
-                  toast.success(res.message || "Test digest sent!");
+                  toast.success(res.message || t("toast.testDigestSent"));
                 } catch (err: any) {
-                  toast.error(err?.message || "Failed to send test digest");
+                  toast.error(err?.message || t("toast.failedTestDigest"));
                 }
               }}
             >
-              Send test
+              {t("settings.sendTest")}
             </Button>
           </div>
         )}
@@ -904,7 +904,7 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
           <Alert className="border-green-600 bg-green-50 text-green-800 dark:border-green-500 dark:bg-green-950 dark:text-green-200">
             <CheckCircle2 className="h-3.5 w-3.5" />
             <AlertDescription className="text-xs">
-              Push notifications are active. You&apos;ll be notified when any tracked package changes status (shipped, in transit, delivered, etc.)
+              {t("settings.pushActiveAlert")}
             </AlertDescription>
           </Alert>
         )}
@@ -916,6 +916,7 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
 function StoreImportSection() {
   const [uploading, setUploading] = useState(false);
   const queryClient = useQueryClient();
+  const { t } = useI18n();
 
   const SUPPORTED_STORES = [
     { label: "Amazon", domain: "amazon.com" },
@@ -945,7 +946,7 @@ function StoreImportSection() {
       const text = await file.text();
       const rows = parseCsv(text);
       if (rows.length === 0) {
-        toast.error("No valid rows found in CSV");
+        toast.error(t("settings.noValidCsvRows"));
         return;
       }
       const result = await api.importCsv(rows);
@@ -953,7 +954,7 @@ function StoreImportSection() {
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["packages"] });
     } catch (err: any) {
-      toast.error(err?.message ?? "Failed to import CSV");
+      toast.error(err?.message ?? t("settings.failedImportCsv"));
     } finally {
       setUploading(false);
       e.target.value = "";
@@ -965,10 +966,10 @@ function StoreImportSection() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <ShoppingBag className="h-4 w-4 text-primary" />
-          Store Orders
+          {t("settings.storeOrders")}
         </CardTitle>
         <CardDescription>
-          Orders from these stores are automatically detected when you connect your email
+          {t("settings.storeOrdersDesc")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -994,27 +995,27 @@ function StoreImportSection() {
 
         <Alert className="border-blue-500 bg-blue-50 text-blue-800 dark:border-blue-400 dark:bg-blue-950 dark:text-blue-200">
           <CheckCircle2 className="h-3.5 w-3.5" />
-          <AlertTitle className="text-xs font-medium">How it works</AlertTitle>
+          <AlertTitle className="text-xs font-medium">{t("settings.howItWorks")}</AlertTitle>
           <AlertDescription className="text-xs">
-            Connect your Gmail above → we scan for order confirmations and shipping notifications → tracking starts automatically. No store login needed.
+            {t("settings.howItWorksDesc")}
           </AlertDescription>
         </Alert>
 
         <Alert className="border-amber-500 bg-amber-50 text-amber-800 dark:border-amber-400 dark:bg-amber-950 dark:text-amber-200">
           <AlertCircle className="h-3.5 w-3.5" />
-          <AlertTitle className="text-xs font-medium">Why not connect stores directly?</AlertTitle>
+          <AlertTitle className="text-xs font-medium">{t("settings.whyNotDirect")}</AlertTitle>
           <AlertDescription className="text-xs">
-            Unlike Google, stores like Amazon and eBay don&apos;t provide consumer APIs to read your orders. Gmail is the most reliable automatic source — it captures confirmations from all stores at once.
+            {t("settings.whyNotDirectDesc")}
           </AlertDescription>
         </Alert>
 
         {/* CSV Import */}
         <div className="space-y-2">
           <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
-            <Upload className="h-3.5 w-3.5" /> Import order history (CSV)
+            <Upload className="h-3.5 w-3.5" /> {t("settings.importCsvTitle")}
           </p>
           <p className="text-xs text-muted-foreground">
-            If you have a CSV or spreadsheet with tracking numbers (exported from any store), upload it here. We&apos;ll extract tracking numbers and start tracking automatically.
+            {t("settings.importCsvDesc")}
           </p>
           <label className="flex items-center justify-center gap-2 rounded-md border-2 border-dashed border-border hover:border-primary/50 p-4 transition-colors cursor-pointer">
             <input
@@ -1027,17 +1028,17 @@ function StoreImportSection() {
             {uploading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm text-muted-foreground">Importing…</span>
+                <span className="text-sm text-muted-foreground">{t("settings.importing")}</span>
               </>
             ) : (
               <>
                 <FileText className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Click to upload CSV file</span>
+                <span className="text-sm text-muted-foreground">{t("settings.clickUploadCsv")}</span>
               </>
             )}
           </label>
           <p className="text-[10px] text-muted-foreground">
-            Expected columns: tracking number, order ID, store name, items, date (headers auto-detected)
+            {t("settings.csvExpectedColumns")}
           </p>
         </div>
       </CardContent>
