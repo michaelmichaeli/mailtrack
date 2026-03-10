@@ -31,13 +31,13 @@ export const metadata: Metadata = {
     title: `${APP_NAME} — Universal Package Tracking Dashboard`,
     description: APP_DESCRIPTION,
     url: APP_URL,
-    images: [{ url: "/og-image.svg", width: 1200, height: 630, alt: "MailTrack — Universal Package Tracking Dashboard" }],
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "MailTrack — Universal Package Tracking Dashboard" }],
   },
   twitter: {
     card: "summary_large_image",
     title: `${APP_NAME} — Universal Package Tracking Dashboard`,
     description: APP_DESCRIPTION,
-    images: ["/og-image.svg"],
+    images: ["/twitter-image"],
   },
   appleWebApp: {
     capable: true,
