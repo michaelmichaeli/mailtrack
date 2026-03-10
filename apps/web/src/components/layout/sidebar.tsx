@@ -15,6 +15,7 @@ import {
   X,
   Bell,
   User,
+  Globe,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
@@ -26,7 +27,22 @@ import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { PushNotificationManager } from "@/components/notifications/push-manager";
 
 export function Sidebar() {
-  const { t } = useI18n();
+  const { t, locale, setLocale } = useI18n();
+
+  const LOCALES = [
+    { code: "en", label: "English" },
+    { code: "he", label: "עברית" },
+    { code: "ar", label: "العربية" },
+    { code: "ru", label: "Русский" },
+  ] as const;
+
+  const cycleLocale = () => {
+    const idx = LOCALES.findIndex((l) => l.code === locale);
+    const next = LOCALES[(idx + 1) % LOCALES.length];
+    setLocale(next.code);
+  };
+
+  const currentLocaleName = LOCALES.find((l) => l.code === locale)?.label ?? "English";
   const pathname = usePathname();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
@@ -78,7 +94,7 @@ export function Sidebar() {
         </Link>
         <button
           onClick={() => setMobileOpen(false)}
-          className="ml-auto md:hidden p-1 rounded-lg hover:bg-accent"
+          className="ms-auto md:hidden p-1 rounded-lg hover:bg-accent"
           aria-label={t("nav.closeMenu")}
         >
           <X className="h-5 w-5" />
@@ -103,7 +119,7 @@ export function Sidebar() {
               )}
             >
               {isActive && (
-                <span className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl bg-primary" />
+                <span className="absolute top-0 bottom-0 w-[3px] rounded-l-xl bg-primary ltr:left-0 rtl:right-0" />
               )}
               <Icon className={cn("h-[18px] w-[18px] transition-colors", isActive ? "text-primary" : "")} />
               {item.label}
@@ -114,6 +130,13 @@ export function Sidebar() {
 
       {/* Bottom actions */}
       <div className="border-t border-border/60 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] space-y-0.5">
+        <button
+          onClick={cycleLocale}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all duration-200"
+        >
+          <Globe className="h-[18px] w-[18px]" />
+          {t("nav.language")}: {currentLocaleName}
+        </button>
         <button
           onClick={cycleTheme}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all duration-200"
@@ -137,14 +160,14 @@ export function Sidebar() {
       {/* Mobile hamburger */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-40 md:hidden p-2 rounded-lg bg-card border border-border shadow-md"
+        className="fixed top-4 z-40 md:hidden p-2 rounded-lg bg-card border border-border shadow-md ltr:left-4 rtl:right-4"
         aria-label={t("nav.openMenu")}
       >
         <Menu className="h-5 w-5" />
       </button>
 
       {/* Floating notification bell — mobile only */}
-      <div className="fixed top-4 right-4 z-40 md:hidden">
+      <div className="fixed top-4 z-40 md:hidden ltr:right-4 rtl:left-4">
         <NotificationBell />
       </div>
 
@@ -159,8 +182,9 @@ export function Sidebar() {
       {/* Mobile sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex h-[100dvh] w-64 flex-col border-r border-border bg-card transition-transform duration-200 md:hidden",
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed inset-y-0 z-50 flex h-[100dvh] w-64 flex-col border-border bg-card transition-transform duration-200 md:hidden",
+          "ltr:left-0 ltr:border-r rtl:right-0 rtl:border-l",
+          mobileOpen ? "translate-x-0" : "ltr:-translate-x-full rtl:translate-x-full"
         )}
       >
         {sidebarContent}

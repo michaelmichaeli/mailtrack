@@ -88,7 +88,7 @@ export default function OrderDetailPage() {
         <p className="text-sm text-muted-foreground mb-6">{t("detail.invalidLink")}</p>
         <Link href="/packages">
           <Button variant="outline" size="sm" className="cursor-pointer">
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
             {t("detail.backToOrders")}
           </Button>
         </Link>
@@ -150,7 +150,7 @@ export default function OrderDetailPage() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => router.back()} className="shrink-0">
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
         </Button>
         <div className="min-w-0 flex-1">
           <h1 className="text-xl font-bold tracking-tight text-foreground truncate">{order.merchant}</h1>
@@ -690,7 +690,7 @@ export default function OrderDetailPage() {
                           {Number(ro.totalAmount).toFixed(2)}
                         </span>
                       )}
-                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors rtl:rotate-180" />
                     </div>
                   </div>
                 </Link>

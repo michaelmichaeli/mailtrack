@@ -505,6 +505,19 @@ const ar: Record<TranslationKey, string> = {
   "notifTitle.trackingUpdate": "تحديث التتبع",
   "notifTitle.readyForPickup": "جاهز للاستلام",
   "notifTitle.newPackage": "تم اكتشاف طرد جديد",
+  "login.welcomeTo": "مرحباً بكم في MailTrack",
+  "login.tagline": "كل طرد، كل متجر، لوحة تحكم واحدة.",
+  "login.signingIn": "جارٍ تسجيل الدخول…",
+  "login.verifying": "جارٍ التحقق…",
+  "login.or": "أو",
+  "login.dev": "تطوير",
+  "login.devLogin": "تسجيل دخول تطوير",
+  "login.termsNotice": "بتسجيل الدخول، أنت توافق على شروط الخدمة وسياسة الخصوصية.",
+  "lang.en": "English",
+  "lang.he": "עברית",
+  "lang.ar": "العربية",
+  "lang.ru": "Русский",
+  "nav.language": "اللغة",
 };
 
 export default ar;

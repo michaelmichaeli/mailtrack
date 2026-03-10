@@ -26,7 +26,7 @@ export function EmptyState({ title, description, action, icon = "package" }: Emp
         <Link href={action.href}>
           <Button size="sm">
             {action.label}
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-4 w-4 rtl:rotate-180" />
           </Button>
         </Link>
       )}

@@ -505,6 +505,19 @@ const he: Record<TranslationKey, string> = {
   "notifTitle.trackingUpdate": "עדכון מעקב",
   "notifTitle.readyForPickup": "מוכן לאיסוף",
   "notifTitle.newPackage": "חבילה חדשה זוהתה",
+  "login.welcomeTo": "ברוכים הבאים ל-MailTrack",
+  "login.tagline": "כל חבילה, כל חנות, לוח בקרה אחד.",
+  "login.signingIn": "מתחבר…",
+  "login.verifying": "מאמת…",
+  "login.or": "או",
+  "login.dev": "פיתוח",
+  "login.devLogin": "התחברות פיתוח",
+  "login.termsNotice": "בהתחברות, אתם מסכימים לתנאי השירות ומדיניות הפרטיות שלנו.",
+  "lang.en": "English",
+  "lang.he": "עברית",
+  "lang.ar": "العربية",
+  "lang.ru": "Русский",
+  "nav.language": "שפה",
 };
 
 export default he;

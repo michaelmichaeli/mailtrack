@@ -145,7 +145,7 @@ export function PackageTimeline({ orders }: { orders: Order[] }) {
                             {Number(order.totalAmount).toFixed(2)}
                           </span>
                         )}
-                        <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                        <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors rtl:rotate-180" />
                       </div>
                     </div>
                   </Link>

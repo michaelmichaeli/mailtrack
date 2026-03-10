@@ -110,6 +110,21 @@ const en = {
   "login.continueWithGoogle": "Continue with Google",
   "login.continueWithGithub": "Continue with GitHub",
   "login.signInWithPasskey": "Sign in with Passkey",
+  "login.welcomeTo": "Welcome to MailTrack",
+  "login.tagline": "Every package, every store, one dashboard.",
+  "login.signingIn": "Signing in…",
+  "login.verifying": "Verifying…",
+  "login.or": "or",
+  "login.dev": "Dev",
+  "login.devLogin": "Dev Login",
+  "login.termsNotice": "By signing in, you agree to our Terms of Service and Privacy Policy.",
+
+  // Language selector
+  "lang.en": "English",
+  "lang.he": "עברית",
+  "lang.ar": "العربية",
+  "lang.ru": "Русский",
+  "nav.language": "Language",
 
   // Package detail
   "detail.orderNotFound": "Order not found",

@@ -110,7 +110,7 @@ export function PackageKanban({ orders }: { orders: Order[] }) {
                         </div>
                         <p className="text-sm font-semibold text-foreground truncate">{order.merchant}</p>
                       </div>
-                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-1" />
+                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-1 rtl:rotate-180" />
                     </div>
 
                     {items.length > 0 && (

@@ -505,6 +505,19 @@ const ru: Record<TranslationKey, string> = {
   "notifTitle.trackingUpdate": "Обновление отслеживания",
   "notifTitle.readyForPickup": "Готово к выдаче",
   "notifTitle.newPackage": "Обнаружена новая посылка",
+  "login.welcomeTo": "Добро пожаловать в MailTrack",
+  "login.tagline": "Каждая посылка, каждый магазин, одна панель.",
+  "login.signingIn": "Вход…",
+  "login.verifying": "Проверка…",
+  "login.or": "или",
+  "login.dev": "Разработка",
+  "login.devLogin": "Вход для разработки",
+  "login.termsNotice": "Входя в систему, вы соглашаетесь с Условиями обслуживания и Политикой конфиденциальности.",
+  "lang.en": "English",
+  "lang.he": "עברית",
+  "lang.ar": "العربية",
+  "lang.ru": "Русский",
+  "nav.language": "Язык",
 };
 
 export default ru;
