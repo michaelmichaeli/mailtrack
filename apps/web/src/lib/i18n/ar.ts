@@ -495,6 +495,16 @@ const ar: Record<TranslationKey, string> = {
   "scanSms.trackAll": "تتبع الكل ({count})",
   "scanSms.noResults": "لم يتم العثور على أرقام تتبع. حاول لصق نص آخر أو رسالة مختلفة.",
   "stat.active": "نشط",
+  "progress.ordered": "تم الطلب",
+  "progress.shipped": "تم الشحن",
+  "progress.inTransit": "في الطريق",
+  "progress.ready": "جاهز",
+  "progress.delivered": "تم التسليم",
+  "notifTitle.newOrder": "تم اكتشاف طلب جديد",
+  "notifTitle.packageDelivered": "تم تسليم الطرد! 🎉",
+  "notifTitle.trackingUpdate": "تحديث التتبع",
+  "notifTitle.readyForPickup": "جاهز للاستلام",
+  "notifTitle.newPackage": "تم اكتشاف طرد جديد",
 };
 
 export default ar;

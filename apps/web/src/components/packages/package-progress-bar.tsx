@@ -3,12 +3,12 @@ import { Check, AlertTriangle, RotateCcw } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 const steps = [
-  { key: "ORDERED", label: "Ordered" },
-  { key: "SHIPPED", label: "Shipped" },
-  { key: "IN_TRANSIT", label: "In Transit" },
-  { key: "OUT_FOR_DELIVERY", label: "Ready" },
-  { key: "DELIVERED", label: "Delivered" },
-];
+  { key: "ORDERED", labelKey: "progress.ordered" },
+  { key: "SHIPPED", labelKey: "progress.shipped" },
+  { key: "IN_TRANSIT", labelKey: "progress.inTransit" },
+  { key: "OUT_FOR_DELIVERY", labelKey: "progress.ready" },
+  { key: "DELIVERED", labelKey: "progress.delivered" },
+] as const;
 
 const statusIndex: Record<string, number> = {
   ORDERED: 0,
@@ -116,7 +116,7 @@ export function PackageProgressBar({ status, className }: PackageProgressBarProp
               index === 0 ? "text-left" : isLast ? "text-right" : "text-center",
               isCurrent ? "text-primary font-semibold" : isCompleted ? "text-foreground" : "text-muted-foreground"
             )}>
-              {step.label}
+              {t(step.labelKey as any)}
             </span>
           );
         })}

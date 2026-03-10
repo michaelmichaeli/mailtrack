@@ -495,6 +495,16 @@ const ru: Record<TranslationKey, string> = {
   "scanSms.trackAll": "Отследить все ({count})",
   "scanSms.noResults": "Номера отслеживания не найдены. Попробуйте вставить другой текст или сообщение.",
   "stat.active": "Активные",
+  "progress.ordered": "Заказано",
+  "progress.shipped": "Отправлено",
+  "progress.inTransit": "В пути",
+  "progress.ready": "Готово",
+  "progress.delivered": "Доставлено",
+  "notifTitle.newOrder": "Обнаружен новый заказ",
+  "notifTitle.packageDelivered": "Посылка доставлена! 🎉",
+  "notifTitle.trackingUpdate": "Обновление отслеживания",
+  "notifTitle.readyForPickup": "Готово к выдаче",
+  "notifTitle.newPackage": "Обнаружена новая посылка",
 };
 
 export default ru;

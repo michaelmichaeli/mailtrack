@@ -23,6 +23,21 @@ interface Notification {
 
 const AUTO_SYNC_INTERVAL = 15 * 60 * 1000; // 15 minutes
 
+const NOTIF_TITLE_MAP: Record<string, string> = {
+  "New Order Detected": "notifTitle.newOrder",
+  "🛍️ New Order Detected": "notifTitle.newOrder",
+  "Package Delivered! 🎉": "notifTitle.packageDelivered",
+  "Tracking Update": "notifTitle.trackingUpdate",
+  "📦 Tracking Update": "notifTitle.trackingUpdate",
+  "📦 Ready for Pickup": "notifTitle.readyForPickup",
+  "📦 New Package Detected": "notifTitle.newPackage",
+};
+
+function translateNotifTitle(title: string, t: (key: any) => string) {
+  const key = NOTIF_TITLE_MAP[title];
+  return key ? t(key) : title;
+}
+
 export function NotificationBell() {
   const { t } = useI18n();
   const router = useRouter();
@@ -304,7 +319,7 @@ export function NotificationBell() {
                               !n.read ? "font-semibold text-foreground" : "font-medium text-foreground/80"
                             )}
                           >
-                            {n.title}
+                            {translateNotifTitle(n.title, t)}
                           </p>
                           {!n.read && (
                             <span

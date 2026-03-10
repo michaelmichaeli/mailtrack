@@ -275,6 +275,18 @@ const en = {
   // Package progress bar
   "progress.returned": "Returned",
   "progress.exception": "Exception",
+  "progress.ordered": "Ordered",
+  "progress.shipped": "Shipped",
+  "progress.inTransit": "In Transit",
+  "progress.ready": "Ready",
+  "progress.delivered": "Delivered",
+
+  // Server notification titles (translated client-side)
+  "notifTitle.newOrder": "New Order Detected",
+  "notifTitle.packageDelivered": "Package Delivered! 🎉",
+  "notifTitle.trackingUpdate": "Tracking Update",
+  "notifTitle.readyForPickup": "Ready for Pickup",
+  "notifTitle.newPackage": "New Package Detected",
 
   // Settings — additional sections
   "settings.biometricDesc": "Sign in with Face ID, Touch ID, or security keys",

@@ -495,6 +495,16 @@ const he: Record<TranslationKey, string> = {
   "scanSms.trackAll": "עקוב אחרי הכל ({count})",
   "scanSms.noResults": "לא נמצאו מספרי מעקב. נסה להדביק טקסט נוסף או הודעה אחרת.",
   "stat.active": "פעיל",
+  "progress.ordered": "הוזמן",
+  "progress.shipped": "נשלח",
+  "progress.inTransit": "בדרך",
+  "progress.ready": "מוכן",
+  "progress.delivered": "נמסר",
+  "notifTitle.newOrder": "הזמנה חדשה זוהתה",
+  "notifTitle.packageDelivered": "החבילה נמסרה! 🎉",
+  "notifTitle.trackingUpdate": "עדכון מעקב",
+  "notifTitle.readyForPickup": "מוכן לאיסוף",
+  "notifTitle.newPackage": "חבילה חדשה זוהתה",
 };
 
 export default he;

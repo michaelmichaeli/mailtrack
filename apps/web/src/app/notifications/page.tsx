@@ -31,6 +31,21 @@ interface Notification {
 
 const LIMIT = 20;
 
+const NOTIF_TITLE_MAP: Record<string, string> = {
+  "New Order Detected": "notifTitle.newOrder",
+  "🛍️ New Order Detected": "notifTitle.newOrder",
+  "Package Delivered! 🎉": "notifTitle.packageDelivered",
+  "Tracking Update": "notifTitle.trackingUpdate",
+  "📦 Tracking Update": "notifTitle.trackingUpdate",
+  "📦 Ready for Pickup": "notifTitle.readyForPickup",
+  "📦 New Package Detected": "notifTitle.newPackage",
+};
+
+function translateNotifTitle(title: string, t: (key: any) => string) {
+  const key = NOTIF_TITLE_MAP[title];
+  return key ? t(key) : title;
+}
+
 function formatTime(iso: string, t: (key: any) => string) {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
@@ -260,7 +275,7 @@ export default function NotificationsPage() {
                             "text-sm leading-snug",
                             !n.read ? "font-semibold text-foreground" : "font-medium text-foreground/80"
                           )}>
-                            {n.title}
+                            {translateNotifTitle(n.title, t)}
                           </p>
                           <span className="text-[10px] text-muted-foreground/70 whitespace-nowrap shrink-0 mt-0.5">
                             {formatTime(n.createdAt, t)}
