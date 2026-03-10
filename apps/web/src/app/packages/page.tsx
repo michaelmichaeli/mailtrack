@@ -24,6 +24,7 @@ import { AddPackageDialog } from "@/components/packages/add-package-dialog";
 import { ScanSmsDialog } from "@/components/packages/scan-sms-dialog";
 import { LogoSpinner } from "@/components/ui/logo-spinner";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { useI18n } from "@/lib/i18n";
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -55,36 +56,37 @@ const TIME_PERIODS = [
 ];
 
 const SORT_OPTIONS = [
-  { value: "updatedAt:desc", label: "Recently Updated" },
-  { value: "createdAt:desc", label: "Newest First" },
-  { value: "createdAt:asc", label: "Oldest First" },
-  { value: "orderDate:desc", label: "Order Date (Newest)" },
-  { value: "orderDate:asc", label: "Order Date (Oldest)" },
-  { value: "merchant:asc", label: "Merchant (A–Z)" },
-  { value: "merchant:desc", label: "Merchant (Z–A)" },
-  { value: "status:asc", label: "Status (A–Z)" },
-];
+  { value: "updatedAt:desc", label: "sort.recentlyUpdated" },
+  { value: "createdAt:desc", label: "sort.newestFirst" },
+  { value: "createdAt:asc", label: "sort.oldestFirst" },
+  { value: "orderDate:desc", label: "sort.orderDateNewest" },
+  { value: "orderDate:asc", label: "sort.orderDateOldest" },
+  { value: "merchant:asc", label: "sort.merchantAZ" },
+  { value: "merchant:desc", label: "sort.merchantZA" },
+  { value: "status:asc", label: "sort.statusAZ" },
+] as const;
 
 const VIEW_MODES = [
-  { value: "grid", label: "Grid", icon: LayoutGrid },
-  { value: "table", label: "Table", icon: Table2 },
-  { value: "kanban", label: "Board", icon: Columns3 },
-  { value: "timeline", label: "Timeline", icon: Clock },
+  { value: "grid", label: "orders.grid", icon: LayoutGrid },
+  { value: "table", label: "orders.table", icon: Table2 },
+  { value: "kanban", label: "orders.board", icon: Columns3 },
+  { value: "timeline", label: "orders.timeline", icon: Clock },
 ] as const;
 
 type ViewMode = typeof VIEW_MODES[number]["value"];
 
 const STAT_PILLS = [
-  { status: "OUT_FOR_DELIVERY", label: "Today", dotColor: "#7c3aed" },
-  { status: "IN_TRANSIT", label: "In Transit", dotColor: "#6366f1" },
-  { status: "PROCESSING", label: "Processing", dotColor: "#94a3b8" },
-  { status: "DELIVERED", label: "Delivered", dotColor: "#10b981" },
-  { status: "EXCEPTION", label: "Issues", dotColor: "#f59e0b" },
-];
+  { status: "OUT_FOR_DELIVERY", label: "stat.today", dotColor: "#7c3aed" },
+  { status: "IN_TRANSIT", label: "stat.inTransit", dotColor: "#6366f1" },
+  { status: "PROCESSING", label: "stat.processing", dotColor: "#94a3b8" },
+  { status: "DELIVERED", label: "stat.delivered", dotColor: "#10b981" },
+  { status: "EXCEPTION", label: "stat.issues", dotColor: "#f59e0b" },
+] as const;
 
 function PackagesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { t } = useI18n();
   const initialStatus = searchParams.get("status") ?? "";
   const initialPeriod = searchParams.get("period") ?? "30d";
   const initialQuery = searchParams.get("q") ?? "";
@@ -203,7 +205,7 @@ function PackagesContent() {
               : `Updated ${s.synced} package${s.synced !== 1 ? "s" : ""}`;
             toast.success(msg);
           } else {
-            toast.error("Tracking sync failed");
+            toast.error(t("toast.syncFailed"));
           }
           refetchStats();
         }
@@ -215,14 +217,14 @@ function PackagesContent() {
     setIsSyncing(true);
     localStorage.setItem("mailtrack_syncing", "true");
     try {
-      setSyncProgress("Scanning emails…");
+      setSyncProgress(t("sync.scanning"));
       const emailResult = await api.syncEmails();
       const emailCount = emailResult.emailsParsed ?? 0;
-      setSyncProgress(emailCount > 0 ? `Found ${emailCount} emails, tracking packages…` : "Tracking packages…");
+      setSyncProgress(emailCount > 0 ? t("sync.foundEmails").replace("{count}", String(emailCount)) : t("sync.tracking"));
       await api.syncAllTracking();
       startSyncPolling(emailCount);
     } catch {
-      toast.error("Failed to sync. Redirecting to connect your email…");
+      toast.error(t("toast.failedSync"));
       finishSync();
       setTimeout(() => router.push("/settings"), 1500);
     }
@@ -259,7 +261,7 @@ function PackagesContent() {
   useEffect(() => {
     if (didAutoSync || isSyncing || isLoading || totalCount > 0 || !hasConnectedEmail) return;
     setDidAutoSync(true);
-    toast.info("Auto-syncing your connected email…");
+    toast.info(t("toast.autoSyncing"));
     handleFullSync();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [totalCount, isLoading, didAutoSync, isSyncing, hasConnectedEmail]);
@@ -273,8 +275,8 @@ function PackagesContent() {
       <FadeIn>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Orders</h1>
-            <p className="text-sm text-muted-foreground/80 mt-0.5">Every package, one dashboard.</p>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("orders.title")}</h1>
+            <p className="text-sm text-muted-foreground/80 mt-0.5">{t("orders.subtitle")}</p>
           </div>
           <div className="flex items-center gap-2">
             <AddPackageDialog />
@@ -284,7 +286,7 @@ function PackagesContent() {
             </Button>
             <Button onClick={handleFullSync} variant="outline" size="sm" disabled={busy} className="cursor-pointer" title="Sync emails from Gmail and update all tracking statuses">
               <RefreshCw className={`h-4 w-4 transition-transform ${busy ? "animate-spin" : ""}`} />
-              {syncProgress || (isSyncing ? "Syncing…" : "Sync All")}
+              {syncProgress || (isSyncing ? t("orders.syncing") : t("orders.syncAll"))}
             </Button>
             <div className="hidden md:block">
               <NotificationBell />
@@ -350,7 +352,7 @@ function PackagesContent() {
                       <button
                         key={p.status}
                         onClick={() => toggleStatus(p.status)}
-                        title={isActive ? `Clear ${p.label} filter` : `Show only ${p.label.toLowerCase()} packages`}
+                        title={isActive ? `Clear ${t(p.label)} filter` : `Show only ${t(p.label).toLowerCase()} packages`}
                         aria-pressed={isActive}
                         className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-200 cursor-pointer ${
                           isActive
@@ -359,7 +361,7 @@ function PackagesContent() {
                         }`}
                       >
                         <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: p.dotColor }} />
-                        {p.label}
+                        {t(p.label)}
                         <span className="font-bold text-foreground min-w-[1rem] text-center">{count}</span>
                       </button>
                     );
@@ -385,18 +387,18 @@ function PackagesContent() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by merchant, tracking number, or item…"
+              placeholder={t("common.search")}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="pl-9 pr-9"
-              aria-label="Search packages"
+              aria-label={t("orders.searchPackages")}
             />
             {query && (
               <button
                 onClick={() => setQuery("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                aria-label="Clear search"
-                title="Clear search"
+                aria-label={t("orders.clearSearch")}
+                title={t("orders.clearSearch")}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -405,12 +407,12 @@ function PackagesContent() {
           <div className="flex gap-2 flex-wrap">
             <Select value={status || "_all"} onValueChange={(v) => setStatus(v === "_all" ? "" : v)}>
               <SelectTrigger className="h-10 w-full sm:w-44" aria-label="Filter by status">
-                <SelectValue placeholder="All Statuses" />
+                <SelectValue placeholder={t("orders.allStatuses")} />
               </SelectTrigger>
               <SelectContent>
                 {STATUS_OPTIONS.map((opt) => (
                   <SelectItem key={opt.value || "_all"} value={opt.value || "_all"}>
-                    {opt.value ? opt.label : "All Statuses"}
+                    {opt.value ? t(`status.${opt.value}` as any) : t("orders.allStatuses")}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -418,12 +420,12 @@ function PackagesContent() {
             <Select value={sort} onValueChange={setSort}>
               <SelectTrigger className="h-10 w-full sm:w-52" aria-label="Sort packages">
                 <ArrowUpDown className="h-3.5 w-3.5 mr-1 shrink-0" />
-                <SelectValue placeholder="Sort by" />
+                <SelectValue placeholder={t("orders.sortBy")} />
               </SelectTrigger>
               <SelectContent>
                 {SORT_OPTIONS.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
+                    {t(opt.label)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -466,10 +468,10 @@ function PackagesContent() {
                     value={mode.value}
                     size="sm"
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm"
-                    aria-label={`${mode.label} view`}
+                    aria-label={`${t(mode.label)} view`}
                   >
                     <Icon className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">{mode.label}</span>
+                    <span className="hidden sm:inline">{t(mode.label)}</span>
                   </ToggleGroupItem>
                 );
               })}
@@ -491,13 +493,13 @@ function PackagesContent() {
       ) : allItems.length === 0 ? (
         <FadeIn>
           <EmptyState
-            title={query || status ? "No orders found" : hasConnectedEmail ? "No packages yet" : "No orders found"}
+            title={query || status ? "No orders found" : t("orders.noPackages")}
             description={
               query || status
-                ? "Try adjusting your search or filters"
+                ? t("orders.adjustFilters")
                 : hasConnectedEmail
-                ? "Hit Sync All to scan your email for orders, or add a package manually"
-                : "Connect your email to start tracking orders"
+                ? t("orders.emptyConnected")
+                : t("orders.emptyNotConnected")
             }
             action={!query && !status && !hasConnectedEmail ? { label: "Connect email", href: "/settings" } : undefined}
           />
@@ -546,7 +548,7 @@ function PackagesContent() {
                  </div>
                 }
                 <div className="flex items-center justify-center gap-2 py-2">
-                  <LogoSpinner size={24} text="Loading more…" />
+                  <LogoSpinner size={24} text={t("orders.loadingMore")} />
                 </div>
               </div>
             )}

@@ -21,6 +21,14 @@ const envToLogger: Record<string, object | boolean> = {
 export async function buildApp() {
   const app = Fastify({
     logger: envToLogger[process.env.NODE_ENV ?? "development"] ?? true,
+    ajv: { customOptions: { removeAdditional: true } },
+  });
+
+  // Allow empty bodies for DELETE requests (Fastify rejects empty JSON by default)
+  app.addHook("onRequest", async (request) => {
+    if (request.method === "DELETE") {
+      delete request.headers["content-type"];
+    }
   });
 
   // CORS

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { PackageProgressBar } from "./package-progress-bar";
 import { Package, MapPin, Clock, ShoppingBag, ChevronRight, Hash, Navigation } from "lucide-react";
 import { getCarrierDisplayName } from "@/lib/carrier-urls";
+import { useI18n } from "@/lib/i18n";
 
 interface OrderCardProps {
   order: {
@@ -33,6 +34,7 @@ interface OrderCardProps {
 }
 
 export function PackageCard({ order }: OrderCardProps) {
+  const { t } = useI18n();
   const pkg = order.package;
 
   const safeParse = (v: any): string[] => {
@@ -127,7 +129,7 @@ export function PackageCard({ order }: OrderCardProps) {
           <div className="flex items-start gap-2 mb-3 px-2.5 py-2 rounded-lg border" style={{ backgroundColor: '#047857', borderColor: '#065f46' }}>
             <Navigation className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: '#ffffff' }} />
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium" style={{ color: '#ffffff' }}>{status === "DELIVERED" ? "Picked up" : "Ready for pickup"}</p>
+              <p className="text-xs font-medium" style={{ color: '#ffffff' }}>{status === "DELIVERED" ? t("detail.pickedUp") : t("detail.readyForPickup")}</p>
               <p className="text-[11px] truncate" style={{ color: '#d1fae5' }}>{pickup.address || pickup.name}</p>
             </div>
             {(pickup.address || pickup.name) && status !== "DELIVERED" && (
@@ -141,7 +143,7 @@ export function PackageCard({ order }: OrderCardProps) {
                 title="Navigate to pickup location"
               >
                 <MapPin className="h-3 w-3" />
-                Navigate
+                {t("detail.navigate")}
               </a>
             )}
           </div>

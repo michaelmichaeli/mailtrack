@@ -12,8 +12,10 @@ import { PackageProgressBar } from "@/components/packages/package-progress-bar";
 import { TrackingTimeline } from "@/components/packages/tracking-timeline";
 import { ArrowLeft, RefreshCw, ExternalLink, MapPin, Clock, DollarSign, Store, Package } from "lucide-react";
 import { toast } from "sonner";
+import { useI18n } from "@/lib/i18n";
 
 export default function PackageDetailPage() {
+  const { t } = useI18n();
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -27,11 +29,11 @@ export default function PackageDetailPage() {
   const refreshMutation = useMutation({
     mutationFn: () => api.refreshPackage(id),
     onSuccess: () => {
-      toast.success("Tracking info refreshed");
+      toast.success(t("toast.trackingUpdated"));
       queryClient.invalidateQueries({ queryKey: ["package", id] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
-    onError: () => toast.error("Failed to refresh tracking"),
+    onError: () => toast.error(t("toast.failedRefreshTracking")),
   });
 
   if (isLoading) {

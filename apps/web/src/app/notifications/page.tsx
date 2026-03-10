@@ -16,6 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { PageTransition, FadeIn } from "@/components/ui/motion";
 import { toast } from "sonner";
+import { useI18n } from "@/lib/i18n";
 
 interface Notification {
   id: string;
@@ -47,6 +48,7 @@ function formatTime(iso: string) {
 }
 
 export default function NotificationsPage() {
+  const { t } = useI18n();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<"all" | "unread">("all");
@@ -87,7 +89,7 @@ export default function NotificationsPage() {
     mutationFn: () => api.markAllNotificationsRead(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      toast.success("All notifications marked as read");
+      toast.success(t("toast.allMarkedRead"));
     },
   });
 
@@ -100,7 +102,7 @@ export default function NotificationsPage() {
     mutationFn: () => api.clearAllNotifications(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      toast.success("All notifications cleared");
+      toast.success(t("toast.allCleared"));
     },
   });
 
@@ -115,9 +117,9 @@ export default function NotificationsPage() {
       <FadeIn>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Notifications</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("notifications.title")}</h1>
             <p className="text-sm text-muted-foreground/80 mt-0.5">
-              Stay updated on your package deliveries
+              {t("notifications.subtitle")}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -130,7 +132,7 @@ export default function NotificationsPage() {
                 disabled={markAllReadMutation.isPending}
               >
                 <CheckCheck className="h-4 w-4" />
-                <span className="hidden sm:inline">Mark all read</span>
+                <span className="hidden sm:inline">{t("notifications.markAllRead")}</span>
               </Button>
             )}
             {allNotifications.length > 0 && (
@@ -142,7 +144,7 @@ export default function NotificationsPage() {
                 disabled={clearAllMutation.isPending}
               >
                 <Trash2 className="h-4 w-4" />
-                <span className="hidden sm:inline">Clear all</span>
+                <span className="hidden sm:inline">{t("notifications.clearAll")}</span>
               </Button>
             )}
             <div className="hidden md:block">
@@ -179,14 +181,14 @@ export default function NotificationsPage() {
                   size="sm"
                   className="rounded-full px-3 py-1 text-xs font-medium data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
                 >
-                  All
+                  {t("notifications.all")}
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="unread"
                   size="sm"
                   className="rounded-full px-3 py-1 text-xs font-medium data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
                 >
-                  Unread
+                  {t("notifications.unread")}
                 </ToggleGroupItem>
               </ToggleGroup>
             </div>
@@ -218,10 +220,10 @@ export default function NotificationsPage() {
                   <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-muted-foreground/20" />
                 </div>
                 <p className="text-sm font-semibold text-foreground/70">
-                  {filter === "unread" ? "No unread notifications" : "No notifications yet"}
+                  {filter === "unread" ? t("notifications.noUnread") : t("notifications.noNotifications")}
                 </p>
                 <p className="text-xs text-muted-foreground/60 mt-1.5 text-center max-w-[240px]">
-                  You&apos;ll see updates here when your packages change status
+                  {t("notifications.emptyHint")}
                 </p>
               </div>
             ) : (

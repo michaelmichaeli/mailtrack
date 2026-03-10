@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
+import { useI18n } from "@/lib/i18n";
 
 // ─── Tiny sound helper (Web Audio API, no files needed) ────────────
 function playSound(type: "pop" | "success" | "whoosh" | "ding") {
@@ -153,6 +154,7 @@ function FloatingParticles() {
 
 function WelcomeStep({ userName, onNext }: { userName: string; onNext: () => void }) {
   const firstName = userName?.split(" ")[0] || "there";
+  const { t } = useI18n();
 
   useEffect(() => {
     const timer = setTimeout(() => fireConfetti(), 600);
@@ -184,7 +186,7 @@ function WelcomeStep({ userName, onNext }: { userName: string; onNext: () => voi
         <h1 className="text-3xl font-bold text-foreground">
           Hey {firstName}! <span className="inline-block animate-bounce">👋</span>
         </h1>
-        <p className="text-lg text-muted-foreground mt-2">Welcome to MailTrack</p>
+        <p className="text-lg text-muted-foreground mt-2">{t("onboarding.welcome")}</p>
       </motion.div>
 
       <motion.p
@@ -193,8 +195,7 @@ function WelcomeStep({ userName, onNext }: { userName: string; onNext: () => voi
         transition={{ delay: 0.8 }}
         className="text-sm text-muted-foreground mt-4 max-w-sm leading-relaxed"
       >
-        Your packages are about to get the VIP tracking treatment. No more digging through emails,
-        no more &quot;where&apos;s my stuff?&quot; moments. 📦✨
+        {t("onboarding.intro")}
       </motion.p>
 
       <motion.p
@@ -203,7 +204,7 @@ function WelcomeStep({ userName, onNext }: { userName: string; onNext: () => voi
         transition={{ delay: 1.2 }}
         className="text-xs text-muted-foreground/70 mt-2 italic"
       >
-        Let&apos;s set things up in under 30 seconds.
+        {t("onboarding.setup")}
       </motion.p>
 
       <motion.div
@@ -213,7 +214,7 @@ function WelcomeStep({ userName, onNext }: { userName: string; onNext: () => voi
         className="mt-8"
       >
         <Button size="lg" onClick={onNext} className="gap-2 text-base px-8">
-          Let&apos;s go
+          {t("onboarding.letsGo")}
           <ArrowRight className="h-5 w-5" />
         </Button>
       </motion.div>
@@ -223,13 +224,14 @@ function WelcomeStep({ userName, onNext }: { userName: string; onNext: () => voi
 
 function ConnectEmailStep({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }) {
   const [connecting, setConnecting] = useState(false);
+  const { t } = useI18n();
 
   const handleConnect = () => {
     setConnecting(true);
     playSound("pop");
     const token = api.getToken();
     if (!token) {
-      toast.error("Session expired. Please log in again.");
+      toast.error(t("toast.sessionExpired"));
       setConnecting(false);
       return;
     }
@@ -260,10 +262,9 @@ function ConnectEmailStep({ onNext, onSkip }: { onNext: () => void; onSkip: () =
         transition={{ delay: 0.3 }}
         className="mt-6"
       >
-        <h2 className="text-2xl font-bold text-foreground">Connect your Gmail</h2>
+        <h2 className="text-2xl font-bold text-foreground">{t("onboarding.connectGmail")}</h2>
         <p className="text-sm text-muted-foreground mt-2 max-w-sm leading-relaxed">
-          We&apos;ll scan your inbox for order confirmations and shipping updates.
-          No spam reading, pinky promise. 🤞
+          {t("onboarding.connectGmailDesc")}
         </p>
       </motion.div>
 
@@ -274,9 +275,9 @@ function ConnectEmailStep({ onNext, onSkip }: { onNext: () => void; onSkip: () =
         className="mt-4 space-y-2 text-left w-full max-w-xs"
       >
         {[
-          { icon: Search, text: "Finds order & shipping emails" },
-          { icon: Eye, text: "Read-only access — we never send emails" },
-          { icon: Shield, text: "Data encrypted & stored securely" },
+          { icon: Search, text: t("onboarding.benefit1") },
+          { icon: Eye, text: t("onboarding.benefit2") },
+          { icon: Shield, text: t("onboarding.benefit3") },
         ].map((item, i) => (
           <motion.div
             key={i}
@@ -304,10 +305,10 @@ function ConnectEmailStep({ onNext, onSkip }: { onNext: () => void; onSkip: () =
           disabled={connecting}
         >
           <Mail className="h-5 w-5" />
-          {connecting ? "Connecting..." : "Connect Gmail"}
+          {connecting ? t("onboarding.connecting") : t("onboarding.connectGmail")}
         </Button>
         <Button variant="ghost" size="sm" className="w-full text-muted-foreground" onClick={onSkip}>
-          I&apos;ll do this later
+          {t("onboarding.doLater")}
         </Button>
       </motion.div>
     </motion.div>
@@ -322,12 +323,13 @@ function SyncingStep({
   syncResult: { emailsParsed: number; ordersCreated: number; totalTracking: number } | null;
 }) {
   const [phase, setPhase] = useState<"scanning" | "done">("scanning");
+  const { t } = useI18n();
   const messages = [
-    "Checking your inbox... 📬",
-    "Found some shipping emails! 🎉",
-    "Extracting tracking numbers... 🔍",
-    "Cross-referencing carriers... 🌐",
-    "Almost there... ⏳",
+    t("onboarding.checkingInbox"),
+    t("onboarding.foundEmails"),
+    t("onboarding.extractingTracking"),
+    t("onboarding.crossReferencing"),
+    t("onboarding.almostThere"),
   ];
   const [msgIndex, setMsgIndex] = useState(0);
 
@@ -424,9 +426,9 @@ function SyncingStep({
             className="mt-4 grid grid-cols-3 gap-3 w-full max-w-sm"
           >
             {[
-              { value: syncResult?.emailsParsed ?? 0, label: "Emails scanned", emoji: "📧" },
-              { value: syncResult?.ordersCreated ?? 0, label: "Orders found", emoji: "📦" },
-              { value: syncResult?.totalTracking ?? 0, label: "Tracking #s", emoji: "🔍" },
+              { value: syncResult?.emailsParsed ?? 0, label: t("onboarding.emailsScanned"), emoji: "📧" },
+              { value: syncResult?.ordersCreated ?? 0, label: t("onboarding.ordersFound"), emoji: "📦" },
+              { value: syncResult?.totalTracking ?? 0, label: t("onboarding.trackingNumbers"), emoji: "🔍" },
             ].map((stat, i) => (
               <motion.div
                 key={i}
@@ -461,7 +463,7 @@ function SyncingStep({
 const FEATURES = [
   {
     icon: Globe,
-    title: "Universal Tracking",
+    titleKey: "onboarding.universalTracking" as const,
     desc: "30+ carriers worldwide. AliExpress, Amazon, USPS, FedEx, DHL, Israel Post — all in one place.",
     color: "bg-blue-50 dark:bg-blue-950/50",
     iconColor: "text-blue-500",
@@ -469,6 +471,7 @@ const FEATURES = [
   },
   {
     icon: Zap,
+    titleKey: null,
     title: "Auto-Sync from Email",
     desc: "New order confirmation? We catch it automatically. No copy-pasting tracking numbers.",
     color: "bg-amber-50 dark:bg-amber-950/50",
@@ -477,7 +480,7 @@ const FEATURES = [
   },
   {
     icon: Bell,
-    title: "Smart Notifications",
+    titleKey: "onboarding.smartNotifications" as const,
     desc: "Get notified when packages ship, arrive, or need attention. Never miss a delivery again.",
     color: "bg-purple-50 dark:bg-purple-950/50",
     iconColor: "text-purple-500",
@@ -485,7 +488,7 @@ const FEATURES = [
   },
   {
     icon: MapPin,
-    title: "Live Location Maps",
+    titleKey: "onboarding.liveMaps" as const,
     desc: "See where your package is on a map. Track the journey from warehouse to your door.",
     color: "bg-green-50 dark:bg-green-950/50",
     iconColor: "text-green-500",
@@ -493,7 +496,7 @@ const FEATURES = [
   },
   {
     icon: BarChart3,
-    title: "Board, Table & Timeline",
+    titleKey: "onboarding.viewModes" as const,
     desc: "View your packages your way — Kanban board, sortable table, or visual timeline.",
     color: "bg-pink-50 dark:bg-pink-950/50",
     iconColor: "text-pink-500",
@@ -505,6 +508,7 @@ function FeatureTourStep({ onNext }: { onNext: () => void }) {
   const [current, setCurrent] = useState(0);
   const feature = FEATURES[current];
   const isLast = current === FEATURES.length - 1;
+  const { t } = useI18n();
 
   const next = () => {
     playSound("pop");
@@ -554,7 +558,7 @@ function FeatureTourStep({ onNext }: { onNext: () => void }) {
           </motion.div>
 
           <h2 className="text-2xl font-bold text-foreground mt-6">
-            {feature.title} {feature.emoji}
+            {feature.titleKey ? t(feature.titleKey) : feature.title} {feature.emoji}
           </h2>
           <p className="text-sm text-muted-foreground mt-2 max-w-sm leading-relaxed">
             {feature.desc}
@@ -574,7 +578,7 @@ function FeatureTourStep({ onNext }: { onNext: () => void }) {
           </Button>
         )}
         <Button size="lg" onClick={next} className="gap-2 px-8">
-          {isLast ? "I'm ready!" : "Next"}
+          {isLast ? t("onboarding.imReady") : t("onboarding.next")}
           <ChevronRight className="h-5 w-5" />
         </Button>
       </motion.div>

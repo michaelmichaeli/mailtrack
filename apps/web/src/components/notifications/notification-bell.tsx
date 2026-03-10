@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { LogoSpinner } from "@/components/ui/logo-spinner";
 import { toast } from "sonner";
+import { useI18n } from "@/lib/i18n";
 
 interface Notification {
   id: string;
@@ -23,6 +24,7 @@ interface Notification {
 const AUTO_SYNC_INTERVAL = 15 * 60 * 1000; // 15 minutes
 
 export function NotificationBell() {
+  const { t } = useI18n();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -42,11 +44,11 @@ export function NotificationBell() {
         if (!initialLoad.current && count > prev) {
           const newCount = count - prev;
           toast.info(`${newCount} new notification${newCount > 1 ? "s" : ""}`, {
-            description: "Tap to view",
+            description: t("notificationBell.tapToView"),
             duration: 4000,
             id: "new-notifications",
             action: {
-              label: "View",
+              label: t("common.view"),
               onClick: () => router.push("/notifications"),
             },
           });
@@ -233,7 +235,7 @@ export function NotificationBell() {
                   <button
                     onClick={handleMarkAllRead}
                     className="p-1.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                    title="Mark all as read"
+                    title={t("notificationBell.markAllRead")}
                   >
                     <CheckCheck className="h-4 w-4" />
                   </button>
@@ -242,7 +244,7 @@ export function NotificationBell() {
                   <button
                     onClick={handleClearAll}
                     className="p-1.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-destructive transition-colors"
-                    title="Clear all"
+                    title={t("notificationBell.clearAll")}
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -250,7 +252,7 @@ export function NotificationBell() {
                 <button
                   onClick={() => setOpen(false)}
                   className="p-1.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                  aria-label="Close notifications"
+                  aria-label={t("notificationBell.close")}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -261,7 +263,7 @@ export function NotificationBell() {
             <div className="overflow-y-auto flex-1 min-h-0">
               {loading && notifications.length === 0 ? (
                 <div className="p-8 text-center">
-                  <LogoSpinner size={24} text="Loading…" />
+                  <LogoSpinner size={24} text={t("common.loading")} />
                 </div>
               ) : notifications.length === 0 ? (
                 <div className="p-8 text-center">
@@ -325,7 +327,7 @@ export function NotificationBell() {
                           <button
                             onClick={(e) => handleMarkRead(n.id, e)}
                             className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                            title="Mark as read"
+                            title={t("notificationBell.markAsRead")}
                           >
                             <Check className="h-3.5 w-3.5" />
                           </button>
@@ -333,7 +335,7 @@ export function NotificationBell() {
                         <button
                           onClick={(e) => handleDelete(n.id, e)}
                           className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors"
-                          title="Delete"
+                          title={t("common.delete")}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>

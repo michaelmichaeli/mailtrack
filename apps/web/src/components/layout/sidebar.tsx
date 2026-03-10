@@ -20,18 +20,13 @@ import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { useScrollRestore } from "@/lib/use-scroll-restore";
+import { useI18n } from "@/lib/i18n";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { PushNotificationManager } from "@/components/notifications/push-manager";
 
-const navItems = [
-  { href: "/packages", label: "Orders", icon: Package },
-  { href: "/notifications", label: "Notifications", icon: Bell },
-  { href: "/profile", label: "Profile", icon: User },
-  { href: "/settings", label: "Settings", icon: Settings },
-];
-
 export function Sidebar() {
+  const { t } = useI18n();
   const pathname = usePathname();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
@@ -47,6 +42,13 @@ export function Sidebar() {
   }, [pathname]);
 
   useScrollRestore();
+
+  const navItems = [
+    { href: "/packages", label: t("nav.orders"), icon: Package },
+    { href: "/notifications", label: t("nav.notifications"), icon: Bell },
+    { href: "/profile", label: t("nav.profile"), icon: User },
+    { href: "/settings", label: t("nav.settings"), icon: Settings },
+  ];
 
   const handleSignOut = async () => {
     try { await api.logout(); } catch {}
@@ -124,7 +126,7 @@ export function Sidebar() {
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
         >
           <LogOut className="h-[18px] w-[18px]" />
-          Sign out
+          {t("nav.signOut")}
         </button>
       </div>
     </>

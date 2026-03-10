@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertTriangle, RefreshCw, ArrowLeft } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 interface ErrorFallbackProps {
   error: Error & { digest?: string };
@@ -18,6 +19,7 @@ const QUIPS = [
 ];
 
 export function ErrorFallback({ error, reset }: ErrorFallbackProps) {
+  const { t } = useI18n();
   const quip = QUIPS[Math.abs(hashCode(error.message)) % QUIPS.length];
 
   return (
@@ -42,11 +44,11 @@ export function ErrorFallback({ error, reset }: ErrorFallbackProps) {
           <div className="flex gap-3 justify-center pt-2">
             <Button onClick={reset}>
               <RefreshCw className="h-4 w-4" />
-              Try Again
+              {t("error.tryAgain")}
             </Button>
             <Button variant="outline" onClick={() => window.history.back()}>
               <ArrowLeft className="h-4 w-4" />
-              Go Back
+              {t("error.backHome")}
             </Button>
           </div>
 

@@ -7,6 +7,7 @@ import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 
 import { cn } from "@/lib/utils";
+import { useI18n, type TranslationKey } from "@/lib/i18n";
 
 const badgeVariants = cva(
   "inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3",
@@ -62,6 +63,7 @@ function Badge({
   ...props
 }: React.ComponentProps<"span"> &
   VariantProps<typeof badgeVariants> & { asChild?: boolean; status?: string }) {
+  const { t } = useI18n();
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -84,7 +86,7 @@ function Badge({
         {...props}
       >
         <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: config.dot }} />
-        {children ?? statusLabels[status] ?? status}
+        {children ?? t(`status.${status}` as TranslationKey) ?? status}
       </span>
     );
   }

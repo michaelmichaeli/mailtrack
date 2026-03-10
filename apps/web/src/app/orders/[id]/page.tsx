@@ -13,11 +13,13 @@ import { TrackingTimeline } from "@/components/packages/tracking-timeline";
 import { ArrowLeft, RefreshCw, MapPin, Clock, DollarSign, Store, Package, ShoppingBag, ExternalLink, ChevronRight, Navigation, KeyRound, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useI18n } from "@/lib/i18n";
 import { getCarrierTrackingUrl, getCarrierDisplayName } from "@/lib/carrier-urls";
 import { CopyButton } from "@/components/ui/copy-button";
 import { PageTransition, FadeIn } from "@/components/ui/motion";
 
 export default function OrderDetailPage() {
+  const { t } = useI18n();
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -37,16 +39,16 @@ export default function OrderDetailPage() {
     },
     onSuccess: (data: any) => {
       if (data?.updated) {
-        toast.success("Tracking info updated from carrier");
+        toast.success(t("toast.trackingUpdated"));
       } else {
-        toast.success("Tracking is up to date (based on email data)");
+        toast.success(t("toast.trackingUpToDate"));
       }
       queryClient.invalidateQueries({ queryKey: ["order", id] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       setRefreshingPkgId(null);
     },
     onError: () => {
-      toast.error("Failed to refresh tracking");
+      toast.error(t("toast.failedRefreshTracking"));
       setRefreshingPkgId(null);
     },
   });
@@ -59,7 +61,7 @@ export default function OrderDetailPage() {
       return result;
     },
     onSuccess: () => {
-      toast.success("Order deleted");
+      toast.success(t("toast.orderDeleted"));
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["packages"] });
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
@@ -68,7 +70,7 @@ export default function OrderDetailPage() {
       router.push("/packages");
     },
     onError: (err: any) => {
-      toast.error(err?.message ?? "Failed to delete order");
+      toast.error(err?.message ?? t("toast.failedDeleteOrder"));
       setConfirmDelete(false);
     },
   });
@@ -83,8 +85,8 @@ export default function OrderDetailPage() {
         <div className="rounded-full bg-muted/50 p-5 mb-5">
           <Package className="h-12 w-12 text-muted-foreground/40" />
         </div>
-        <h2 className="text-xl font-semibold mb-1">Order not found</h2>
-        <p className="text-sm text-muted-foreground mb-6">This order may have been deleted or the link is invalid.</p>
+        <h2 className="text-xl font-semibold mb-1">{t("detail.orderNotFound")}</h2>
+        <p className="text-sm text-muted-foreground mb-6">{t("detail.invalidLink")}</p>
         <Link href="/packages">
           <Button variant="outline" size="sm" className="cursor-pointer">
             <ArrowLeft className="h-4 w-4" />
@@ -168,7 +170,7 @@ export default function OrderDetailPage() {
               onClick={() => deleteMutation.mutate()}
               disabled={deleteMutation.isPending}
             >
-              {deleteMutation.isPending ? "Deleting…" : "Yes"}
+              {deleteMutation.isPending ? t("detail.deleting") : t("detail.yes")}
             </Button>
             <Button
               variant="ghost"
@@ -363,7 +365,7 @@ export default function OrderDetailPage() {
 
               return (
                 <div className="border-t border-border pt-5">
-                  <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-4">Tracking History</p>
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-4">{t("detail.trackingHistory")}</p>
                   <TrackingTimeline events={allEvents} />
                 </div>
               );
@@ -395,7 +397,7 @@ export default function OrderDetailPage() {
               const fallbackLocation = order.packages.find((p: any) => p.lastLocation)?.lastLocation;
               if (unique.length === 0 && !fallbackLocation) return null;
 
-              const allLocations = unique.length > 0 ? unique : (fallbackLocation ? [{ location: fallbackLocation, timestamp: order.updatedAt, description: "Last known location" }] : []);
+              const allLocations = unique.length > 0 ? unique : (fallbackLocation ? [{ location: fallbackLocation, timestamp: order.updatedAt, description: t("detail.lastKnownLocation") }] : []);
               if (allLocations.length === 0) return null;
 
               return (
@@ -431,7 +433,7 @@ export default function OrderDetailPage() {
                       style={{ border: 0 }}
                       allowFullScreen
                       loading="lazy"
-                      title="Package location"
+                      title={t("detail.packageLocation")}
                     />
                     <div className="p-2 bg-muted/30">
                       <a
@@ -471,7 +473,7 @@ export default function OrderDetailPage() {
           const headerText = isDelivered ? "✅ Picked Up" : "📦 Ready for Pickup";
           const subText = isDelivered
             ? `Delivered by ${pickup.name || 'carrier'}`
-            : "Your package is waiting at the location below";
+            : t("detail.packageWaiting");
 
           return (
             <Card className="overflow-hidden shadow-sm" style={{ borderColor: '#047857' }}>
@@ -554,7 +556,7 @@ export default function OrderDetailPage() {
                                 ? { backgroundColor: '#047857', color: '#ffffff' }
                                 : { backgroundColor: '#b91c1c', color: '#ffffff' }
                             }>
-                              {pickup.openNow ? "Open now" : "Closed"}
+                              {pickup.openNow ? t("detail.openNow") : t("detail.closed")}
                             </span>
                           )}
                         </div>
@@ -602,7 +604,7 @@ export default function OrderDetailPage() {
                     style={{ border: 0 }}
                     allowFullScreen
                     loading="lazy"
-                    title="Pickup location map"
+                    title={t("detail.pickupLocationMap")}
                   />
                   <div className="p-3 bg-muted/30">
                     <a
@@ -612,7 +614,7 @@ export default function OrderDetailPage() {
                     >
                       <Button variant="outline" size="sm" className="w-full font-medium">
                         <Navigation className="h-3.5 w-3.5" />
-                        Get Directions
+                        {t("detail.getDirections")}
                       </Button>
                     </a>
                   </div>

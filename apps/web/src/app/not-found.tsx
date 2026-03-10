@@ -6,6 +6,7 @@ import { NotificationBell } from "@/components/notifications/notification-bell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Package } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 const MESSAGES = [
   "This package got lost in transit… just like this page.",
@@ -30,6 +31,7 @@ interface Box {
 }
 
 export default function NotFound() {
+  const { t } = useI18n();
   const [message, setMessage] = useState(MESSAGES[0]);
   const [boxes, setBoxes] = useState<Box[]>([]);
   const [score, setScore] = useState(0);
@@ -103,7 +105,7 @@ export default function NotFound() {
             onClick={() => catchBox(box.id)}
             className="absolute text-3xl cursor-pointer hover:scale-150 transition-transform duration-150 select-none z-10"
             style={{ left: `${box.x}%`, top: `${box.y}%` }}
-            aria-label="Catch the package"
+            aria-label={t("notFound.title")}
           >
             {box.emoji}
           </button>
@@ -138,7 +140,7 @@ export default function NotFound() {
                 <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
                   <Button onClick={() => (window.location.href = "/packages")}>
                     <Package className="h-4 w-4" />
-                    Track My Packages
+                    {t("notFound.backHome")}
                   </Button>
                   <Button variant="outline" onClick={() => window.history.back()}>
                     <ArrowLeft className="h-4 w-4" />

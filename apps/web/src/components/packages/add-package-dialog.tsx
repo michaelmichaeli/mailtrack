@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
+import { useI18n } from "@/lib/i18n";
 import {
   Select,
   SelectContent,
@@ -57,6 +58,7 @@ export function AddPackageDialog() {
   const [description, setDescription] = useState("");
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { t } = useI18n();
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -73,9 +75,9 @@ export function AddPackageDialog() {
       setCarrier("");
       setDescription("");
       if (data.alreadyExists) {
-        toast.info("Package is already being tracked");
+        toast.info(t("toast.packageAlreadyTracked"));
       } else {
-        toast.success("Package added successfully");
+        toast.success(t("toast.packageAdded"));
       }
       router.push(`/orders/${data.orderId}`);
     },
@@ -86,15 +88,15 @@ export function AddPackageDialog() {
       <DialogTrigger asChild>
         <Button size="sm" className="gap-1.5 whitespace-nowrap">
           <Package className="h-4 w-4" />
-          <span className="hidden sm:inline">Track Package</span>
-          <span className="sm:hidden">Add</span>
+          <span className="hidden sm:inline">{t("addPackage.title")}</span>
+          <span className="sm:hidden">{t("addPackage.add")}</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Search className="h-5 w-5 text-indigo-500" />
-            Track a Package
+            {t("addPackage.title")}
           </DialogTitle>
           <DialogDescription>
             Enter a tracking number to start tracking a package from any carrier worldwide.
@@ -109,11 +111,11 @@ export function AddPackageDialog() {
         >
           <div className="space-y-2">
             <Label htmlFor="tracking-number">
-              Tracking Number <span className="text-red-500">*</span>
+              {t("addPackage.trackingNumber")} <span className="text-red-500">*</span>
             </Label>
             <Input
               id="tracking-number"
-              placeholder="e.g. 1Z999AA10123456784"
+              placeholder={t("addPackage.trackingPlaceholder")}
               value={trackingNumber}
               onChange={(e) => setTrackingNumber(e.target.value)}
               className="font-mono"
@@ -121,25 +123,25 @@ export function AddPackageDialog() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="carrier">Carrier</Label>
+            <Label htmlFor="carrier">{t("addPackage.carrier")}</Label>
             <Select value={carrier || "_auto"} onValueChange={(v) => setCarrier(v === "_auto" ? "" : v)}>
               <SelectTrigger id="carrier">
-                <SelectValue placeholder="Select carrier" />
+                <SelectValue placeholder={t("addPackage.selectCarrier")} />
               </SelectTrigger>
               <SelectContent>
                 {CARRIERS.map((c) => (
                   <SelectItem key={c.value || "_auto"} value={c.value || "_auto"}>
-                    {c.label}
+                    {c.value ? c.label : t("addPackage.autoDetect")}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Description (optional)</Label>
+            <Label htmlFor="description">{t("addPackage.description")}</Label>
             <Input
               id="description"
-              placeholder="e.g. Blue winter jacket"
+              placeholder={t("addPackage.descriptionPlaceholder")}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />

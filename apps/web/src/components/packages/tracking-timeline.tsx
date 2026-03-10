@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { MapPin, Package, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
+import { useI18n } from "@/lib/i18n";
 
 interface TrackingEvent {
   id: string;
@@ -77,6 +78,7 @@ function TimelineRow({ event, isFirst, isLast, colors }: {
 
 export function TrackingTimeline({ events }: TrackingTimelineProps) {
   const [expanded, setExpanded] = useState(false);
+  const { t } = useI18n();
 
   if (events.length === 0) {
     return (
@@ -124,7 +126,7 @@ export function TrackingTimeline({ events }: TrackingTimelineProps) {
             <span className={cn("transition-transform duration-300", expanded && "rotate-180")}>
               <ChevronDown className="h-3.5 w-3.5" />
             </span>
-            {expanded ? "Show less" : `Show all ${events.length} events`}
+            {expanded ? t("detail.showLess") : t("detail.showAllEvents").replace("{count}", String(events.length))}
           </button>
         </>
       )}

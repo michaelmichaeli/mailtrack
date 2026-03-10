@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Check, AlertTriangle, RotateCcw } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 const steps = [
   { key: "ORDERED", label: "Ordered" },
@@ -24,6 +25,7 @@ interface PackageProgressBarProps {
 }
 
 export function PackageProgressBar({ status, className }: PackageProgressBarProps) {
+  const { t } = useI18n();
   const isException = status === "EXCEPTION";
   const isReturned = status === "RETURNED";
   const isSpecial = isException || isReturned;
@@ -55,7 +57,7 @@ export function PackageProgressBar({ status, className }: PackageProgressBarProp
             />
           </div>
           <span className="text-xs font-semibold" style={{ color: isReturned ? "#ef4444" : "#f59e0b" }}>
-            {isReturned ? "Returned" : "Exception"}
+            {isReturned ? t("progress.returned") : t("progress.exception")}
           </span>
         </div>
       </div>

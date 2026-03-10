@@ -1,0 +1,270 @@
+import type { TranslationKey } from "./en";
+
+const he: Record<TranslationKey, string> = {
+  // Sidebar
+  "nav.orders": "הזמנות",
+  "nav.notifications": "התראות",
+  "nav.profile": "פרופיל",
+  "nav.settings": "הגדרות",
+  "nav.signOut": "התנתקות",
+
+  // Orders page
+  "orders.title": "הזמנות",
+  "orders.subtitle": "כל החבילות, לוח בקרה אחד.",
+  "orders.syncAll": "סנכרון הכל",
+  "orders.syncing": "מסנכרן…",
+  "orders.scanMessages": "סריקת הודעות",
+  "orders.loadMore": "טען עוד",
+  "orders.noPackages": "אין חבילות להצגה",
+  "orders.emptyConnected": "לא נמצאו חבילות עדיין. לחצו על סנכרון הכל כדי לסרוק את המיילים.",
+  "orders.emptyNotConnected": "חברו את Gmail בהגדרות כדי למצוא הזמנות ומספרי מעקב אוטומטית.",
+  "orders.grid": "רשת",
+  "orders.table": "טבלה",
+  "orders.board": "לוח",
+  "orders.timeline": "ציר זמן",
+
+  // Time filters
+  "filter.7d": "7י",
+  "filter.30d": "30י",
+  "filter.6m": "6ח",
+  "filter.1y": "שנה",
+  "filter.all": "הכל",
+
+  // Sort options
+  "sort.recentlyUpdated": "עודכן לאחרונה",
+  "sort.newestFirst": "החדש ביותר",
+  "sort.oldestFirst": "הישן ביותר",
+  "sort.orderDateNewest": "תאריך הזמנה (חדש)",
+  "sort.orderDateOldest": "תאריך הזמנה (ישן)",
+  "sort.merchantAZ": "חנות (א–ת)",
+  "sort.merchantZA": "חנות (ת–א)",
+  "sort.statusAZ": "סטטוס (א–ת)",
+
+  // Status labels
+  "status.ORDERED": "הוזמן",
+  "status.PROCESSING": "בעיבוד",
+  "status.SHIPPED": "נשלח",
+  "status.IN_TRANSIT": "בדרך",
+  "status.OUT_FOR_DELIVERY": "בחלוקה",
+  "status.DELIVERED": "נמסר",
+  "status.EXCEPTION": "חריגה",
+  "status.RETURNED": "הוחזר",
+
+  // Status pills
+  "stat.today": "היום",
+  "stat.inTransit": "בדרך",
+  "stat.processing": "בעיבוד",
+  "stat.delivered": "נמסרו",
+  "stat.issues": "בעיות",
+
+  // Notifications
+  "notifications.title": "התראות",
+  "notifications.subtitle": "הישארו מעודכנים לגבי המשלוחים שלכם",
+  "notifications.markAllRead": "סמן הכל כנקרא",
+  "notifications.clearAll": "נקה הכל",
+  "notifications.all": "הכל",
+  "notifications.unread": "לא נקראו",
+  "notifications.noUnread": "אין התראות שלא נקראו",
+  "notifications.noNotifications": "אין התראות עדיין",
+  "notifications.emptyHint": "תקבלו עדכונים כאן כשהחבילות שלכם ישנו סטטוס",
+
+  // Profile
+  "profile.title": "פרופיל",
+  "profile.subtitle": "פרטי החשבון שלך",
+
+  // Settings
+  "settings.title": "הגדרות",
+  "settings.subtitle": "נהלו את החשבון וההעדפות שלכם",
+  "settings.connectedEmails": "אימיילים מחוברים",
+  "settings.connectGmail": "חבר Gmail",
+  "settings.autoForwardSMS": "העברת SMS אוטומטית",
+  "settings.appearance": "מראה",
+  "settings.theme": "ערכת נושא",
+  "settings.themeDesc": "בחרו את ערכת הנושא המועדפת",
+  "settings.language": "שפה",
+  "settings.languageDesc": "בחרו את השפה המועדפת",
+  "settings.light": "בהיר",
+  "settings.dark": "כהה",
+  "settings.system": "מערכת",
+  "settings.passkeys": "מפתחות גישה",
+  "settings.addPasskey": "הוסף מפתח גישה",
+  "settings.replayOnboarding": "הפעל מדריך מחדש",
+  "settings.signOut": "התנתקות",
+  "settings.dataPrivacy": "נתונים ופרטיות",
+  "settings.exportData": "ייצוא כל הנתונים (JSON)",
+  "settings.dangerZone": "אזור מסוכן",
+  "settings.removeAllPackages": "הסר את כל החבילות",
+  "settings.removeAllPackagesDesc": "פעולה זו תמחק לצמיתות את כל ההזמנות, החבילות, אירועי המעקב וההתראות. החשבון והאימיילים המחוברים יישארו.",
+  "settings.deleteAccount": "מחק חשבון",
+  "settings.deleteAccountDesc": "פעולה זו תמחק לצמיתות את החשבון, כל הנתונים, האימיילים המחוברים וההעדפות. לא ניתן לבטל פעולה זו.",
+  "settings.generateIngestKey": "צור מפתח קליטה",
+  "settings.copyURL": "העתק כתובת ל-iOS Shortcuts",
+  "settings.downloadTasker": "הורד פרופיל Tasker",
+
+  // Login
+  "login.continueWithGoogle": "המשך עם Google",
+  "login.continueWithGithub": "המשך עם GitHub",
+  "login.signInWithPasskey": "התחבר עם מפתח גישה",
+
+  // Package detail
+  "detail.orderNotFound": "ההזמנה לא נמצאה",
+  "detail.packageNotFound": "החבילה לא נמצאה",
+  "detail.invalidLink": "ייתכן שההזמנה נמחקה או שהקישור אינו תקין.",
+  "detail.getDirections": "נווט לשם",
+  "detail.refreshTracking": "רענן מעקב",
+  "detail.deleteOrder": "מחק הזמנה",
+  "detail.pickedUp": "נאסף",
+  "detail.readyForPickup": "מוכן לאיסוף",
+  "detail.navigate": "ניווט",
+
+  // Toasts
+  "toast.allMarkedRead": "כל ההתראות סומנו כנקראו",
+  "toast.allCleared": "כל ההתראות נוקו",
+  "toast.trackingUpdated": "פרטי מעקב עודכנו מהשליח",
+  "toast.trackingUpToDate": "המעקב מעודכן (לפי נתוני אימייל)",
+  "toast.orderDeleted": "ההזמנה נמחקה",
+  "toast.nameUpdated": "השם עודכן",
+  "toast.emailDisconnected": "האימייל נותק",
+  "toast.preferencesUpdated": "ההעדפות עודכנו",
+  "toast.dataExported": "הנתונים יוצאו בהצלחה",
+  "toast.passkeyRegistered": "מפתח גישה נרשם!",
+  "toast.passkeyRemoved": "מפתח גישה הוסר",
+  "toast.ingestKeyGenerated": "מפתח קליטה נוצר",
+  "toast.copiedToClipboard": "הועתק ללוח",
+  "toast.failedRefreshTracking": "רענון המעקב נכשל",
+  "toast.failedDeleteOrder": "מחיקת ההזמנה נכשלה",
+  "toast.failedUpdateName": "עדכון השם נכשל",
+  "toast.pleaseLogIn": "אנא התחברו קודם",
+  "toast.failedDisconnectEmail": "ניתוק האימייל נכשל",
+  "toast.failedExportData": "ייצוא הנתונים נכשל",
+  "toast.failedSync": "הסנכרון נכשל. מעביר להגדרות…",
+  "toast.syncFailed": "סנכרון המעקב נכשל",
+  "toast.failedRegisterPasskey": "רישום מפתח הגישה נכשל",
+  "toast.failedRemovePasskey": "הסרת מפתח הגישה נכשלה",
+  "toast.failedGenerateKey": "יצירת המפתח נכשלה",
+  "toast.failedRemovePackages": "הסרת החבילות נכשלה",
+  "toast.failedDeleteAccount": "מחיקת החשבון נכשלה",
+  "toast.autoSyncing": "סנכרון אוטומטי של האימייל…",
+  "toast.packageAlreadyTracked": "החבילה כבר במעקב",
+  "toast.packageAdded": "החבילה נוספה בהצלחה",
+  "toast.sessionExpired": "פג תוקף ההתחברות. אנא התחברו מחדש.",
+
+  // Onboarding
+  "onboarding.welcome": "ברוכים הבאים ל-MailTrack",
+  "onboarding.intro": "החבילות שלכם עומדות לקבל מעקב VIP. בלי לחפור במיילים, בלי ׳איפה הדבר שלי?׳. 📦✨",
+  "onboarding.setup": "בואו נגדיר הכל בפחות מ-30 שניות.",
+  "onboarding.letsGo": "יאללה",
+  "onboarding.connectGmail": "חברו את Gmail שלכם",
+  "onboarding.connectGmailDesc": "נסרוק את תיבת הדואר שלכם בחיפוש אחר אישורי הזמנה ועדכוני משלוח. לא קוראים ספאם, מבטיחים. 🤞",
+  "onboarding.benefit1": "מוצא מיילים של הזמנות ומשלוחים",
+  "onboarding.benefit2": "גישת קריאה בלבד — לא שולחים מיילים",
+  "onboarding.benefit3": "נתונים מוצפנים ומאוחסנים בבטחה",
+  "onboarding.doLater": "אעשה זאת מאוחר יותר",
+  "onboarding.connecting": "מתחבר...",
+  "onboarding.checkingInbox": "בודק את תיבת הדואר... 📬",
+  "onboarding.foundEmails": "נמצאו מיילים של משלוחים! 🎉",
+  "onboarding.extractingTracking": "מחלץ מספרי מעקב... 🔍",
+  "onboarding.crossReferencing": "מצליב מידע עם חברות שילוח... 🌐",
+  "onboarding.almostThere": "כמעט שם... ⏳",
+  "onboarding.emailsScanned": "מיילים נסרקו",
+  "onboarding.ordersFound": "הזמנות נמצאו",
+  "onboarding.trackingNumbers": "מספרי מעקב",
+  "onboarding.universalTracking": "מעקב אוניברסלי",
+  "onboarding.smartNotifications": "התראות חכמות",
+  "onboarding.liveMaps": "מפות מיקום בזמן אמת",
+  "onboarding.viewModes": "לוח, טבלה וציר זמן",
+  "onboarding.imReady": "!אני מוכן",
+  "onboarding.next": "הבא",
+
+  // Sync progress
+  "sync.scanning": "סורק מיילים…",
+  "sync.foundEmails": "נמצאו {count} מיילים, עוקב אחר חבילות…",
+  "sync.tracking": "עוקב אחר חבילות…",
+
+  // Package detail extras
+  "detail.trackingHistory": "היסטוריית מעקב",
+  "detail.orderDetails": "פרטי הזמנה",
+  "detail.deleting": "מוחק…",
+  "detail.yes": "כן",
+  "detail.lastKnownLocation": "מיקום ידוע אחרון",
+  "detail.packageLocation": "מיקום החבילה",
+  "detail.packageWaiting": "החבילה שלכם ממתינה במיקום שלהלן",
+  "detail.openNow": "פתוח עכשיו",
+  "detail.closed": "סגור",
+  "detail.pickupLocationMap": "מפת נקודת איסוף",
+  "detail.showLess": "הצג פחות",
+  "detail.showAllEvents": "הצג את כל {count} האירועים",
+  "detail.unknownDate": "תאריך לא ידוע",
+
+  // Add package dialog
+  "addPackage.title": "הוסף חבילה",
+  "addPackage.trackingNumber": "מספר מעקב",
+  "addPackage.trackingPlaceholder": "לדוגמה 1Z999AA10123456784",
+  "addPackage.carrier": "חברת שילוח",
+  "addPackage.selectCarrier": "בחר חברת שילוח",
+  "addPackage.autoDetect": "זיהוי אוטומטי",
+  "addPackage.description": "תיאור (אופציונלי)",
+  "addPackage.descriptionPlaceholder": "לדוגמה ז׳קט חורף כחול",
+  "addPackage.add": "הוסף",
+
+  // Packages page extras
+  "orders.allStatuses": "כל הסטטוסים",
+  "orders.sortBy": "מיין לפי",
+  "orders.adjustFilters": "נסו לשנות את החיפוש או הסינון",
+  "orders.loadingMore": "טוען עוד…",
+  "orders.searchPackages": "חיפוש חבילות",
+  "orders.clearSearch": "נקה חיפוש",
+
+  // Settings extras
+  "settings.never": "אף פעם",
+  "settings.disconnectEmail": "נתק אימייל",
+  "settings.deleteAccountPermanently": "מחק חשבון לצמיתות",
+  "settings.checkingBrowser": "בודק תמיכת דפדפן…",
+  "settings.notSupported": "לא נתמך בדפדפן זה",
+  "settings.pushEnabled": "מופעל — תקבלו התראות על שינויי סטטוס",
+  "settings.pushDisabled": "קבלו התראות בדפדפן כשחבילות מתעדכנות",
+  "settings.enable": "הפעל",
+  "settings.disable": "השבת",
+
+  // Common
+  "common.cancel": "ביטול",
+  "common.confirm": "אישור",
+  "common.delete": "מחיקה",
+  "common.save": "שמירה",
+  "common.search": "חיפוש",
+  "common.loading": "טוען…",
+  "common.view": "הצג",
+  "common.added": "נוסף",
+  "common.tracked": "במעקב",
+
+  // 404 page
+  "notFound.title": "הדף לא נמצא",
+  "notFound.backHome": "חזרה ללוח הבקרה",
+
+  // Error fallback
+  "error.tryAgain": "נסה שוב",
+  "error.backHome": "חזרה הביתה",
+
+  // Notification bell
+  "notificationBell.markAllRead": "סמן הכל כנקרא",
+  "notificationBell.clearAll": "נקה הכל",
+  "notificationBell.close": "סגור התראות",
+  "notificationBell.tapToView": "הקש להצגה",
+  "notificationBell.markAsRead": "סמן כנקרא",
+
+  // Scan SMS dialog
+  "scanSms.title": "סריקת טקסט",
+  "scanSms.placeholder": "הדביקו את ההודעות כאן…\n\nדוגמה:\nהחבילה שלך נשלחה! עקוב: LP00123456789012\nדואר ישראל: RR123456789IL",
+  "scanSms.noTrackingFound": "לא נמצאו מספרי מעקב בטקסט",
+  "scanSms.failedScan": "סריקת הטקסט נכשלה",
+  "scanSms.failedAdd": "הוספת החבילה נכשלה",
+  "scanSms.unknownCarrier": "חברת שילוח לא ידועה",
+  "scanSms.rescan": "סרוק שוב",
+  "scanSms.scanText": "סרוק טקסט",
+
+  // Package progress bar
+  "progress.returned": "הוחזר",
+  "progress.exception": "חריגה",
+};
+
+export default he;

@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
+import { useI18n } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -62,16 +63,13 @@ function SettingsContent() {
   const [isDeleting, setIsDeleting] = useState(false);
   const queryClient = useQueryClient();
   const { theme, setTheme } = useTheme();
+  const { t, locale, setLocale } = useI18n();
   const searchParams = useSearchParams();
   const router = useRouter();
   const errorParam = searchParams.get("error");
   const successParam = searchParams.get("success");
   const autoSync = searchParams.get("autoSync");
   const [didAutoSync, setDidAutoSync] = useState(false);
-  const [language, setLanguage] = useState(() => {
-    if (typeof window !== "undefined") return localStorage.getItem("mailtrack_language") ?? "en";
-    return "en";
-  });
   const [displayError, setDisplayError] = useState<string | null>(errorParam);
   const [displaySuccess, setDisplaySuccess] = useState<string | null>(successParam);
 
@@ -131,18 +129,18 @@ function SettingsContent() {
   const disconnectEmail = useMutation({
     mutationFn: (id: string) => api.disconnectEmail(id),
     onSuccess: () => {
-      toast.success("Email disconnected");
+      toast.success(t("toast.emailDisconnected"));
       queryClient.invalidateQueries({ queryKey: ["connected-accounts"] });
     },
     onError: (err: any) => {
-      toast.error(err?.message ?? "Failed to disconnect email");
+      toast.error(err?.message ?? t("toast.failedDisconnectEmail"));
     },
   });
 
   const updateNotifications = useMutation({
     mutationFn: (data: any) => api.updateNotificationPreferences(data),
     onSuccess: () => {
-      toast.success("Preferences updated");
+      toast.success(t("toast.preferencesUpdated"));
       queryClient.invalidateQueries({ queryKey: ["notification-prefs"] });
     },
   });
@@ -158,9 +156,9 @@ function SettingsContent() {
       a.download = `mailtrack-export-${new Date().toISOString().split("T")[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success("Data exported successfully");
+      toast.success(t("toast.dataExported"));
     } catch {
-      toast.error("Failed to export data");
+      toast.error(t("toast.failedExportData"));
     } finally {
       setIsExporting(false);
     }
@@ -176,7 +174,7 @@ function SettingsContent() {
       await api.deleteAccount();
       window.location.href = "/login";
     } catch {
-      toast.error("Failed to delete account");
+      toast.error(t("toast.failedDeleteAccount"));
       setIsDeleting(false);
     }
   };
@@ -189,8 +187,9 @@ function SettingsContent() {
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["packages"] });
       setDeletePackagesOpen(false);
-    } catch {
-      toast.error("Failed to remove packages");
+    } catch (err) {
+      console.error("Delete all orders failed:", err);
+      toast.error(t("toast.failedRemovePackages"));
     } finally {
       setIsDeletingAll(false);
     }
@@ -206,8 +205,8 @@ function SettingsContent() {
     <div className="space-y-6 max-w-2xl">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Settings</h1>
-          <p className="text-sm text-muted-foreground/80 mt-0.5">Manage your account and preferences</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("settings.title")}</h1>
+          <p className="text-sm text-muted-foreground/80 mt-0.5">{t("settings.subtitle")}</p>
         </div>
         <div className="hidden md:block">
           <NotificationBell />
@@ -233,7 +232,7 @@ function SettingsContent() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Mail className="h-4 w-4 text-primary" />
-            Connected Emails
+            {t("settings.connectedEmails")}
           </CardTitle>
           <CardDescription>
             Connect your email to automatically track packages from order confirmations
@@ -255,7 +254,7 @@ function SettingsContent() {
                     {email.provider} · Last synced:{" "}
                     {email.lastSyncAt
                       ? new Date(email.lastSyncAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
-                      : "Never"}
+                      : t("settings.never")}
                   </p>
                 </div>
               </div>
@@ -263,7 +262,7 @@ function SettingsContent() {
                 onClick={() => disconnectEmail.mutate(email.id)}
                 disabled={disconnectEmail.isPending}
                 className="p-1.5 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors shrink-0"
-                title="Disconnect email"
+                title={t("settings.disconnectEmail")}
               >
                 <XCircle className="h-4 w-4" />
               </button>
@@ -271,7 +270,7 @@ function SettingsContent() {
           ))}
           <Button variant="outline" className="w-full" onClick={connectGmail}>
             <LinkIcon className="h-4 w-4" />
-            Connect Gmail
+            {t("settings.connectGmail")}
           </Button>
         </CardContent>
       </Card>
@@ -293,27 +292,27 @@ function SettingsContent() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Palette className="h-4 w-4 text-primary" />
-            Appearance
+            {t("settings.appearance")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="flex items-center justify-between">
             <div>
-              <Label className="text-sm font-medium">Theme</Label>
-              <p className="text-xs text-muted-foreground">Choose your preferred appearance</p>
+              <Label className="text-sm font-medium">{t("settings.theme")}</Label>
+              <p className="text-xs text-muted-foreground">{t("settings.themeDesc")}</p>
             </div>
             <ToggleGroup type="single" value={theme ?? "system"} onValueChange={(v) => v && setTheme(v)}>
               <ToggleGroupItem value="light" size="sm" aria-label="Light theme">
                 <Sun className="h-4 w-4 mr-1" />
-                Light
+                {t("settings.light")}
               </ToggleGroupItem>
               <ToggleGroupItem value="dark" size="sm" aria-label="Dark theme">
                 <Moon className="h-4 w-4 mr-1" />
-                Dark
+                {t("settings.dark")}
               </ToggleGroupItem>
               <ToggleGroupItem value="system" size="sm" aria-label="System theme">
                 <Palette className="h-4 w-4 mr-1" />
-                System
+                {t("settings.system")}
               </ToggleGroupItem>
             </ToggleGroup>
           </div>
@@ -322,17 +321,14 @@ function SettingsContent() {
             <div>
               <Label className="text-sm font-medium flex items-center gap-1.5">
                 <Globe className="h-3.5 w-3.5" />
-                Language
+                {t("settings.language")}
               </Label>
-              <p className="text-xs text-muted-foreground">Choose your preferred language</p>
+              <p className="text-xs text-muted-foreground">{t("settings.languageDesc")}</p>
             </div>
             <Select
-              value={language}
+              value={locale}
               onValueChange={(v) => {
-                setLanguage(v);
-                localStorage.setItem("mailtrack_language", v);
-                document.documentElement.lang = v;
-                document.documentElement.dir = v === "he" || v === "ar" ? "rtl" : "ltr";
+                setLocale(v);
               }}
             >
               <SelectTrigger className="w-40">
@@ -354,7 +350,7 @@ function SettingsContent() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <KeyRound className="h-4 w-4 text-primary" />
-            Passkeys
+            {t("settings.passkeys")}
           </CardTitle>
           <CardDescription>Sign in with Face ID, Touch ID, or security keys</CardDescription>
         </CardHeader>
@@ -379,9 +375,9 @@ function SettingsContent() {
                     onClick={async () => {
                       try {
                         await api.deletePasskey(pk.id);
-                        toast.success("Passkey removed");
+                        toast.success(t("toast.passkeyRemoved"));
                         refetchPasskeys();
-                      } catch { toast.error("Failed to remove passkey"); }
+                      } catch { toast.error(t("toast.failedRemovePasskey")); }
                     }}
                   >
                     <Trash2 className="h-4 w-4 text-muted-foreground" />
@@ -401,12 +397,12 @@ function SettingsContent() {
                 const options = await api.getPasskeyRegisterOptions();
                 const credential = await startRegistration({ optionsJSON: options });
                 await api.registerPasskey(credential, `Passkey ${(passkeys?.length ?? 0) + 1}`);
-                toast.success("Passkey registered!");
+                toast.success(t("toast.passkeyRegistered"));
                 refetchPasskeys();
               } catch (err: any) {
                 if (err?.name !== "NotAllowedError") {
                   console.error("Passkey registration error:", err);
-                  toast.error(err?.message ?? "Failed to register passkey");
+                  toast.error(err?.message ?? t("toast.failedRegisterPasskey"));
                 }
               } finally {
                 setRegisteringPasskey(false);
@@ -414,7 +410,7 @@ function SettingsContent() {
             }}
           >
             <Key className="h-4 w-4" />
-            {registeringPasskey ? "Registering…" : "Add a passkey"}
+            {registeringPasskey ? "Registering…" : t("settings.addPasskey")}
           </Button>
         </CardContent>
       </Card>
@@ -423,11 +419,11 @@ function SettingsContent() {
       <div className="flex gap-3">
         <Button variant="outline" className="flex-1" onClick={() => window.location.href = "/onboarding"}>
           <RotateCcw className="h-4 w-4" />
-          Replay onboarding
+          {t("settings.replayOnboarding")}
         </Button>
         <Button variant="outline" className="flex-1" onClick={handleSignOut}>
           <LogOut className="h-4 w-4" />
-          Sign out
+          {t("settings.signOut")}
         </Button>
       </div>
 
@@ -436,14 +432,14 @@ function SettingsContent() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Shield className="h-4 w-4 text-primary" />
-            Data & Privacy
+            {t("settings.dataPrivacy")}
           </CardTitle>
           <CardDescription>Export your data or manage your account</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <Button variant="outline" className="w-full" onClick={handleExport} disabled={isExporting}>
             <Download className={`h-4 w-4 ${isExporting ? "animate-spin" : ""}`} />
-            {isExporting ? "Exporting…" : "Export all data (JSON)"}
+            {isExporting ? "Exporting…" : t("settings.exportData")}
           </Button>
         </CardContent>
       </Card>
@@ -453,7 +449,7 @@ function SettingsContent() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base text-destructive">
             <AlertCircle className="h-4 w-4" />
-            Danger Zone
+            {t("settings.dangerZone")}
           </CardTitle>
           <CardDescription>Irreversible actions — proceed with caution</CardDescription>
         </CardHeader>
@@ -462,21 +458,21 @@ function SettingsContent() {
             <DialogTrigger asChild>
               <Button variant="outline" className="w-full border-destructive/30 text-destructive hover:bg-destructive/10">
                 <Trash2 className="h-4 w-4" />
-                Remove all packages
+                {t("settings.removeAllPackages")}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Remove all packages?</DialogTitle>
+                <DialogTitle>{t("settings.removeAllPackages")}?</DialogTitle>
                 <DialogDescription>
-                  This will permanently delete all your orders, packages, tracking events, and notifications. Your account and connected emails will remain.
+                  {t("settings.removeAllPackagesDesc")}
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setDeletePackagesOpen(false)}>Cancel</Button>
+                <Button variant="outline" onClick={() => setDeletePackagesOpen(false)}>{t("common.cancel")}</Button>
                 <Button variant="destructive" onClick={handleDeleteAllOrders} disabled={isDeletingAll}>
                   <Trash2 className={`h-4 w-4 ${isDeletingAll ? "animate-spin" : ""}`} />
-                  {isDeletingAll ? "Removing…" : "Remove all packages"}
+                  {isDeletingAll ? "Removing…" : t("settings.removeAllPackages")}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -486,21 +482,21 @@ function SettingsContent() {
             <DialogTrigger asChild>
               <Button variant="destructive" className="w-full">
                 <Trash2 className="h-4 w-4" />
-                Delete account
+                {t("settings.deleteAccount")}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Delete your account?</DialogTitle>
+                <DialogTitle>{t("settings.deleteAccount")}?</DialogTitle>
                 <DialogDescription>
-                  This will permanently delete your account, all data, connected emails, and preferences. This action cannot be undone.
+                  {t("settings.deleteAccountDesc")}
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setDeleteAccountOpen(false)}>Cancel</Button>
+                <Button variant="outline" onClick={() => setDeleteAccountOpen(false)}>{t("common.cancel")}</Button>
                 <Button variant="destructive" onClick={handleDeleteAccount} disabled={isDeleting}>
                   <Trash2 className={`h-4 w-4 ${isDeleting ? "animate-spin" : ""}`} />
-                  {isDeleting ? "Deleting…" : "Delete account permanently"}
+                  {isDeleting ? t("detail.deleting") : t("settings.deleteAccountPermanently")}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -517,6 +513,7 @@ function ScanMessagesSection() {
   const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showGuide, setShowGuide] = useState<"android" | "ios" | null>(null);
+  const { t } = useI18n();
 
   const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002";
   const webhookUrl = `${API_BASE}/api/ingest/sms`;
@@ -550,7 +547,7 @@ function ScanMessagesSection() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <Smartphone className="h-4 w-4 text-primary" />
-          Auto-Forward SMS
+          {t("settings.autoForwardSMS")}
         </CardTitle>
         <CardDescription>
           Automatically forward shipping SMS from your phone to track packages without any manual work
@@ -716,6 +713,7 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
   const [pushSupported, setPushSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const { t } = useI18n();
 
   // Check if browser supports push and if already subscribed (client-only)
   useEffect(() => {
@@ -839,12 +837,12 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
             <p className="text-sm font-medium text-foreground">Push notifications</p>
             <p className="text-xs text-muted-foreground">
               {!mounted
-                ? "Checking browser support…"
+                ? t("settings.checkingBrowser")
                 : !pushSupported
-                ? "Not supported in this browser"
+                ? t("settings.notSupported")
                 : isSubscribed
-                ? "Enabled — you'll get notified on status changes"
-                : "Get browser notifications when packages update"}
+                ? t("settings.pushEnabled")
+                : t("settings.pushDisabled")}
             </p>
           </div>
           {mounted && pushSupported && (
@@ -862,7 +860,7 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
               ) : (
                 <Bell className="h-3.5 w-3.5" />
               )}
-              {isSubscribed ? "Disable" : "Enable"}
+              {isSubscribed ? t("settings.disable") : t("settings.enable")}
             </Button>
           )}
         </div>

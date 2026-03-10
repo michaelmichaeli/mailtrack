@@ -16,6 +16,7 @@ import {
 import { MessageSquare, Loader2, Package, Check, Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useI18n } from "@/lib/i18n";
 
 interface ScanResult {
   trackingNumber: string;
@@ -32,6 +33,7 @@ interface ScanSmsDialogProps {
 }
 
 export function ScanSmsDialog({ open, onOpenChange }: ScanSmsDialogProps) {
+  const { t } = useI18n();
   const [text, setText] = useState("");
   const [scanning, setScanning] = useState(false);
   const [results, setResults] = useState<ScanResult[] | null>(null);
@@ -45,10 +47,10 @@ export function ScanSmsDialog({ open, onOpenChange }: ScanSmsDialogProps) {
       const res = await api.scanText(text);
       setResults(res.found);
       if (res.total === 0) {
-        toast.info("No tracking numbers found in the text");
+        toast.info(t("scanSms.noTrackingFound"));
       }
     } catch (err: any) {
-      toast.error(err?.message ?? "Failed to scan text");
+      toast.error(err?.message ?? t("scanSms.failedScan"));
     } finally {
       setScanning(false);
     }
@@ -77,7 +79,7 @@ export function ScanSmsDialog({ open, onOpenChange }: ScanSmsDialogProps) {
       setResults((prev) =>
         prev!.map((r, i) => (i === index ? { ...r, adding: false } : r))
       );
-      toast.error(err?.message ?? "Failed to add package");
+      toast.error(err?.message ?? t("scanSms.failedAdd"));
     }
   };
 
@@ -117,7 +119,7 @@ export function ScanSmsDialog({ open, onOpenChange }: ScanSmsDialogProps) {
 
         <div className="space-y-4">
           <Textarea
-            placeholder={"Paste your messages here…\n\nExample:\nYour package has shipped! Track it: LP00123456789012\nIsrael Post: RR123456789IL"}
+            placeholder={t("scanSms.placeholder")}
             value={text}
             onChange={(e) => {
               setText(e.target.value);
@@ -143,14 +145,14 @@ export function ScanSmsDialog({ open, onOpenChange }: ScanSmsDialogProps) {
                       <div className="min-w-0">
                         <p className="text-sm font-mono truncate">{r.trackingNumber}</p>
                         <p className="text-xs text-muted-foreground">
-                          {r.carrier === "UNKNOWN" ? "Unknown carrier" : r.carrier.replace(/_/g, " ")}
+                          {r.carrier === "UNKNOWN" ? t("scanSms.unknownCarrier") : r.carrier.replace(/_/g, " ")}
                         </p>
                       </div>
                     </div>
                     {r.alreadyTracked || r.added ? (
                       <Badge variant="outline" className="shrink-0 gap-1" style={{ color: '#047857', borderColor: '#16a34a' }}>
                         <Check className="h-3 w-3" />
-                        {r.added ? "Added" : "Tracked"}
+                        {r.added ? t("common.added") : t("common.tracked")}
                       </Badge>
                     ) : (
                       <Button
@@ -199,7 +201,7 @@ export function ScanSmsDialog({ open, onOpenChange }: ScanSmsDialogProps) {
             ) : (
               <MessageSquare className="h-4 w-4" />
             )}
-            {results ? "Re-scan" : "Scan Text"}
+            {results ? t("scanSms.rescan") : t("scanSms.scanText")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,0 +1,270 @@
+import type { TranslationKey } from "./en";
+
+const ar: Record<TranslationKey, string> = {
+  // Sidebar
+  "nav.orders": "الطلبات",
+  "nav.notifications": "الإشعارات",
+  "nav.profile": "الملف الشخصي",
+  "nav.settings": "الإعدادات",
+  "nav.signOut": "تسجيل الخروج",
+
+  // Orders page
+  "orders.title": "الطلبات",
+  "orders.subtitle": "كل الطرود في لوحة واحدة.",
+  "orders.syncAll": "مزامنة الكل",
+  "orders.syncing": "جارٍ المزامنة…",
+  "orders.scanMessages": "فحص الرسائل",
+  "orders.loadMore": "تحميل المزيد",
+  "orders.noPackages": "لا توجد طرود للعرض",
+  "orders.emptyConnected": "لم يتم العثور على طرود بعد. انقر على مزامنة الكل لفحص رسائل البريد الإلكتروني.",
+  "orders.emptyNotConnected": "قم بربط Gmail في الإعدادات للعثور تلقائياً على الطلبات وأرقام التتبع.",
+  "orders.grid": "شبكة",
+  "orders.table": "جدول",
+  "orders.board": "لوحة",
+  "orders.timeline": "الجدول الزمني",
+
+  // Time filters
+  "filter.7d": "7أ",
+  "filter.30d": "30ي",
+  "filter.6m": "6أ",
+  "filter.1y": "سنة",
+  "filter.all": "الكل",
+
+  // Sort options
+  "sort.recentlyUpdated": "آخر تحديث",
+  "sort.newestFirst": "الأحدث أولاً",
+  "sort.oldestFirst": "الأقدم أولاً",
+  "sort.orderDateNewest": "تاريخ الطلب (الأحدث)",
+  "sort.orderDateOldest": "تاريخ الطلب (الأقدم)",
+  "sort.merchantAZ": "المتجر (أ–ي)",
+  "sort.merchantZA": "المتجر (ي–أ)",
+  "sort.statusAZ": "الحالة (أ–ي)",
+
+  // Status labels
+  "status.ORDERED": "تم الطلب",
+  "status.PROCESSING": "قيد المعالجة",
+  "status.SHIPPED": "تم الشحن",
+  "status.IN_TRANSIT": "في الطريق",
+  "status.OUT_FOR_DELIVERY": "خرج للتوصيل",
+  "status.DELIVERED": "تم التوصيل",
+  "status.EXCEPTION": "استثناء",
+  "status.RETURNED": "تم الإرجاع",
+
+  // Status pills
+  "stat.today": "اليوم",
+  "stat.inTransit": "في الطريق",
+  "stat.processing": "قيد المعالجة",
+  "stat.delivered": "تم التوصيل",
+  "stat.issues": "مشاكل",
+
+  // Notifications
+  "notifications.title": "الإشعارات",
+  "notifications.subtitle": "ابقَ على اطلاع بتوصيل طرودك",
+  "notifications.markAllRead": "تعيين الكل كمقروء",
+  "notifications.clearAll": "مسح الكل",
+  "notifications.all": "الكل",
+  "notifications.unread": "غير مقروء",
+  "notifications.noUnread": "لا توجد إشعارات غير مقروءة",
+  "notifications.noNotifications": "لا توجد إشعارات بعد",
+  "notifications.emptyHint": "ستظهر التحديثات هنا عند تغيّر حالة طرودك",
+
+  // Profile
+  "profile.title": "الملف الشخصي",
+  "profile.subtitle": "معلومات حسابك",
+
+  // Settings
+  "settings.title": "الإعدادات",
+  "settings.subtitle": "إدارة حسابك وتفضيلاتك",
+  "settings.connectedEmails": "البريد المتصل",
+  "settings.connectGmail": "ربط Gmail",
+  "settings.autoForwardSMS": "إعادة توجيه SMS تلقائياً",
+  "settings.appearance": "المظهر",
+  "settings.theme": "السمة",
+  "settings.themeDesc": "اختر السمة المفضلة",
+  "settings.language": "اللغة",
+  "settings.languageDesc": "اختر لغتك المفضلة",
+  "settings.light": "فاتح",
+  "settings.dark": "داكن",
+  "settings.system": "النظام",
+  "settings.passkeys": "مفاتيح المرور",
+  "settings.addPasskey": "إضافة مفتاح مرور",
+  "settings.replayOnboarding": "إعادة العرض التعريفي",
+  "settings.signOut": "تسجيل الخروج",
+  "settings.dataPrivacy": "البيانات والخصوصية",
+  "settings.exportData": "تصدير جميع البيانات (JSON)",
+  "settings.dangerZone": "منطقة الخطر",
+  "settings.removeAllPackages": "إزالة جميع الطرود",
+  "settings.removeAllPackagesDesc": "سيؤدي هذا إلى حذف جميع طلباتك وطرودك وأحداث التتبع والإشعارات نهائياً. سيبقى حسابك والبريد المتصل.",
+  "settings.deleteAccount": "حذف الحساب",
+  "settings.deleteAccountDesc": "سيؤدي هذا إلى حذف حسابك وجميع بياناتك والبريد المتصل والتفضيلات نهائياً. لا يمكن التراجع عن هذا الإجراء.",
+  "settings.generateIngestKey": "إنشاء مفتاح استقبال",
+  "settings.copyURL": "نسخ الرابط لـ iOS Shortcuts",
+  "settings.downloadTasker": "تنزيل ملف Tasker",
+
+  // Login
+  "login.continueWithGoogle": "المتابعة مع Google",
+  "login.continueWithGithub": "المتابعة مع GitHub",
+  "login.signInWithPasskey": "تسجيل الدخول بمفتاح المرور",
+
+  // Package detail
+  "detail.orderNotFound": "الطلب غير موجود",
+  "detail.packageNotFound": "الطرد غير موجود",
+  "detail.invalidLink": "ربما تم حذف هذا الطلب أو أن الرابط غير صالح.",
+  "detail.getDirections": "الحصول على الاتجاهات",
+  "detail.refreshTracking": "تحديث التتبع",
+  "detail.deleteOrder": "حذف الطلب",
+  "detail.pickedUp": "تم الاستلام",
+  "detail.readyForPickup": "جاهز للاستلام",
+  "detail.navigate": "التنقل",
+
+  // Toasts
+  "toast.allMarkedRead": "تم تعيين جميع الإشعارات كمقروءة",
+  "toast.allCleared": "تم مسح جميع الإشعارات",
+  "toast.trackingUpdated": "تم تحديث معلومات التتبع من الناقل",
+  "toast.trackingUpToDate": "التتبع محدّث (بناءً على بيانات البريد)",
+  "toast.orderDeleted": "تم حذف الطلب",
+  "toast.nameUpdated": "تم تحديث الاسم",
+  "toast.emailDisconnected": "تم فصل البريد",
+  "toast.preferencesUpdated": "تم تحديث التفضيلات",
+  "toast.dataExported": "تم تصدير البيانات بنجاح",
+  "toast.passkeyRegistered": "تم تسجيل مفتاح المرور!",
+  "toast.passkeyRemoved": "تم إزالة مفتاح المرور",
+  "toast.ingestKeyGenerated": "تم إنشاء مفتاح الاستقبال",
+  "toast.copiedToClipboard": "تم النسخ إلى الحافظة",
+  "toast.failedRefreshTracking": "فشل تحديث التتبع",
+  "toast.failedDeleteOrder": "فشل حذف الطلب",
+  "toast.failedUpdateName": "فشل تحديث الاسم",
+  "toast.pleaseLogIn": "يرجى تسجيل الدخول أولاً",
+  "toast.failedDisconnectEmail": "فشل فصل البريد",
+  "toast.failedExportData": "فشل تصدير البيانات",
+  "toast.failedSync": "فشلت المزامنة. جارٍ التوجيه للإعدادات…",
+  "toast.syncFailed": "فشلت مزامنة التتبع",
+  "toast.failedRegisterPasskey": "فشل تسجيل مفتاح المرور",
+  "toast.failedRemovePasskey": "فشل إزالة مفتاح المرور",
+  "toast.failedGenerateKey": "فشل إنشاء المفتاح",
+  "toast.failedRemovePackages": "فشل إزالة الطرود",
+  "toast.failedDeleteAccount": "فشل حذف الحساب",
+  "toast.autoSyncing": "مزامنة تلقائية للبريد…",
+  "toast.packageAlreadyTracked": "الطرد قيد التتبع بالفعل",
+  "toast.packageAdded": "تمت إضافة الطرد بنجاح",
+  "toast.sessionExpired": "انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى.",
+
+  // Onboarding
+  "onboarding.welcome": "مرحباً بك في MailTrack",
+  "onboarding.intro": "طرودك على وشك الحصول على تتبع VIP. لا مزيد من البحث في الرسائل. 📦✨",
+  "onboarding.setup": "لنقم بالإعداد في أقل من 30 ثانية.",
+  "onboarding.letsGo": "هيا بنا",
+  "onboarding.connectGmail": "اربط حساب Gmail الخاص بك",
+  "onboarding.connectGmailDesc": "سنفحص بريدك بحثاً عن تأكيدات الطلبات وتحديثات الشحن. لن نقرأ الرسائل العشوائية. 🤞",
+  "onboarding.benefit1": "يجد رسائل الطلبات والشحن",
+  "onboarding.benefit2": "وصول للقراءة فقط — لا نرسل رسائل أبداً",
+  "onboarding.benefit3": "البيانات مشفرة ومخزنة بأمان",
+  "onboarding.doLater": "سأفعل هذا لاحقاً",
+  "onboarding.connecting": "جارٍ الاتصال...",
+  "onboarding.checkingInbox": "جارٍ فحص بريدك الوارد... 📬",
+  "onboarding.foundEmails": "تم العثور على رسائل شحن! 🎉",
+  "onboarding.extractingTracking": "جارٍ استخراج أرقام التتبع... 🔍",
+  "onboarding.crossReferencing": "جارٍ التحقق من شركات الشحن... 🌐",
+  "onboarding.almostThere": "أوشكنا على الانتهاء... ⏳",
+  "onboarding.emailsScanned": "رسائل تم فحصها",
+  "onboarding.ordersFound": "طلبات تم العثور عليها",
+  "onboarding.trackingNumbers": "أرقام تتبع",
+  "onboarding.universalTracking": "تتبع شامل",
+  "onboarding.smartNotifications": "إشعارات ذكية",
+  "onboarding.liveMaps": "خرائط الموقع المباشر",
+  "onboarding.viewModes": "لوحة وجدول وجدول زمني",
+  "onboarding.imReady": "!أنا جاهز",
+  "onboarding.next": "التالي",
+
+  // Sync progress
+  "sync.scanning": "جارٍ فحص الرسائل…",
+  "sync.foundEmails": "تم العثور على {count} رسالة، جارٍ تتبع الطرود…",
+  "sync.tracking": "جارٍ تتبع الطرود…",
+
+  // Package detail extras
+  "detail.trackingHistory": "سجل التتبع",
+  "detail.orderDetails": "تفاصيل الطلب",
+  "detail.deleting": "جارٍ الحذف…",
+  "detail.yes": "نعم",
+  "detail.lastKnownLocation": "آخر موقع معروف",
+  "detail.packageLocation": "موقع الطرد",
+  "detail.packageWaiting": "طردك ينتظر في الموقع أدناه",
+  "detail.openNow": "مفتوح الآن",
+  "detail.closed": "مغلق",
+  "detail.pickupLocationMap": "خريطة موقع الاستلام",
+  "detail.showLess": "عرض أقل",
+  "detail.showAllEvents": "عرض جميع الأحداث ({count})",
+  "detail.unknownDate": "تاريخ غير معروف",
+
+  // Add package dialog
+  "addPackage.title": "إضافة طرد",
+  "addPackage.trackingNumber": "رقم التتبع",
+  "addPackage.trackingPlaceholder": "مثال: 1Z999AA10123456784",
+  "addPackage.carrier": "شركة الشحن",
+  "addPackage.selectCarrier": "اختر شركة الشحن",
+  "addPackage.autoDetect": "اكتشاف تلقائي",
+  "addPackage.description": "الوصف (اختياري)",
+  "addPackage.descriptionPlaceholder": "مثال: جاكيت شتوي أزرق",
+  "addPackage.add": "إضافة",
+
+  // Packages page extras
+  "orders.allStatuses": "جميع الحالات",
+  "orders.sortBy": "ترتيب حسب",
+  "orders.adjustFilters": "حاول تعديل البحث أو الفلاتر",
+  "orders.loadingMore": "جارٍ تحميل المزيد…",
+  "orders.searchPackages": "البحث في الطرود",
+  "orders.clearSearch": "مسح البحث",
+
+  // Settings extras
+  "settings.never": "أبداً",
+  "settings.disconnectEmail": "فصل البريد الإلكتروني",
+  "settings.deleteAccountPermanently": "حذف الحساب نهائياً",
+  "settings.checkingBrowser": "جارٍ فحص دعم المتصفح…",
+  "settings.notSupported": "غير مدعوم في هذا المتصفح",
+  "settings.pushEnabled": "مفعّل — ستتلقى إشعارات عند تغيّر الحالة",
+  "settings.pushDisabled": "احصل على إشعارات المتصفح عند تحديث الطرود",
+  "settings.enable": "تفعيل",
+  "settings.disable": "تعطيل",
+
+  // Common
+  "common.cancel": "إلغاء",
+  "common.confirm": "تأكيد",
+  "common.delete": "حذف",
+  "common.save": "حفظ",
+  "common.search": "بحث",
+  "common.loading": "جارٍ التحميل…",
+  "common.view": "عرض",
+  "common.added": "تمت الإضافة",
+  "common.tracked": "قيد التتبع",
+
+  // 404 page
+  "notFound.title": "الصفحة غير موجودة",
+  "notFound.backHome": "العودة إلى لوحة التحكم",
+
+  // Error fallback
+  "error.tryAgain": "حاول مرة أخرى",
+  "error.backHome": "العودة للرئيسية",
+
+  // Notification bell
+  "notificationBell.markAllRead": "تعيين الكل كمقروء",
+  "notificationBell.clearAll": "مسح الكل",
+  "notificationBell.close": "إغلاق الإشعارات",
+  "notificationBell.tapToView": "انقر للعرض",
+  "notificationBell.markAsRead": "تعيين كمقروء",
+
+  // Scan SMS dialog
+  "scanSms.title": "فحص النص",
+  "scanSms.placeholder": "الصق رسائلك هنا…\n\nمثال:\nتم شحن طردك! تتبعه: LP00123456789012\nالبريد الإسرائيلي: RR123456789IL",
+  "scanSms.noTrackingFound": "لم يتم العثور على أرقام تتبع في النص",
+  "scanSms.failedScan": "فشل فحص النص",
+  "scanSms.failedAdd": "فشل إضافة الطرد",
+  "scanSms.unknownCarrier": "شركة شحن غير معروفة",
+  "scanSms.rescan": "إعادة الفحص",
+  "scanSms.scanText": "فحص النص",
+
+  // Package progress bar
+  "progress.returned": "تم الإرجاع",
+  "progress.exception": "استثناء",
+};
+
+export default ar;

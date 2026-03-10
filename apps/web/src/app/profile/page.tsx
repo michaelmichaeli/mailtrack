@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, Mail, Calendar, Shield, Save, Pencil, Package, Truck, CheckCircle2, Bell, Store, BarChart3, RefreshCw, WifiOff } from "lucide-react";
 import { toast } from "sonner";
+import { useI18n } from "@/lib/i18n";
 import { LogoSpinner } from "@/components/ui/logo-spinner";
 import { ProfileSkeleton } from "@/components/ui/skeleton";
 import { NotificationBell } from "@/components/notifications/notification-bell";
@@ -31,6 +32,7 @@ interface UserProfile {
 }
 
 export default function ProfilePage() {
+  const { t } = useI18n();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<{
     totalOrders: number;
@@ -75,9 +77,9 @@ export default function ProfilePage() {
       await api.updateProfile({ name: editName.trim() });
       setUser((prev) => prev ? { ...prev, name: editName.trim() } : prev);
       setEditing(false);
-      toast.success("Name updated");
+      toast.success(t("toast.nameUpdated"));
     } catch {
-      toast.error("Failed to update name");
+      toast.error(t("toast.failedUpdateName"));
     } finally {
       setSaving(false);
     }
@@ -122,8 +124,8 @@ export default function ProfilePage() {
     <div className="space-y-6 max-w-2xl">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Profile</h1>
-          <p className="text-sm text-muted-foreground/80 mt-0.5">Your account information</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("profile.title")}</h1>
+          <p className="text-sm text-muted-foreground/80 mt-0.5">{t("profile.subtitle")}</p>
         </div>
         <div className="hidden md:block">
           <NotificationBell />

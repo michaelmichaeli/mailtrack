@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { getCarrierDisplayName } from "@/lib/carrier-urls";
 import { Package, Navigation, ChevronRight, MapPin } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 interface Order {
   id: string;
@@ -29,6 +30,7 @@ interface Order {
 }
 
 export function PackageTimeline({ orders }: { orders: Order[] }) {
+  const { t } = useI18n();
   const safeParse = (v: any): string[] => {
     if (!v) return [];
     if (Array.isArray(v)) return v;
@@ -44,7 +46,7 @@ export function PackageTimeline({ orders }: { orders: Order[] }) {
   // Group by date
   const getDateKey = (order: Order) => {
     const d = order.effectiveDate || order.orderDate;
-    if (!d) return "Unknown date";
+    if (!d) return t("detail.unknownDate");
     const date = new Date(d);
     return date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
   };
@@ -130,7 +132,7 @@ export function PackageTimeline({ orders }: { orders: Order[] }) {
                         {pickup && ((!pickup.carrierOnly && pickup.address) || status === "DELIVERED") && (
                           <div className="inline-flex items-center gap-1.5 mt-2 px-2 py-1 rounded-md text-xs font-medium" style={{ backgroundColor: '#047857', color: '#ffffff' }}>
                             <Navigation className="h-3 w-3" />
-                            {status === "DELIVERED" ? "Picked up" : "Ready for pickup"}
+                            {status === "DELIVERED" ? t("detail.pickedUp") : t("detail.readyForPickup")}
                           </div>
                         )}
                       </div>

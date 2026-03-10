@@ -1,0 +1,270 @@
+import type { TranslationKey } from "./en";
+
+const ru: Record<TranslationKey, string> = {
+  // Sidebar
+  "nav.orders": "Заказы",
+  "nav.notifications": "Уведомления",
+  "nav.profile": "Профиль",
+  "nav.settings": "Настройки",
+  "nav.signOut": "Выйти",
+
+  // Orders page
+  "orders.title": "Заказы",
+  "orders.subtitle": "Все посылки на одной панели.",
+  "orders.syncAll": "Синхронизировать",
+  "orders.syncing": "Синхронизация…",
+  "orders.scanMessages": "Сканировать письма",
+  "orders.loadMore": "Загрузить ещё",
+  "orders.noPackages": "Нет посылок для отображения",
+  "orders.emptyConnected": "Посылки пока не найдены. Нажмите «Синхронизировать», чтобы просканировать почту.",
+  "orders.emptyNotConnected": "Подключите Gmail в настройках, чтобы автоматически находить заказы и номера отслеживания.",
+  "orders.grid": "Сетка",
+  "orders.table": "Таблица",
+  "orders.board": "Доска",
+  "orders.timeline": "Хронология",
+
+  // Time filters
+  "filter.7d": "7Д",
+  "filter.30d": "30Д",
+  "filter.6m": "6М",
+  "filter.1y": "1Г",
+  "filter.all": "Все",
+
+  // Sort options
+  "sort.recentlyUpdated": "Недавно обновлённые",
+  "sort.newestFirst": "Сначала новые",
+  "sort.oldestFirst": "Сначала старые",
+  "sort.orderDateNewest": "Дата заказа (новые)",
+  "sort.orderDateOldest": "Дата заказа (старые)",
+  "sort.merchantAZ": "Магазин (А–Я)",
+  "sort.merchantZA": "Магазин (Я–А)",
+  "sort.statusAZ": "Статус (А–Я)",
+
+  // Status labels
+  "status.ORDERED": "Заказано",
+  "status.PROCESSING": "В обработке",
+  "status.SHIPPED": "Отправлено",
+  "status.IN_TRANSIT": "В пути",
+  "status.OUT_FOR_DELIVERY": "На доставке",
+  "status.DELIVERED": "Доставлено",
+  "status.EXCEPTION": "Проблема",
+  "status.RETURNED": "Возвращено",
+
+  // Status pills
+  "stat.today": "Сегодня",
+  "stat.inTransit": "В пути",
+  "stat.processing": "В обработке",
+  "stat.delivered": "Доставлено",
+  "stat.issues": "Проблемы",
+
+  // Notifications
+  "notifications.title": "Уведомления",
+  "notifications.subtitle": "Следите за доставкой ваших посылок",
+  "notifications.markAllRead": "Прочитать все",
+  "notifications.clearAll": "Очистить все",
+  "notifications.all": "Все",
+  "notifications.unread": "Непрочитанные",
+  "notifications.noUnread": "Нет непрочитанных уведомлений",
+  "notifications.noNotifications": "Уведомлений пока нет",
+  "notifications.emptyHint": "Здесь появятся обновления при изменении статуса посылок",
+
+  // Profile
+  "profile.title": "Профиль",
+  "profile.subtitle": "Информация о вашем аккаунте",
+
+  // Settings
+  "settings.title": "Настройки",
+  "settings.subtitle": "Управление аккаунтом и настройками",
+  "settings.connectedEmails": "Подключённая почта",
+  "settings.connectGmail": "Подключить Gmail",
+  "settings.autoForwardSMS": "Авто-пересылка SMS",
+  "settings.appearance": "Внешний вид",
+  "settings.theme": "Тема",
+  "settings.themeDesc": "Выберите предпочитаемую тему",
+  "settings.language": "Язык",
+  "settings.languageDesc": "Выберите предпочитаемый язык",
+  "settings.light": "Светлая",
+  "settings.dark": "Тёмная",
+  "settings.system": "Системная",
+  "settings.passkeys": "Ключи доступа",
+  "settings.addPasskey": "Добавить ключ доступа",
+  "settings.replayOnboarding": "Повторить обучение",
+  "settings.signOut": "Выйти",
+  "settings.dataPrivacy": "Данные и конфиденциальность",
+  "settings.exportData": "Экспортировать данные (JSON)",
+  "settings.dangerZone": "Опасная зона",
+  "settings.removeAllPackages": "Удалить все посылки",
+  "settings.removeAllPackagesDesc": "Это навсегда удалит все ваши заказы, посылки, события отслеживания и уведомления. Аккаунт и подключённая почта останутся.",
+  "settings.deleteAccount": "Удалить аккаунт",
+  "settings.deleteAccountDesc": "Это навсегда удалит ваш аккаунт, все данные, подключённую почту и настройки. Это действие нельзя отменить.",
+  "settings.generateIngestKey": "Сгенерировать ключ приёма",
+  "settings.copyURL": "Скопировать URL для iOS Shortcuts",
+  "settings.downloadTasker": "Скачать профиль Tasker",
+
+  // Login
+  "login.continueWithGoogle": "Продолжить с Google",
+  "login.continueWithGithub": "Продолжить с GitHub",
+  "login.signInWithPasskey": "Войти с ключом доступа",
+
+  // Package detail
+  "detail.orderNotFound": "Заказ не найден",
+  "detail.packageNotFound": "Посылка не найдена",
+  "detail.invalidLink": "Возможно, заказ был удалён или ссылка недействительна.",
+  "detail.getDirections": "Проложить маршрут",
+  "detail.refreshTracking": "Обновить отслеживание",
+  "detail.deleteOrder": "Удалить заказ",
+  "detail.pickedUp": "Получено",
+  "detail.readyForPickup": "Готово к получению",
+  "detail.navigate": "Навигация",
+
+  // Toasts
+  "toast.allMarkedRead": "Все уведомления прочитаны",
+  "toast.allCleared": "Все уведомления очищены",
+  "toast.trackingUpdated": "Информация отслеживания обновлена",
+  "toast.trackingUpToDate": "Отслеживание актуально (по данным почты)",
+  "toast.orderDeleted": "Заказ удалён",
+  "toast.nameUpdated": "Имя обновлено",
+  "toast.emailDisconnected": "Почта отключена",
+  "toast.preferencesUpdated": "Настройки обновлены",
+  "toast.dataExported": "Данные успешно экспортированы",
+  "toast.passkeyRegistered": "Ключ доступа зарегистрирован!",
+  "toast.passkeyRemoved": "Ключ доступа удалён",
+  "toast.ingestKeyGenerated": "Ключ приёма создан",
+  "toast.copiedToClipboard": "Скопировано в буфер обмена",
+  "toast.failedRefreshTracking": "Не удалось обновить отслеживание",
+  "toast.failedDeleteOrder": "Не удалось удалить заказ",
+  "toast.failedUpdateName": "Не удалось обновить имя",
+  "toast.pleaseLogIn": "Пожалуйста, войдите в систему",
+  "toast.failedDisconnectEmail": "Не удалось отключить почту",
+  "toast.failedExportData": "Не удалось экспортировать данные",
+  "toast.failedSync": "Синхронизация не удалась. Перенаправление…",
+  "toast.syncFailed": "Синхронизация отслеживания не удалась",
+  "toast.failedRegisterPasskey": "Не удалось зарегистрировать ключ",
+  "toast.failedRemovePasskey": "Не удалось удалить ключ",
+  "toast.failedGenerateKey": "Не удалось создать ключ",
+  "toast.failedRemovePackages": "Не удалось удалить посылки",
+  "toast.failedDeleteAccount": "Не удалось удалить аккаунт",
+  "toast.autoSyncing": "Автоматическая синхронизация почты…",
+  "toast.packageAlreadyTracked": "Посылка уже отслеживается",
+  "toast.packageAdded": "Посылка успешно добавлена",
+  "toast.sessionExpired": "Сессия истекла. Пожалуйста, войдите снова.",
+
+  // Onboarding
+  "onboarding.welcome": "Добро пожаловать в MailTrack",
+  "onboarding.intro": "Ваши посылки получат VIP-отслеживание. Больше не нужно копаться в письмах. 📦✨",
+  "onboarding.setup": "Настроим всё менее чем за 30 секунд.",
+  "onboarding.letsGo": "Поехали",
+  "onboarding.connectGmail": "Подключите Gmail",
+  "onboarding.connectGmailDesc": "Мы просканируем почту на подтверждения заказов и обновления доставки. Спам не читаем, обещаем. 🤞",
+  "onboarding.benefit1": "Находит письма о заказах и доставке",
+  "onboarding.benefit2": "Только чтение — мы не отправляем письма",
+  "onboarding.benefit3": "Данные зашифрованы и хранятся безопасно",
+  "onboarding.doLater": "Сделаю позже",
+  "onboarding.connecting": "Подключение...",
+  "onboarding.checkingInbox": "Проверяем почту... 📬",
+  "onboarding.foundEmails": "Нашли письма о доставке! 🎉",
+  "onboarding.extractingTracking": "Извлекаем номера отслеживания... 🔍",
+  "onboarding.crossReferencing": "Сверяем с перевозчиками... 🌐",
+  "onboarding.almostThere": "Почти готово... ⏳",
+  "onboarding.emailsScanned": "Писем просканировано",
+  "onboarding.ordersFound": "Заказов найдено",
+  "onboarding.trackingNumbers": "Номеров отслеживания",
+  "onboarding.universalTracking": "Универсальное отслеживание",
+  "onboarding.smartNotifications": "Умные уведомления",
+  "onboarding.liveMaps": "Карты в реальном времени",
+  "onboarding.viewModes": "Доска, таблица и хронология",
+  "onboarding.imReady": "Я готов!",
+  "onboarding.next": "Далее",
+
+  // Sync progress
+  "sync.scanning": "Сканирование писем…",
+  "sync.foundEmails": "Найдено {count} писем, отслеживаем посылки…",
+  "sync.tracking": "Отслеживание посылок…",
+
+  // Package detail extras
+  "detail.trackingHistory": "История отслеживания",
+  "detail.orderDetails": "Детали заказа",
+  "detail.deleting": "Удаление…",
+  "detail.yes": "Да",
+  "detail.lastKnownLocation": "Последнее известное местоположение",
+  "detail.packageLocation": "Местоположение посылки",
+  "detail.packageWaiting": "Ваша посылка ожидает по адресу ниже",
+  "detail.openNow": "Сейчас открыто",
+  "detail.closed": "Закрыто",
+  "detail.pickupLocationMap": "Карта пункта выдачи",
+  "detail.showLess": "Показать меньше",
+  "detail.showAllEvents": "Показать все {count} событий",
+  "detail.unknownDate": "Дата неизвестна",
+
+  // Add package dialog
+  "addPackage.title": "Добавить посылку",
+  "addPackage.trackingNumber": "Номер отслеживания",
+  "addPackage.trackingPlaceholder": "напр. 1Z999AA10123456784",
+  "addPackage.carrier": "Перевозчик",
+  "addPackage.selectCarrier": "Выберите перевозчика",
+  "addPackage.autoDetect": "Автоопределение",
+  "addPackage.description": "Описание (необязательно)",
+  "addPackage.descriptionPlaceholder": "напр. Синяя зимняя куртка",
+  "addPackage.add": "Добавить",
+
+  // Packages page extras
+  "orders.allStatuses": "Все статусы",
+  "orders.sortBy": "Сортировка",
+  "orders.adjustFilters": "Попробуйте изменить поиск или фильтры",
+  "orders.loadingMore": "Загрузка…",
+  "orders.searchPackages": "Поиск посылок",
+  "orders.clearSearch": "Очистить поиск",
+
+  // Settings extras
+  "settings.never": "Никогда",
+  "settings.disconnectEmail": "Отключить почту",
+  "settings.deleteAccountPermanently": "Удалить аккаунт навсегда",
+  "settings.checkingBrowser": "Проверка поддержки браузера…",
+  "settings.notSupported": "Не поддерживается в этом браузере",
+  "settings.pushEnabled": "Включено — вы будете получать уведомления об изменениях статуса",
+  "settings.pushDisabled": "Получайте уведомления браузера при обновлении посылок",
+  "settings.enable": "Включить",
+  "settings.disable": "Выключить",
+
+  // Common
+  "common.cancel": "Отмена",
+  "common.confirm": "Подтвердить",
+  "common.delete": "Удалить",
+  "common.save": "Сохранить",
+  "common.search": "Поиск",
+  "common.loading": "Загрузка…",
+  "common.view": "Просмотр",
+  "common.added": "Добавлено",
+  "common.tracked": "Отслеживается",
+
+  // 404 page
+  "notFound.title": "Страница не найдена",
+  "notFound.backHome": "Вернуться на главную",
+
+  // Error fallback
+  "error.tryAgain": "Попробовать снова",
+  "error.backHome": "На главную",
+
+  // Notification bell
+  "notificationBell.markAllRead": "Прочитать все",
+  "notificationBell.clearAll": "Очистить все",
+  "notificationBell.close": "Закрыть уведомления",
+  "notificationBell.tapToView": "Нажмите для просмотра",
+  "notificationBell.markAsRead": "Отметить как прочитанное",
+
+  // Scan SMS dialog
+  "scanSms.title": "Сканировать текст",
+  "scanSms.placeholder": "Вставьте сообщения сюда…\n\nПример:\nВаша посылка отправлена! Отслеживайте: LP00123456789012\nПочта Израиля: RR123456789IL",
+  "scanSms.noTrackingFound": "В тексте не найдено номеров отслеживания",
+  "scanSms.failedScan": "Не удалось сканировать текст",
+  "scanSms.failedAdd": "Не удалось добавить посылку",
+  "scanSms.unknownCarrier": "Неизвестный перевозчик",
+  "scanSms.rescan": "Сканировать снова",
+  "scanSms.scanText": "Сканировать текст",
+
+  // Package progress bar
+  "progress.returned": "Возвращено",
+  "progress.exception": "Проблема",
+};
+
+export default ru;
