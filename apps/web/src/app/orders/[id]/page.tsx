@@ -420,7 +420,7 @@ export default function OrderDetailPage() {
                           <p className="text-xs text-muted-foreground">
                             {new Date(loc.timestamp).toLocaleDateString(dateLocale, { month: "short", day: "numeric" })}
                             {" · "}
-                            {new Date(loc.timestamp).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+                            {new Date(loc.timestamp).toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" })}
                           </p>
                         </div>
                       </div>

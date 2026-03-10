@@ -46,7 +46,7 @@ function translateNotifTitle(title: string, t: (key: any) => string) {
   return key ? t(key) : title;
 }
 
-function formatTime(iso: string, t: (key: any) => string) {
+function formatTime(iso: string, t: (key: any) => string, dateLocale = "en-US") {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return t("time.justNow");
@@ -55,7 +55,7 @@ function formatTime(iso: string, t: (key: any) => string) {
   if (hrs < 24) return t("time.hAgo").replace("{count}", String(hrs));
   const days = Math.floor(hrs / 24);
   if (days < 7) return t("time.dAgo").replace("{count}", String(days));
-  return new Date(iso).toLocaleDateString(undefined, {
+  return new Date(iso).toLocaleDateString(dateLocale, {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -63,7 +63,8 @@ function formatTime(iso: string, t: (key: any) => string) {
 }
 
 export default function NotificationsPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const dateLocale = locale === "he" ? "he-IL" : locale === "ar" ? "ar" : locale === "ru" ? "ru-RU" : "en-US";
   const router = useRouter();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<"all" | "unread">("all");
@@ -278,7 +279,7 @@ export default function NotificationsPage() {
                             {translateNotifTitle(n.title, t)}
                           </p>
                           <span className="text-[10px] text-muted-foreground/70 whitespace-nowrap shrink-0 mt-0.5">
-                            {formatTime(n.createdAt, t)}
+                            {formatTime(n.createdAt, t, dateLocale)}
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>

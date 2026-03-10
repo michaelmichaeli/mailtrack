@@ -39,7 +39,8 @@ function translateNotifTitle(title: string, t: (key: any) => string) {
 }
 
 export function NotificationBell() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const dateLocale = locale === "he" ? "he-IL" : locale === "ar" ? "ar" : locale === "ru" ? "ru-RU" : "en-US";
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -187,7 +188,7 @@ export function NotificationBell() {
     if (hrs < 24) return t("time.hAgo").replace("{count}", String(hrs));
     const days = Math.floor(hrs / 24);
     if (days < 7) return t("time.dAgo").replace("{count}", String(days));
-    return new Date(iso).toLocaleDateString();
+    return new Date(iso).toLocaleDateString(dateLocale);
   };
 
   return (

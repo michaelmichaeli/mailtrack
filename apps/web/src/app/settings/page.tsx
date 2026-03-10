@@ -64,6 +64,7 @@ function SettingsContent() {
   const queryClient = useQueryClient();
   const { theme, setTheme } = useTheme();
   const { t, locale, setLocale } = useI18n();
+  const dateLocale = locale === "he" ? "he-IL" : locale === "ar" ? "ar" : locale === "ru" ? "ru-RU" : "en-US";
   const searchParams = useSearchParams();
   const router = useRouter();
   const errorParam = searchParams.get("error");
@@ -253,7 +254,7 @@ function SettingsContent() {
                   <p className="text-xs text-muted-foreground">
                     {email.provider} · {t("settings.lastSynced")}{" "}
                     {email.lastSyncAt
-                      ? new Date(email.lastSyncAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+                      ? new Date(email.lastSyncAt).toLocaleString(dateLocale, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
                       : t("settings.never")}
                   </p>
                 </div>
@@ -364,7 +365,7 @@ function SettingsContent() {
                     <div>
                       <p className="text-sm font-medium">{pk.friendlyName}</p>
                       <p className="text-xs text-muted-foreground">
-                        Added {new Date(pk.createdAt).toLocaleDateString()}
+                        Added {new Date(pk.createdAt).toLocaleDateString(dateLocale)}
                         {pk.backedUp && ` · ${t("settings.synced")}`}
                       </p>
                     </div>

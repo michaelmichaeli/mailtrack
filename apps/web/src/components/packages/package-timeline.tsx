@@ -30,7 +30,8 @@ interface Order {
 }
 
 export function PackageTimeline({ orders }: { orders: Order[] }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const dateLocale = locale === "he" ? "he-IL" : locale === "ar" ? "ar" : locale === "ru" ? "ru-RU" : "en-US";
   const safeParse = (v: any): string[] => {
     if (!v) return [];
     if (Array.isArray(v)) return v;
@@ -48,7 +49,7 @@ export function PackageTimeline({ orders }: { orders: Order[] }) {
     const d = order.effectiveDate || order.orderDate;
     if (!d) return t("detail.unknownDate");
     const date = new Date(d);
-    return date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+    return date.toLocaleDateString(dateLocale, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
   };
 
   const grouped: Record<string, Order[]> = {};

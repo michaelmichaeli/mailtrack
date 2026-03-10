@@ -34,7 +34,8 @@ interface OrderCardProps {
 }
 
 export function PackageCard({ order }: OrderCardProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const dateLocale = locale === "he" ? "he-IL" : locale === "ar" ? "ar" : locale === "ru" ? "ru-RU" : "en-US";
   const pkg = order.package;
 
   const safeParse = (v: any): string[] => {
@@ -56,7 +57,7 @@ export function PackageCard({ order }: OrderCardProps) {
   const pickup = safeParseObj(pkg?.pickupLocation);
 
   const formattedDate = order.orderDate
-    ? new Date(order.orderDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+    ? new Date(order.orderDate).toLocaleDateString(dateLocale, { month: "short", day: "numeric" })
     : null;
   const formattedAmount =
     order.totalAmount != null
