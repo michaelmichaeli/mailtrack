@@ -21,6 +21,7 @@ import {
   Eye,
   Globe,
   Shield,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
@@ -368,7 +369,7 @@ function SyncingStep({
             </div>
           </motion.div>
 
-          <h2 className="text-2xl font-bold text-foreground">Scanning your emails</h2>
+          <h2 className="text-2xl font-bold text-foreground">{t("onboarding.scanningEmails")}</h2>
 
           <AnimatePresence mode="wait">
             <motion.p
@@ -394,7 +395,7 @@ function SyncingStep({
           </motion.div>
 
           <p className="text-xs text-muted-foreground/60 mt-3 italic">
-            This usually takes 10-20 seconds ☕
+            {t("onboarding.scanningHint")}
           </p>
         </>
       ) : (
@@ -415,8 +416,8 @@ function SyncingStep({
             transition={{ delay: 0.3 }}
             className="mt-6"
           >
-            <h2 className="text-2xl font-bold text-foreground">All synced up! 🎊</h2>
-            <p className="text-sm text-muted-foreground mt-2">Here&apos;s what we found:</p>
+            <h2 className="text-2xl font-bold text-foreground">{t("onboarding.allSynced")}</h2>
+            <p className="text-sm text-muted-foreground mt-2">{t("onboarding.heresWhatWeFound")}</p>
           </motion.div>
 
           <motion.div
@@ -450,7 +451,7 @@ function SyncingStep({
             className="mt-8"
           >
             <Button size="lg" onClick={onComplete} className="gap-2 text-base px-8">
-              See what I can do
+              {t("onboarding.seeWhatICanDo")}
               <Sparkles className="h-5 w-5" />
             </Button>
           </motion.div>
@@ -464,16 +465,15 @@ const FEATURES = [
   {
     icon: Globe,
     titleKey: "onboarding.universalTracking" as const,
-    desc: "30+ carriers worldwide. AliExpress, Amazon, USPS, FedEx, DHL, Israel Post — all in one place.",
+    descKey: "onboarding.featureDesc.universalTracking" as const,
     color: "bg-blue-50 dark:bg-blue-950/50",
     iconColor: "text-blue-500",
     emoji: "🌍",
   },
   {
     icon: Zap,
-    titleKey: null,
-    title: "Auto-Sync from Email",
-    desc: "New order confirmation? We catch it automatically. No copy-pasting tracking numbers.",
+    titleKey: "onboarding.autoSync" as const,
+    descKey: "onboarding.featureDesc.autoSync" as const,
     color: "bg-amber-50 dark:bg-amber-950/50",
     iconColor: "text-amber-500",
     emoji: "⚡",
@@ -481,7 +481,7 @@ const FEATURES = [
   {
     icon: Bell,
     titleKey: "onboarding.smartNotifications" as const,
-    desc: "Get notified when packages ship, arrive, or need attention. Never miss a delivery again.",
+    descKey: "onboarding.featureDesc.smartNotifications" as const,
     color: "bg-purple-50 dark:bg-purple-950/50",
     iconColor: "text-purple-500",
     emoji: "🔔",
@@ -489,7 +489,7 @@ const FEATURES = [
   {
     icon: MapPin,
     titleKey: "onboarding.liveMaps" as const,
-    desc: "See where your package is on a map. Track the journey from warehouse to your door.",
+    descKey: "onboarding.featureDesc.liveMaps" as const,
     color: "bg-green-50 dark:bg-green-950/50",
     iconColor: "text-green-500",
     emoji: "📍",
@@ -497,7 +497,7 @@ const FEATURES = [
   {
     icon: BarChart3,
     titleKey: "onboarding.viewModes" as const,
-    desc: "View your packages your way — Kanban board, sortable table, or visual timeline.",
+    descKey: "onboarding.featureDesc.viewModes" as const,
     color: "bg-pink-50 dark:bg-pink-950/50",
     iconColor: "text-pink-500",
     emoji: "📊",
@@ -558,10 +558,10 @@ function FeatureTourStep({ onNext }: { onNext: () => void }) {
           </motion.div>
 
           <h2 className="text-2xl font-bold text-foreground mt-6">
-            {feature.titleKey ? t(feature.titleKey) : feature.title} {feature.emoji}
+            {t(feature.titleKey)} {feature.emoji}
           </h2>
           <p className="text-sm text-muted-foreground mt-2 max-w-sm leading-relaxed">
-            {feature.desc}
+            {t(feature.descKey)}
           </p>
         </motion.div>
       </AnimatePresence>
@@ -574,7 +574,7 @@ function FeatureTourStep({ onNext }: { onNext: () => void }) {
       >
         {!isLast && (
           <Button variant="ghost" size="sm" onClick={onNext} className="text-muted-foreground">
-            Skip tour
+            {t("onboarding.skipTour")}
           </Button>
         )}
         <Button size="lg" onClick={next} className="gap-2 px-8">
@@ -587,6 +587,8 @@ function FeatureTourStep({ onNext }: { onNext: () => void }) {
 }
 
 function CompletionStep({ onFinish }: { onFinish: () => void }) {
+  const { t } = useI18n();
+
   useEffect(() => {
     playSound("success");
     fireCelebration();
@@ -613,7 +615,7 @@ function CompletionStep({ onFinish }: { onFinish: () => void }) {
         transition={{ delay: 0.6 }}
         className="text-3xl font-bold text-foreground mt-6"
       >
-        You&apos;re all set! 🚀
+        {t("onboarding.allSet")}
       </motion.h2>
 
       <motion.p
@@ -622,8 +624,7 @@ function CompletionStep({ onFinish }: { onFinish: () => void }) {
         transition={{ delay: 0.9 }}
         className="text-sm text-muted-foreground mt-3 max-w-sm leading-relaxed"
       >
-        Your dashboard is ready. Every package, every carrier, one beautiful dashboard.
-        Go ahead — you&apos;ve earned it.
+        {t("onboarding.allSetDesc")}
       </motion.p>
 
       <motion.div
@@ -634,7 +635,7 @@ function CompletionStep({ onFinish }: { onFinish: () => void }) {
       >
         <Button size="lg" onClick={onFinish} className="gap-2 text-base px-10 text-lg">
           <Package className="h-5 w-5" />
-          Open my dashboard
+          {t("onboarding.openDashboard")}
         </Button>
       </motion.div>
 
@@ -644,7 +645,7 @@ function CompletionStep({ onFinish }: { onFinish: () => void }) {
         transition={{ delay: 1.8 }}
         className="text-xs text-muted-foreground/50 mt-4 italic"
       >
-        Pro tip: Bookmark this page for quick access 🔖
+        {t("onboarding.proTip")}
       </motion.p>
     </motion.div>
   );
@@ -721,6 +722,8 @@ function OnboardingWizard() {
     router.push("/packages");
   };
 
+  const { t } = useI18n();
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4 relative overflow-hidden">
       <FloatingParticles />
@@ -730,6 +733,16 @@ function OnboardingWizard() {
         layout
         transition={{ layout: { duration: 0.3 } }}
       >
+        {/* Close button */}
+        {step !== "syncing" && (
+          <button
+            onClick={handleFinish}
+            className="absolute top-3 right-3 z-20 p-1.5 rounded-full hover:bg-muted text-muted-foreground transition-colors"
+            aria-label={t("onboarding.closeWizard")}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
         <AnimatePresence mode="wait">
           {step === "welcome" && (
             <WelcomeStep

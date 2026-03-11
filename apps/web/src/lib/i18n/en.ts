@@ -4,6 +4,8 @@ const en = {
   "nav.notifications": "Notifications",
   "nav.profile": "Profile",
   "nav.settings": "Settings",
+  "nav.analytics": "Analytics",
+  "nav.map": "Map",
   "nav.signOut": "Sign out",
 
   // Orders page
@@ -546,6 +548,85 @@ const en = {
   "nav.theme": "Theme:",
   "nav.openMenu": "Open menu",
   "nav.closeMenu": "Close menu",
+
+  // Onboarding — syncing step
+  "onboarding.scanningEmails": "Scanning your emails",
+  "onboarding.scanningHint": "This usually takes 10-20 seconds ☕",
+  "onboarding.allSynced": "All synced up! 🎊",
+  "onboarding.heresWhatWeFound": "Here's what we found:",
+  "onboarding.seeWhatICanDo": "See what I can do",
+  "onboarding.skipTour": "Skip tour",
+  "onboarding.closeWizard": "Close",
+
+  // Onboarding — feature descriptions
+  "onboarding.autoSync": "Auto-Sync from Email",
+  "onboarding.featureDesc.universalTracking": "30+ carriers worldwide. AliExpress, Amazon, USPS, FedEx, DHL, Israel Post — all in one place.",
+  "onboarding.featureDesc.autoSync": "New order confirmation? We catch it automatically. No copy-pasting tracking numbers.",
+  "onboarding.featureDesc.smartNotifications": "Get notified when packages ship, arrive, or need attention. Never miss a delivery again.",
+  "onboarding.featureDesc.liveMaps": "See where your package is on a map. Track the journey from warehouse to your door.",
+  "onboarding.featureDesc.viewModes": "View your packages your way — Kanban board, sortable table, or visual timeline.",
+
+  // Onboarding — completion step
+  "onboarding.allSet": "You're all set! 🚀",
+  "onboarding.allSetDesc": "Your dashboard is ready. Every package, every carrier, one beautiful dashboard. Go ahead — you've earned it.",
+  "onboarding.openDashboard": "Open my dashboard",
+  "onboarding.proTip": "Pro tip: Bookmark this page for quick access 🔖",
+
+  // Push banner
+  "push.enableTitle": "Enable push notifications?",
+  "push.enableDesc": "Get notified when your packages are shipped, out for delivery, or arrive.",
+  "push.notNow": "Not now",
+  "push.iosInstallTitle": "Install MailTrack for notifications",
+  "push.iosInstallDesc": "Add MailTrack to your Home Screen to enable push notifications on iOS.",
+  "push.iosAddToHome": "Add to Home Screen",
+
+  // Accessibility
+  "a11y.scrollToTop": "Scroll to top",
+
+  // Analytics page
+  "analytics.title": "Analytics",
+  "analytics.subtitle": "Insights about your deliveries",
+  "analytics.packagesByStatus": "Packages by Status",
+  "analytics.packagesByCarrier": "Packages by Carrier",
+  "analytics.deliveryTimeline": "Delivery Timeline",
+  "analytics.avgDeliveryTime": "Avg. Delivery Time",
+  "analytics.days": "days",
+  "analytics.totalPackages": "Total Packages",
+  "analytics.deliveredPackages": "Delivered",
+  "analytics.activePackages": "Active",
+  "analytics.carriers": "Carriers",
+  "analytics.noData": "No package data yet. Sync your emails to see analytics.",
+
+  // Map page
+  "map.title": "Package Map",
+  "map.subtitle": "See where your packages are",
+  "map.noLocations": "No location data available yet",
+  "map.myLocation": "My Location",
+  "map.packageLocations": "Package Locations",
+  "map.lastSeen": "Last seen",
+  "map.tracking": "Tracking",
+
+  // Walkthrough
+  "walkthrough.welcome.title": "Welcome to MailTrack! 🎉",
+  "walkthrough.welcome.desc": "Let's take a quick tour to show you around. It'll only take a minute!",
+  "walkthrough.sidebar.title": "Your Navigation Hub 🧭",
+  "walkthrough.sidebar.desc": "Everything you need is right here — orders, analytics, map view, notifications, and settings.",
+  "walkthrough.packages.title": "Your Packages 📦",
+  "walkthrough.packages.desc": "All your orders in one place. We auto-detect them from your Gmail. Switch between grid, table, board, and timeline views!",
+  "walkthrough.filters.title": "Filter & Sort 🔍",
+  "walkthrough.filters.desc": "Find exactly what you're looking for. Filter by status, time period, or search by name.",
+  "walkthrough.sync.title": "Stay Updated 🔄",
+  "walkthrough.sync.desc": "Hit Sync to check for new orders and update all tracking statuses. We do this automatically too!",
+  "walkthrough.notifications.title": "Never Miss a Delivery 🔔",
+  "walkthrough.notifications.desc": "Get notified when packages ship, arrive, or need attention. Check your notification bell!",
+  "walkthrough.done.title": "You're a Pro! 🚀",
+  "walkthrough.done.desc": "That's it! Start tracking your packages like a boss. Happy deliveries!",
+  "walkthrough.next": "Next",
+  "walkthrough.prev": "Back",
+  "walkthrough.finish": "Got it!",
+  "walkthrough.replay": "Replay Tour",
+  "settings.replayTour": "Replay App Tour",
+  "settings.replayTourDesc": "Take the guided tour again to learn about all features",
 } as const;
 
 export type TranslationKey = keyof typeof en;

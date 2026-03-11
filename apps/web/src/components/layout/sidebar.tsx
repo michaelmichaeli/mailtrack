@@ -16,6 +16,8 @@ import {
   Bell,
   User,
   Globe,
+  BarChart3,
+  MapPin,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
@@ -54,6 +56,8 @@ export function Sidebar() {
 
   const navItems = [
     { href: "/packages", label: t("nav.orders"), icon: Package },
+    { href: "/analytics", label: t("nav.analytics"), icon: BarChart3 },
+    { href: "/map", label: t("nav.map"), icon: MapPin },
     { href: "/notifications", label: t("nav.notifications"), icon: Bell },
     { href: "/profile", label: t("nav.profile"), icon: User },
     { href: "/settings", label: t("nav.settings"), icon: Settings },

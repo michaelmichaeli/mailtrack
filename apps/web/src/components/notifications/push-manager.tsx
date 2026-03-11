@@ -1,10 +1,23 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Bell, X } from "lucide-react";
+import { Bell, X, Share, Plus } from "lucide-react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
+
+function isIOSSafari(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  return isIOS && !("standalone" in navigator && (navigator as any).standalone);
+}
+
+function isStandalone(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(display-mode: standalone)").matches ||
+    ("standalone" in navigator && (navigator as any).standalone === true);
+}
 
 /**
  * PushNotificationManager — handles service worker registration and push subscription.
@@ -14,9 +27,11 @@ import { useI18n } from "@/lib/i18n";
  * - If permission already granted but not subscribed → auto-subscribe silently
  * - If permission is "default" → show soft prompt banner after delay
  * - If permission is "denied" → do nothing
+ * - On iOS Safari (not PWA) → show "Add to Home Screen" instructions
  */
 export function PushNotificationManager() {
   const [showBanner, setShowBanner] = useState(false);
+  const [showIOSBanner, setShowIOSBanner] = useState(false);
   const [subscribing, setSubscribing] = useState(false);
   const { t } = useI18n();
 
@@ -66,7 +81,16 @@ export function PushNotificationManager() {
   }, [t]);
 
   useEffect(() => {
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+      // iOS Safari without PWA — show install banner
+      if (isIOSSafari() && !isStandalone()) {
+        const dismissed = sessionStorage.getItem("ios_install_dismissed");
+        if (!dismissed) {
+          setTimeout(() => setShowIOSBanner(true), 5000);
+        }
+      }
+      return;
+    }
     if (!window.isSecureContext) return;
 
     // Register SW
@@ -105,9 +129,54 @@ export function PushNotificationManager() {
     sessionStorage.setItem("push_banner_dismissed", "1");
   };
 
+  const handleDismissIOS = () => {
+    setShowIOSBanner(false);
+    sessionStorage.setItem("ios_install_dismissed", "1");
+  };
+
   const handleEnable = () => {
     subscribeToPush(true);
   };
+
+  // iOS "Add to Home Screen" banner
+  if (showIOSBanner) {
+    return (
+      <div className="fixed bottom-20 right-4 left-4 sm:left-auto z-50 max-w-sm animate-in slide-in-from-bottom-4 fade-in duration-300">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-lg">
+          <button
+            onClick={handleDismissIOS}
+            className="absolute top-2 right-2 p-1 rounded-full hover:bg-muted text-muted-foreground"
+            aria-label={t("push.dismiss")}
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+              <Bell className="h-5 w-5 text-primary" />
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-foreground">{t("push.iosInstallTitle")}</p>
+              <p className="text-xs text-muted-foreground">{t("push.iosInstallDesc")}</p>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  1. <Share className="h-3.5 w-3.5 text-primary" />
+                </span>
+                <span className="flex items-center gap-1">
+                  2. {t("push.iosAddToHome")} <Plus className="h-3.5 w-3.5 text-primary" />
+                </span>
+              </div>
+              <button
+                onClick={handleDismissIOS}
+                className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors"
+              >
+                {t("push.notNow")}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!showBanner) return null;
 
@@ -126,9 +195,9 @@ export function PushNotificationManager() {
             <Bell className="h-5 w-5 text-primary" />
           </div>
           <div className="space-y-1">
-            <p className="text-sm font-medium text-foreground">Enable push notifications?</p>
+            <p className="text-sm font-medium text-foreground">{t("push.enableTitle")}</p>
             <p className="text-xs text-muted-foreground">
-              Get notified when your packages are shipped, out for delivery, or arrive.
+              {t("push.enableDesc")}
             </p>
             <div className="flex gap-2 pt-1.5">
               <button
@@ -142,7 +211,7 @@ export function PushNotificationManager() {
                 onClick={handleDismiss}
                 className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors"
               >
-                Not now
+                {t("push.notNow")}
               </button>
             </div>
           </div>

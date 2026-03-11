@@ -25,6 +25,7 @@ import { ScanSmsDialog } from "@/components/packages/scan-sms-dialog";
 import { LogoSpinner } from "@/components/ui/logo-spinner";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useI18n } from "@/lib/i18n";
+import { WalkthroughTrigger } from "@/components/walkthrough/app-walkthrough";
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -280,6 +281,7 @@ function PackagesContent() {
 
   return (
     <PageTransition className="space-y-5">
+      <WalkthroughTrigger />
       {/* Header with actions */}
       <FadeIn>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -293,11 +295,11 @@ function PackagesContent() {
               <MessageSquare className="h-4 w-4" />
               <span className="hidden sm:inline">{t("orders.scanMessages")}</span>
             </Button>
-            <Button onClick={handleFullSync} variant="outline" size="sm" disabled={busy} className="cursor-pointer" title={t("orders.syncTooltip")}>
+            <Button onClick={handleFullSync} variant="outline" size="sm" disabled={busy} className="cursor-pointer" title={t("orders.syncTooltip")} data-walkthrough="sync">
               <RefreshCw className={`h-4 w-4 transition-transform ${busy ? "animate-spin" : ""}`} />
               {syncProgress || (isSyncing ? t("orders.syncing") : t("orders.syncAll"))}
             </Button>
-            <div className="hidden md:block">
+            <div className="hidden md:block" data-walkthrough="notifications">
               <NotificationBell />
             </div>
             <ScanSmsDialog open={scanOpen} onOpenChange={setScanOpen} />
@@ -392,7 +394,7 @@ function PackagesContent() {
 
       {/* Search & Filter */}
       <FadeIn delay={0.1}>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center" data-walkthrough="filters">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input

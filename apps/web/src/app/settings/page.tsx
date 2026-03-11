@@ -35,6 +35,7 @@ import {
   RotateCcw,
   KeyRound,
   Globe,
+  Play,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
@@ -441,6 +442,30 @@ function SettingsContent() {
           <Button variant="outline" className="w-full" onClick={handleExport} disabled={isExporting}>
             <Download className={`h-4 w-4 ${isExporting ? "animate-spin" : ""}`} />
             {isExporting ? t("settings.exporting") : t("settings.exportData")}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* App Tour */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Play className="h-4 w-4" />
+            {t("settings.replayTour")}
+          </CardTitle>
+          <CardDescription>{t("settings.replayTourDesc")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => {
+              localStorage.removeItem("mailtrack_walkthrough_done");
+              window.location.href = "/packages";
+            }}
+          >
+            <Play className="h-4 w-4" />
+            {t("walkthrough.replay")}
           </Button>
         </CardContent>
       </Card>

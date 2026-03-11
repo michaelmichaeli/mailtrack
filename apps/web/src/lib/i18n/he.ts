@@ -6,6 +6,8 @@ const he: Record<TranslationKey, string> = {
   "nav.notifications": "התראות",
   "nav.profile": "פרופיל",
   "nav.settings": "הגדרות",
+  "nav.analytics": "אנליטיקס",
+  "nav.map": "מפה",
   "nav.signOut": "התנתקות",
 
   // Orders page
@@ -520,6 +522,85 @@ const he: Record<TranslationKey, string> = {
   "lang.ar": "العربية",
   "lang.ru": "Русский",
   "nav.language": "שפה",
+
+  // Onboarding — syncing step
+  "onboarding.scanningEmails": "סורקים את המיילים שלך",
+  "onboarding.scanningHint": "זה בדרך כלל לוקח 10-20 שניות ☕",
+  "onboarding.allSynced": "הכל מסונכרן! 🎊",
+  "onboarding.heresWhatWeFound": "הנה מה שמצאנו:",
+  "onboarding.seeWhatICanDo": "תראו מה אני יודע לעשות",
+  "onboarding.skipTour": "דלג על הסיור",
+  "onboarding.closeWizard": "סגור",
+
+  // Onboarding — feature descriptions
+  "onboarding.autoSync": "סנכרון אוטומטי מהמייל",
+  "onboarding.featureDesc.universalTracking": "30+ שליחים ברחבי העולם. AliExpress, Amazon, USPS, FedEx, DHL, דואר ישראל — הכל במקום אחד.",
+  "onboarding.featureDesc.autoSync": "אישור הזמנה חדשה? אנחנו תופסים את זה אוטומטית. בלי העתק-הדבק של מספרי מעקב.",
+  "onboarding.featureDesc.smartNotifications": "קבלו התראות כשחבילות נשלחות, מגיעות, או דורשות תשומת לב. לעולם לא תפספסו משלוח.",
+  "onboarding.featureDesc.liveMaps": "ראו איפה החבילה שלכם על המפה. עקבו אחרי המסע מהמחסן עד הדלת.",
+  "onboarding.featureDesc.viewModes": "צפו בחבילות שלכם בדרך שלכם — לוח קנבן, טבלה, או ציר זמן.",
+
+  // Onboarding — completion step
+  "onboarding.allSet": "הכל מוכן! 🚀",
+  "onboarding.allSetDesc": "לוח הבקרה שלכם מוכן. כל חבילה, כל שליח, לוח בקרה אחד יפה. קדימה — הרווחתם את זה.",
+  "onboarding.openDashboard": "פתח את לוח הבקרה",
+  "onboarding.proTip": "טיפ: הוסיפו סימניה לגישה מהירה 🔖",
+
+  // Push banner
+  "push.enableTitle": "להפעיל התראות פוש?",
+  "push.enableDesc": "קבלו התראות כשחבילות נשלחות, יוצאות למשלוח, או מגיעות.",
+  "push.notNow": "לא עכשיו",
+  "push.iosInstallTitle": "התקינו את MailTrack לקבלת התראות",
+  "push.iosInstallDesc": "הוסיפו את MailTrack למסך הבית כדי לקבל התראות פוש ב-iOS.",
+  "push.iosAddToHome": "הוסף למסך הבית",
+
+  // Accessibility
+  "a11y.scrollToTop": "גלול למעלה",
+
+  // Analytics page
+  "analytics.title": "אנליטיקס",
+  "analytics.subtitle": "תובנות על המשלוחים שלך",
+  "analytics.packagesByStatus": "חבילות לפי סטטוס",
+  "analytics.packagesByCarrier": "חבילות לפי שליח",
+  "analytics.deliveryTimeline": "ציר זמן משלוחים",
+  "analytics.avgDeliveryTime": "זמן משלוח ממוצע",
+  "analytics.days": "ימים",
+  "analytics.totalPackages": "סה״כ חבילות",
+  "analytics.deliveredPackages": "נמסרו",
+  "analytics.activePackages": "פעילות",
+  "analytics.carriers": "שליחים",
+  "analytics.noData": "אין נתוני חבילות עדיין. סנכרנו את המיילים כדי לראות אנליטיקס.",
+
+  // Map page
+  "map.title": "מפת חבילות",
+  "map.subtitle": "ראו איפה החבילות שלכם",
+  "map.noLocations": "אין נתוני מיקום זמינים עדיין",
+  "map.myLocation": "המיקום שלי",
+  "map.packageLocations": "מיקומי חבילות",
+  "map.lastSeen": "נראה לאחרונה",
+  "map.tracking": "מעקב",
+
+  // Walkthrough
+  "walkthrough.welcome.title": "!ברוכים הבאים ל-MailTrack 🎉",
+  "walkthrough.welcome.desc": "בואו נעשה סיור קצר כדי להכיר את המערכת. זה ייקח רק דקה!",
+  "walkthrough.sidebar.title": "מרכז הניווט שלכם 🧭",
+  "walkthrough.sidebar.desc": "הכל כאן — הזמנות, אנליטיקס, מפה, התראות והגדרות.",
+  "walkthrough.packages.title": "החבילות שלכם 📦",
+  "walkthrough.packages.desc": "כל ההזמנות במקום אחד. אנחנו מזהים אותן אוטומטית מ-Gmail. החליפו בין תצוגת רשת, טבלה, לוח וציר זמן!",
+  "walkthrough.filters.title": "סינון ומיון 🔍",
+  "walkthrough.filters.desc": "מצאו בדיוק מה שאתם מחפשים. סננו לפי סטטוס, תקופה או חפשו לפי שם.",
+  "walkthrough.sync.title": "הישארו מעודכנים 🔄",
+  "walkthrough.sync.desc": "לחצו סנכרון כדי לבדוק הזמנות חדשות ולעדכן סטטוסים. אנחנו עושים את זה גם אוטומטית!",
+  "walkthrough.notifications.title": "לא תפספסו משלוח 🔔",
+  "walkthrough.notifications.desc": "קבלו התראות כשחבילות נשלחות, מגיעות או דורשות תשומת לב. בדקו את פעמון ההתראות!",
+  "walkthrough.done.title": "!אתם מומחים 🚀",
+  "walkthrough.done.desc": "זהו! התחילו לעקוב אחרי חבילות כמו מקצוענים. משלוחים שמחים!",
+  "walkthrough.next": "הבא",
+  "walkthrough.prev": "חזרה",
+  "walkthrough.finish": "הבנתי!",
+  "walkthrough.replay": "הפעל סיור מחדש",
+  "settings.replayTour": "הפעל סיור באפליקציה",
+  "settings.replayTourDesc": "עברו שוב על הסיור המודרך ללמוד על כל התכונות",
 };
 
 export default he;

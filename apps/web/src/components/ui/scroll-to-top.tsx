@@ -3,9 +3,11 @@
 import { useEffect, useState, useCallback } from "react";
 import { ArrowUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 
 export function ScrollToTop() {
   const [visible, setVisible] = useState(false);
+  const { t } = useI18n();
 
   const getScrollContainer = useCallback(() => {
     return document.querySelector("main") || window;
@@ -43,7 +45,7 @@ export function ScrollToTop() {
         "hover:bg-primary/90 transition-all duration-200",
         "animate-in fade-in zoom-in-75"
       )}
-      aria-label="Scroll to top"
+      aria-label={t("a11y.scrollToTop")}
     >
       <ArrowUp className="h-5 w-5" />
     </button>

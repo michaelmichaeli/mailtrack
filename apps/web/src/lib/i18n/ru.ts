@@ -6,6 +6,8 @@ const ru: Record<TranslationKey, string> = {
   "nav.notifications": "Уведомления",
   "nav.profile": "Профиль",
   "nav.settings": "Настройки",
+  "nav.analytics": "Аналитика",
+  "nav.map": "Карта",
   "nav.signOut": "Выйти",
 
   // Orders page
@@ -520,6 +522,85 @@ const ru: Record<TranslationKey, string> = {
   "lang.ar": "العربية",
   "lang.ru": "Русский",
   "nav.language": "Язык",
+
+  // Onboarding — syncing step
+  "onboarding.scanningEmails": "Сканируем вашу почту",
+  "onboarding.scanningHint": "Обычно это занимает 10-20 секунд ☕",
+  "onboarding.allSynced": "Всё синхронизировано! 🎊",
+  "onboarding.heresWhatWeFound": "Вот что мы нашли:",
+  "onboarding.seeWhatICanDo": "Покажи, что умеешь",
+  "onboarding.skipTour": "Пропустить тур",
+  "onboarding.closeWizard": "Закрыть",
+
+  // Onboarding — feature descriptions
+  "onboarding.autoSync": "Авто-синхронизация из почты",
+  "onboarding.featureDesc.universalTracking": "30+ курьерских служб по всему миру. AliExpress, Amazon, USPS, FedEx, DHL, Почта Израиля — всё в одном месте.",
+  "onboarding.featureDesc.autoSync": "Новое подтверждение заказа? Мы ловим его автоматически. Без копирования номеров отслеживания.",
+  "onboarding.featureDesc.smartNotifications": "Получайте уведомления, когда посылки отправлены, доставлены или требуют внимания. Больше не пропустите доставку.",
+  "onboarding.featureDesc.liveMaps": "Смотрите, где ваша посылка на карте. Отслеживайте путь от склада до вашей двери.",
+  "onboarding.featureDesc.viewModes": "Просматривайте посылки по-своему — доска Канбан, сортируемая таблица или временная шкала.",
+
+  // Onboarding — completion step
+  "onboarding.allSet": "Всё готово! 🚀",
+  "onboarding.allSetDesc": "Панель управления готова. Каждая посылка, каждый курьер, одна красивая панель. Вперёд — вы это заслужили.",
+  "onboarding.openDashboard": "Открыть панель",
+  "onboarding.proTip": "Совет: добавьте в закладки для быстрого доступа 🔖",
+
+  // Push banner
+  "push.enableTitle": "Включить push-уведомления?",
+  "push.enableDesc": "Получайте уведомления, когда посылки отправлены, в пути или доставлены.",
+  "push.notNow": "Не сейчас",
+  "push.iosInstallTitle": "Установите MailTrack для уведомлений",
+  "push.iosInstallDesc": "Добавьте MailTrack на главный экран, чтобы получать push-уведомления на iOS.",
+  "push.iosAddToHome": "На экран «Домой»",
+
+  // Accessibility
+  "a11y.scrollToTop": "Наверх",
+
+  // Analytics page
+  "analytics.title": "Аналитика",
+  "analytics.subtitle": "Статистика ваших доставок",
+  "analytics.packagesByStatus": "Посылки по статусу",
+  "analytics.packagesByCarrier": "Посылки по курьеру",
+  "analytics.deliveryTimeline": "Хронология доставок",
+  "analytics.avgDeliveryTime": "Среднее время доставки",
+  "analytics.days": "дней",
+  "analytics.totalPackages": "Всего посылок",
+  "analytics.deliveredPackages": "Доставлено",
+  "analytics.activePackages": "Активные",
+  "analytics.carriers": "Курьеры",
+  "analytics.noData": "Данных пока нет. Синхронизируйте почту, чтобы увидеть аналитику.",
+
+  // Map page
+  "map.title": "Карта посылок",
+  "map.subtitle": "Посмотрите, где ваши посылки",
+  "map.noLocations": "Данные о местоположении ещё недоступны",
+  "map.myLocation": "Моё местоположение",
+  "map.packageLocations": "Местоположения посылок",
+  "map.lastSeen": "Последний раз",
+  "map.tracking": "Отслеживание",
+
+  // Walkthrough
+  "walkthrough.welcome.title": "Добро пожаловать в MailTrack! 🎉",
+  "walkthrough.welcome.desc": "Давайте проведём быструю экскурсию. Это займёт всего минуту!",
+  "walkthrough.sidebar.title": "Центр навигации 🧭",
+  "walkthrough.sidebar.desc": "Всё, что нужно, прямо здесь — заказы, аналитика, карта, уведомления и настройки.",
+  "walkthrough.packages.title": "Ваши посылки 📦",
+  "walkthrough.packages.desc": "Все заказы в одном месте. Мы находим их автоматически из Gmail. Переключайтесь между сеткой, таблицей, доской и хронологией!",
+  "walkthrough.filters.title": "Фильтры и сортировка 🔍",
+  "walkthrough.filters.desc": "Найдите именно то, что ищете. Фильтруйте по статусу, периоду или ищите по названию.",
+  "walkthrough.sync.title": "Будьте в курсе 🔄",
+  "walkthrough.sync.desc": "Нажмите Синхронизация для проверки новых заказов и обновления статусов. Мы делаем это и автоматически!",
+  "walkthrough.notifications.title": "Не пропустите доставку 🔔",
+  "walkthrough.notifications.desc": "Получайте уведомления о посылках. Следите за колокольчиком!",
+  "walkthrough.done.title": "Вы профи! 🚀",
+  "walkthrough.done.desc": "Вот и всё! Отслеживайте посылки как профессионал. Удачных доставок!",
+  "walkthrough.next": "Далее",
+  "walkthrough.prev": "Назад",
+  "walkthrough.finish": "Понятно!",
+  "walkthrough.replay": "Повторить тур",
+  "settings.replayTour": "Повторить тур по приложению",
+  "settings.replayTourDesc": "Пройдите экскурсию ещё раз, чтобы узнать обо всех функциях",
 };
 
 export default ru;

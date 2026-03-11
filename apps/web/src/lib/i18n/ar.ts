@@ -6,6 +6,8 @@ const ar: Record<TranslationKey, string> = {
   "nav.notifications": "الإشعارات",
   "nav.profile": "الملف الشخصي",
   "nav.settings": "الإعدادات",
+  "nav.analytics": "التحليلات",
+  "nav.map": "الخريطة",
   "nav.signOut": "تسجيل الخروج",
 
   // Orders page
@@ -520,6 +522,85 @@ const ar: Record<TranslationKey, string> = {
   "lang.ar": "العربية",
   "lang.ru": "Русский",
   "nav.language": "اللغة",
+
+  // Onboarding — syncing step
+  "onboarding.scanningEmails": "جارٍ فحص بريدك الإلكتروني",
+  "onboarding.scanningHint": "يستغرق هذا عادةً 10-20 ثانية ☕",
+  "onboarding.allSynced": "تم المزامنة! 🎊",
+  "onboarding.heresWhatWeFound": "إليك ما وجدناه:",
+  "onboarding.seeWhatICanDo": "شاهد ما يمكنني فعله",
+  "onboarding.skipTour": "تخطي الجولة",
+  "onboarding.closeWizard": "إغلاق",
+
+  // Onboarding — feature descriptions
+  "onboarding.autoSync": "مزامنة تلقائية من البريد",
+  "onboarding.featureDesc.universalTracking": "أكثر من 30 شركة شحن حول العالم. AliExpress، Amazon، USPS، FedEx، DHL، البريد الإسرائيلي — الكل في مكان واحد.",
+  "onboarding.featureDesc.autoSync": "تأكيد طلب جديد؟ نلتقطه تلقائياً. بدون نسخ ولصق أرقام التتبع.",
+  "onboarding.featureDesc.smartNotifications": "احصل على إشعارات عند شحن الطرود أو وصولها أو حاجتها للانتباه. لن تفوتك أي شحنة مرة أخرى.",
+  "onboarding.featureDesc.liveMaps": "شاهد أين طردك على الخريطة. تتبع الرحلة من المستودع إلى بابك.",
+  "onboarding.featureDesc.viewModes": "اعرض طرودك بطريقتك — لوحة كانبان، جدول قابل للفرز، أو خط زمني.",
+
+  // Onboarding — completion step
+  "onboarding.allSet": "كل شيء جاهز! 🚀",
+  "onboarding.allSetDesc": "لوحة التحكم جاهزة. كل طرد، كل شركة شحن، لوحة تحكم واحدة جميلة. تفضل — لقد استحققت ذلك.",
+  "onboarding.openDashboard": "افتح لوحة التحكم",
+  "onboarding.proTip": "نصيحة: أضف إشارة مرجعية للوصول السريع 🔖",
+
+  // Push banner
+  "push.enableTitle": "تفعيل إشعارات الدفع؟",
+  "push.enableDesc": "احصل على إشعارات عند شحن طرودك أو خروجها للتسليم أو وصولها.",
+  "push.notNow": "ليس الآن",
+  "push.iosInstallTitle": "ثبّت MailTrack للحصول على الإشعارات",
+  "push.iosInstallDesc": "أضف MailTrack إلى الشاشة الرئيسية لتفعيل إشعارات الدفع على iOS.",
+  "push.iosAddToHome": "أضف إلى الشاشة الرئيسية",
+
+  // Accessibility
+  "a11y.scrollToTop": "انتقل إلى الأعلى",
+
+  // Analytics page
+  "analytics.title": "التحليلات",
+  "analytics.subtitle": "رؤى حول شحناتك",
+  "analytics.packagesByStatus": "الطرود حسب الحالة",
+  "analytics.packagesByCarrier": "الطرود حسب شركة الشحن",
+  "analytics.deliveryTimeline": "الجدول الزمني للتسليم",
+  "analytics.avgDeliveryTime": "متوسط وقت التسليم",
+  "analytics.days": "أيام",
+  "analytics.totalPackages": "إجمالي الطرود",
+  "analytics.deliveredPackages": "تم التسليم",
+  "analytics.activePackages": "نشطة",
+  "analytics.carriers": "شركات الشحن",
+  "analytics.noData": "لا توجد بيانات طرود بعد. قم بمزامنة بريدك لرؤية التحليلات.",
+
+  // Map page
+  "map.title": "خريطة الطرود",
+  "map.subtitle": "شاهد أين طرودك",
+  "map.noLocations": "لا توجد بيانات موقع متاحة بعد",
+  "map.myLocation": "موقعي",
+  "map.packageLocations": "مواقع الطرود",
+  "map.lastSeen": "آخر ظهور",
+  "map.tracking": "تتبع",
+
+  // Walkthrough
+  "walkthrough.welcome.title": "!مرحباً بكم في MailTrack 🎉",
+  "walkthrough.welcome.desc": "لنأخذ جولة سريعة لنريك الأساسيات. ستستغرق دقيقة واحدة فقط!",
+  "walkthrough.sidebar.title": "مركز التنقل 🧭",
+  "walkthrough.sidebar.desc": "كل ما تحتاجه هنا — الطلبات، التحليلات، الخريطة، الإشعارات والإعدادات.",
+  "walkthrough.packages.title": "طرودك 📦",
+  "walkthrough.packages.desc": "جميع طلباتك في مكان واحد. نكتشفها تلقائياً من Gmail. بدّل بين عرض الشبكة والجدول واللوحة والجدول الزمني!",
+  "walkthrough.filters.title": "تصفية وفرز 🔍",
+  "walkthrough.filters.desc": "ابحث عن ما تريده بالضبط. فلتر حسب الحالة أو الفترة أو ابحث بالاسم.",
+  "walkthrough.sync.title": "ابقَ محدّثاً 🔄",
+  "walkthrough.sync.desc": "اضغط مزامنة للتحقق من الطلبات الجديدة وتحديث حالات التتبع. نفعل ذلك تلقائياً أيضاً!",
+  "walkthrough.notifications.title": "لا تفوّت أي تسليم 🔔",
+  "walkthrough.notifications.desc": "احصل على إشعارات عند شحن الطرود أو وصولها أو حاجتها للانتباه. تحقق من جرس الإشعارات!",
+  "walkthrough.done.title": "!أنت محترف الآن 🚀",
+  "walkthrough.done.desc": "هذا كل شيء! ابدأ بتتبع طرودك كالمحترفين. شحنات سعيدة!",
+  "walkthrough.next": "التالي",
+  "walkthrough.prev": "رجوع",
+  "walkthrough.finish": "فهمت!",
+  "walkthrough.replay": "إعادة الجولة",
+  "settings.replayTour": "إعادة جولة التطبيق",
+  "settings.replayTourDesc": "قم بالجولة الإرشادية مرة أخرى للتعرف على جميع الميزات",
 };
 
 export default ar;
