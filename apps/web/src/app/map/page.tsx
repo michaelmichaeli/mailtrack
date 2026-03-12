@@ -201,7 +201,7 @@ export default function MapPage() {
   }
 
   return (
-    <PageTransition className="flex flex-col h-[calc(100vh-1rem)] md:h-screen">
+    <PageTransition className="flex flex-col h-full">
       <FadeIn>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between p-4 md:p-6 pb-2">
           <div>
@@ -217,7 +217,7 @@ export default function MapPage() {
       <FadeIn delay={0.05}>
       <div className="flex-1 flex flex-col md:flex-row gap-4 px-4 md:px-6 pb-4">
         {/* Map */}
-        <div className="flex-1 rounded-xl border border-border overflow-hidden bg-card min-h-[400px]">
+        <div className="rounded-xl border border-border overflow-hidden bg-card h-[50vh] md:h-auto md:flex-1 min-h-[400px]">
           {mapReady && (
             <MapContainer
               center={center as [number, number]}

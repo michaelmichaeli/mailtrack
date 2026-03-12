@@ -119,6 +119,12 @@ These tasks were discussed in a previous session. Recording here for continuity:
 
 - ✅ Applied all 9 convention fixes to Map page: PageTransition wrapper, FadeIn header with NotificationBell, tracking-tight, text-muted-foreground/80, gradient empty state, FadeIn delay on content section
 - ✅ Analytics page was already fully convention-compliant
+- ✅ Created missing `layout.tsx` for Analytics and Map pages (sidebar, AuthGuard, main wrapper)
+- ✅ Fixed mobile map rendering: map had 0 height on mobile due to flex collapse, now uses `h-[50vh]` on mobile
+- ✅ Fixed mobile map title overlap with hamburger menu via `pt-14 md:pt-0` on layout
+- ✅ Fixed e2e test conflict: added root `vitest.config.ts` to exclude `e2e/**` and `*.spec.ts` from vitest
+- ✅ All 17 unit tests passing
+- ✅ Added permanent rule to AGENT_INSTRUCTIONS.md: "New pages MUST have layout.tsx"
 
 ## Known Issues
 

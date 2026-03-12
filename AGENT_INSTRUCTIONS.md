@@ -77,6 +77,7 @@ These are permanent instructions from the user. Follow them in EVERY session:
 | **Kanban style** | User wants Trello/Jira-style board — unified page scroll, NO per-column scrolling. Never revert this. |
 | **Dev servers** | API: port 3002, Web: port 3003. Dev login: `POST /api/auth/dev-login` with `{"email":"michaelmichaeli888@gmail.com"}` |
 | **Record ALL instructions** | Any new preference or instruction from the user must be added to this table and to `docs/agent-memory.md`. |
+| **New pages MUST have layout.tsx** | Every new route under `app/` that requires sidebar MUST have a `layout.tsx` with `AuthGuard`, `Sidebar`, and `<main>` wrapper. Copy from `packages/layout.tsx` as template. NEVER create a page without its layout. |
 
 ---
 

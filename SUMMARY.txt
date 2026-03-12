@@ -1,0 +1,264 @@
+═══════════════════════════════════════════════════════════════════════════════
+                     PAGE CONVENTIONS ANALYSIS - EXECUTIVE SUMMARY
+═══════════════════════════════════════════════════════════════════════════════
+
+ANALYZED EXISTING PAGES (Reference implementations):
+  ✓ /dashboard (redirects to packages)
+  ✓ /packages
+  ✓ /notifications
+  ✓ /profile
+  ✓ /settings
+
+ANALYZED NEW PAGES (Need fixes):
+  ✗ /analytics - 8 convention violations
+  ✗ /map - 7 convention violations
+
+═══════════════════════════════════════════════════════════════════════════════
+                             CORE CONVENTIONS
+═══════════════════════════════════════════════════════════════════════════════
+
+1. LAYOUT STRUCTURE - MUST FOLLOW THIS PATTERN:
+
+   <PageTransition className="space-y-5/6">
+     <FadeIn>
+       <Header with title, subtitle, actions />
+     </FadeIn>
+     
+     <FadeIn delay={0.05}>
+       <Card or Section 1 />
+     </FadeIn>
+     
+     <FadeIn delay={0.1}>
+       <Card or Section 2 />
+     </FadeIn>
+     
+     <FadeIn delay={0.15}>
+       <Card or Section 3 />
+     </FadeIn>
+   </PageTransition>
+
+   Key points:
+   • Root wrapper MUST be <PageTransition>
+   • All top-level sections wrapped in <FadeIn> with staggered delays
+   • Delays increment by 0.05: 0, 0.05, 0.1, 0.15, 0.2, etc.
+   • Spacing between sections: "space-y-5" or "space-y-6"
+
+───────────────────────────────────────────────────────────────────────────────
+
+2. HEADER PATTERN - MUST FOLLOW THIS STRUCTURE:
+
+   <FadeIn>
+     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+       <div>
+         <h1 className="text-2xl font-bold tracking-tight text-foreground">
+           {t("page.title")}
+         </h1>
+         <p className="text-sm text-muted-foreground/80 mt-0.5">
+           {t("page.subtitle")}
+         </p>
+       </div>
+       <div className="flex items-center gap-2">
+         {/* Action buttons */}
+         <div className="hidden md:block">
+           <NotificationBell />
+         </div>
+       </div>
+     </div>
+   </FadeIn>
+
+   Key points:
+   • h1: "text-2xl font-bold tracking-tight text-foreground"
+   • p: "text-sm text-muted-foreground/80 mt-0.5"
+   • Flex layout for responsive title + actions
+   • NotificationBell always on right, hidden on mobile
+
+───────────────────────────────────────────────────────────────────────────────
+
+3. CARD HEADERS - MUST INCLUDE ICON:
+
+   <Card>
+     <CardHeader className="pb-3">
+       <CardTitle className="flex items-center gap-2 text-base">
+         <IconComponent className="h-4 w-4 text-primary" />
+         {t("section.title")}
+       </CardTitle>
+       <CardDescription>{t("section.subtitle")}</CardDescription>
+     </CardHeader>
+     <Separator />
+     <CardContent>
+       Content here
+     </CardContent>
+   </Card>
+
+   Key points:
+   • Icon is h-4 w-4, text-primary
+   • Title is flex with gap-2
+   • CardHeader has pb-3 padding
+   • Use Separator between header and content
+   • CardTitle text-base (not h2)
+
+───────────────────────────────────────────────────────────────────────────────
+
+4. EMPTY STATES - FOLLOW THIS PATTERN:
+
+   <div className="flex flex-col items-center justify-center py-16 px-4">
+     <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl 
+                     bg-gradient-to-br from-primary/10 to-violet-500/10 mb-4">
+       <IconComponent className="h-7 w-7 text-primary/40" />
+     </div>
+     <p className="text-sm font-semibold text-foreground/70">
+       {t("section.noData")}
+     </p>
+     <p className="text-xs text-muted-foreground/60 mt-1.5 text-center max-w-[240px]">
+       {t("section.noDataHint")}
+     </p>
+   </div>
+
+   Key points:
+   • Icon background: h-16 w-16 container
+   • Icon inside: h-7 w-7, text-primary/40
+   • Background gradient: from-primary/10 to-violet-500/10
+   • Main text: text-sm font-semibold text-foreground/70
+   • Hint text: text-xs text-muted-foreground/60
+   • Centered with py-16 px-4
+
+───────────────────────────────────────────────────────────────────────────────
+
+5. i18n PATTERN:
+
+   const { t, locale } = useI18n();
+   
+   // Date locale mapping (consistent across all pages):
+   const dateLocale = locale === "he" ? "he-IL" 
+     : locale === "ar" ? "ar" 
+     : locale === "ru" ? "ru-RU" 
+     : "en-US";
+   
+   // Always use t() for text:
+   <h1>{t("page.title")}</h1>
+   toast.success(t("toast.success"));
+
+───────────────────────────────────────────────────────────────────────────────
+
+6. ANIMATIONS HIERARCHY:
+
+   PageTransition (root page wrapper)
+   └── FadeIn (delay={0}) - Header
+   └── FadeIn (delay={0.05}) - First section
+   └── FadeIn (delay={0.1}) - Second section
+   └── FadeIn (delay={0.15}) - Third section
+   
+   For grids of items:
+   └── StaggerContainer
+       ├── StaggerItem
+       ├── StaggerItem
+       └── StaggerItem
+
+   For charts/complex animations (direct framer-motion):
+   └── motion.div with initial/animate/transition
+
+───────────────────────────────────────────────────────────────────────────────
+
+7. COLOR/SPACING STANDARDS:
+
+   Text Colors:
+   • Primary: text-foreground
+   • Secondary: text-muted-foreground
+   • Muted secondary: text-muted-foreground/80
+   • Very muted: text-muted-foreground/60
+   • Error: text-destructive
+
+   Spacing:
+   • Between sections: space-y-5 or space-y-6
+   • Between elements: gap-2, gap-3, gap-4
+   • Icon spacing: gap-1.5 or gap-2
+   • Padding: p-3, p-4, p-5 (multiples of 4px)
+   • Fine-tuned margins: mt-0.5, mt-1.5, mb-4
+
+   Icon Sizing:
+   • Text inline: h-3 w-3, h-3.5 w-3.5
+   • Standard: h-4 w-4
+   • Large: h-5 w-5, h-7 w-7
+   • Extra large: h-16 w-16
+
+═══════════════════════════════════════════════════════════════════════════════
+                      ANALYTICS PAGE - FIX CHECKLIST
+═══════════════════════════════════════════════════════════════════════════════
+
+[ ] Line 132: Replace <div> with <PageTransition className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
+[ ] Lines 134-137: Wrap header in <FadeIn>, add flex layout, add tracking-tight, fix subtitle
+[ ] Line 245: Replace closing </div> with </PageTransition>
+[ ] Lines 140-159: Wrap stat cards in <FadeIn delay={0.05}>
+[ ] Lines 162-193: Wrap pie chart in <FadeIn delay={0.1}>, use Card structure
+[ ] Lines 196-218: Wrap bar chart in <FadeIn delay={0.15}>, use Card structure  
+[ ] Lines 222-244: Wrap timeline in <FadeIn delay={0.2}>, use Card structure
+[ ] Add imports: PageTransition, FadeIn, Card components, NotificationBell
+
+TOTAL VIOLATIONS: 8
+SEVERITY: Medium - Page works but doesn't follow established conventions
+
+═══════════════════════════════════════════════════════════════════════════════
+                            MAP PAGE - FIX CHECKLIST
+═══════════════════════════════════════════════════════════════════════════════
+
+[ ] Line 199: Replace <div className="flex flex-col h-[calc(100vh-1rem)] md:h-screen"> with <PageTransition>
+[ ] Lines 201-204: Wrap header in <FadeIn>, add flex layout, add tracking-tight, fix subtitle, add NotificationBell
+[ ] Line 281: Replace closing </div> with </PageTransition>
+[ ] Lines 191-196: Wrap loading state in <PageTransition>
+[ ] Lines 248-252: Update empty state with gradient icon background
+[ ] Lines 238-277: Consider wrapping location section in <FadeIn delay={0.05}> (optional, motion.div acceptable)
+[ ] Add imports: PageTransition, FadeIn, NotificationBell
+
+TOTAL VIOLATIONS: 7 (1 is optional/acceptable)
+SEVERITY: Medium - Page works but doesn't follow established conventions
+
+═══════════════════════════════════════════════════════════════════════════════
+                           REQUIRED NEW IMPORTS
+═══════════════════════════════════════════════════════════════════════════════
+
+ANALYTICS PAGE - Add to imports at top:
+─────────────────────────────────────────────────────────────────────────────
+import { PageTransition, FadeIn } from "@/components/ui/motion";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { NotificationBell } from "@/components/notifications/notification-bell";
+
+MAP PAGE - Add to imports at top:
+─────────────────────────────────────────────────────────────────────────────
+import { PageTransition, FadeIn } from "@/components/ui/motion";
+import { NotificationBell } from "@/components/notifications/notification-bell";
+
+═══════════════════════════════════════════════════════════════════════════════
+                              KEY INSIGHTS
+═══════════════════════════════════════════════════════════════════════════════
+
+1. ANIMATION CONSISTENCY IS CRITICAL
+   • Every page must start with <PageTransition>
+   • Every section must be wrapped in <FadeIn> with staggered delays
+   • This creates a smooth, polished feel to the UI
+
+2. HEADER PATTERN IS UNIVERSAL
+   • Title format: "text-2xl font-bold tracking-tight text-foreground"
+   • Subtitle format: "text-sm text-muted-foreground/80 mt-0.5"
+   • All pages include this exact structure
+   • NotificationBell is essential visual indicator
+
+3. CARD HEADERS MUST HAVE ICONS
+   • Icon immediately precedes title
+   • Icon color is always text-primary
+   • Icon size is always h-4 w-4
+   • Title is contained in CardTitle not h2
+
+4. EMPTY STATES HAVE DISTINCTIVE VISUAL TREATMENT
+   • Gradient backgrounds for icons
+   • Layered text (main + hint)
+   • Consistent sizing and spacing
+
+5. RESPONSIVE DESIGN IS CONSISTENT
+   • Mobile-first approach: hide, then show with sm:/md:/lg:
+   • NotificationBell hidden on mobile (hidden md:block)
+   • Text labels hidden on mobile (hidden sm:inline)
+   • Flex direction changes: flex-col sm:flex-row
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Full detailed analysis saved to: CONVENTION_ANALYSIS.md
