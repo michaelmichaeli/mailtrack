@@ -106,7 +106,7 @@
 |---|------|--------|-------|
 | 1 | Email digest frequency selector | ✅ Done | Added daily/weekly/monthly/yearly dropdown (default weekly) to settings, Prisma schema + shared Zod |
 | 2 | Remove hover effects for mobile | ✅ Done | Removed hover:scale, hover:shadow, hover:-translate, whileHover across all components. Replaced with active:bg-muted/30 tap feedback |
-| 3 | Map page complete redesign | ✅ Done | Status filter pills, colored CircleMarkers, clickable popups linking to orders, legend overlay, stats bar, active/show-all filters, proper empty states |
+| 3 | Map page complete redesign | ✅ Done | V2: Full-bleed map, floating glass header/filters, desktop side panel, mobile bottom sheet, FABs (locate/legend/layers), CartoDB Voyager tiles, fly-to animation, pulsing user dot, rich popups with CTA |
 
 ## User Preferences (Recorded)
 
