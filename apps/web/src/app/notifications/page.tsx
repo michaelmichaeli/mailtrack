@@ -155,7 +155,7 @@ export default function NotificationsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="cursor-pointer text-destructive hover:text-destructive"
+                className="cursor-pointer text-destructive active:text-destructive"
                 onClick={() => clearAllMutation.mutate()}
                 disabled={clearAllMutation.isPending}
               >
@@ -253,8 +253,8 @@ export default function NotificationsPage() {
                         "group relative flex items-start gap-3 px-5 py-4 transition-all duration-200",
                         n.orderId && "cursor-pointer",
                         !n.read
-                          ? "bg-primary/5 hover:bg-primary/10"
-                          : "hover:bg-muted/50"
+                          ? "bg-primary/5 active:bg-primary/10"
+                          : "active:bg-muted/50"
                       )}
                     >
                       {/* Unread accent bar */}
@@ -284,7 +284,7 @@ export default function NotificationsPage() {
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>
                         {n.orderId && (
-                          <p className="text-xs text-primary mt-1.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <p className="text-xs text-primary mt-1.5 flex items-center gap-1 ">
                             <ExternalLink className="h-3 w-3" />
                             {t("notifications.viewOrder")}
                           </p>
@@ -296,11 +296,11 @@ export default function NotificationsPage() {
                         {!n.read && (
                           <span className="w-2 h-2 rounded-full bg-primary" />
                         )}
-                        <div className="flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex flex-col gap-0.5 ">
                           {!n.read && (
                             <button
                               onClick={(e) => { e.stopPropagation(); markReadMutation.mutate(n.id); }}
-                              className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                              className="p-1 rounded active:bg-muted text-muted-foreground active:text-foreground transition-colors"
                               title={t("notifications.markAsRead")}
                             >
                               <Check className="h-3.5 w-3.5" />
@@ -308,7 +308,7 @@ export default function NotificationsPage() {
                           )}
                           <button
                             onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(n.id); }}
-                            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors"
+                            className="p-1 rounded active:bg-muted text-muted-foreground active:text-destructive transition-colors"
                             title={t("common.delete")}
                           >
                             <Trash2 className="h-3.5 w-3.5" />

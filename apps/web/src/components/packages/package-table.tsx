@@ -74,9 +74,9 @@ export function PackageTable({ orders }: { orders: Order[] }) {
               const items = orderItems.length > 0 ? orderItems : pkgItems;
 
               return (
-                <tr key={order.id} className="hover:bg-muted/30 transition-colors group">
+                <tr key={order.id} className="active:bg-muted/30 transition-colors group">
                   <td className="px-4 py-3">
-                    <Link href={`/orders/${order.id}`} className="font-medium text-foreground hover:text-primary transition-colors">
+                    <Link href={`/orders/${order.id}`} className="font-medium text-foreground active:text-primary transition-colors">
                       {order.merchant}
                     </Link>
                   </td>
@@ -119,7 +119,7 @@ export function PackageTable({ orders }: { orders: Order[] }) {
                     {formatCurrency(order.totalAmount, order.currency)}
                   </td>
                   <td className="px-4 py-3">
-                    <Link href={`/orders/${order.id}`} className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary">
+                    <Link href={`/orders/${order.id}`} className=" text-muted-foreground active:text-primary">
                       <ExternalLink className="h-4 w-4" />
                     </Link>
                   </td>

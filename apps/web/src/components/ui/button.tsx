@@ -14,12 +14,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(
           "inline-flex items-center justify-center whitespace-nowrap rounded-lg font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] [&_svg]:shrink-0",
           // Variants
-          variant === "default" && "bg-gradient-to-r from-primary to-indigo-500 dark:from-primary dark:to-indigo-400 text-primary-foreground shadow-md hover:brightness-110",
-          variant === "secondary" && "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-          variant === "outline" && "border border-border bg-card hover:bg-accent hover:text-accent-foreground shadow-sm",
-          variant === "ghost" && "hover:bg-accent hover:text-accent-foreground",
-          variant === "destructive" && "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
-          variant === "success" && "bg-success text-success-foreground shadow-sm hover:bg-success/90",
+          variant === "default" && "bg-gradient-to-r from-primary to-indigo-500 dark:from-primary dark:to-indigo-400 text-primary-foreground shadow-md active:brightness-110",
+          variant === "secondary" && "bg-secondary text-secondary-foreground active:bg-secondary/80",
+          variant === "outline" && "border border-border bg-card active:bg-accent active:text-accent-foreground shadow-sm",
+          variant === "ghost" && "active:bg-accent active:text-accent-foreground",
+          variant === "destructive" && "bg-destructive text-destructive-foreground shadow-sm active:bg-destructive/90",
+          variant === "success" && "bg-success text-success-foreground shadow-sm active:bg-success/90",
           // Sizes
           size === "sm" && "h-8 gap-1.5 px-3 text-xs",
           size === "md" && "h-10 gap-2 px-4 text-sm",

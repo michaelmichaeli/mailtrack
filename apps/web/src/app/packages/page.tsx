@@ -407,7 +407,7 @@ function PackagesContent() {
             {query && (
               <button
                 onClick={() => setQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground active:text-foreground transition-colors cursor-pointer"
                 aria-label={t("orders.clearSearch")}
                 title={t("orders.clearSearch")}
               >

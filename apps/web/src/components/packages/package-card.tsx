@@ -176,7 +176,7 @@ export function PackageCard({ order }: OrderCardProps) {
             {formattedAmount && (
               <span className="text-xs font-semibold text-foreground">{formattedAmount}</span>
             )}
-            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors rtl:rotate-180" />
+            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground text-primary transition-colors rtl:rotate-180" />
           </div>
         </div>
       </Card>

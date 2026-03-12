@@ -179,7 +179,7 @@ export function NotificationBell() {
       {/* Bell button */}
       <PopoverTrigger asChild>
         <button
-          className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-card border border-border shadow-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-card border border-border shadow-md text-muted-foreground active:text-foreground transition-colors cursor-pointer"
           aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
         >
           <Bell className="h-[18px] w-[18px]" />
@@ -223,7 +223,7 @@ export function NotificationBell() {
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
-                className="p-1.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                className="p-1.5 rounded-lg text-muted-foreground active:bg-muted active:text-foreground transition-colors"
                 title={t("notificationBell.markAllRead")}
               >
                 <CheckCheck className="h-4 w-4" />
@@ -232,7 +232,7 @@ export function NotificationBell() {
             {notifications.length > 0 && (
               <button
                 onClick={handleClearAll}
-                className="p-1.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-destructive transition-colors"
+                className="p-1.5 rounded-lg text-muted-foreground active:bg-muted active:text-destructive transition-colors"
                 title={t("notificationBell.clearAll")}
               >
                 <Trash2 className="h-4 w-4" />
@@ -240,7 +240,7 @@ export function NotificationBell() {
             )}
             <button
               onClick={() => setOpen(false)}
-              className="p-1.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              className="p-1.5 rounded-lg text-muted-foreground active:bg-muted active:text-foreground transition-colors"
               aria-label={t("notificationBell.close")}
             >
               <X className="h-4 w-4" />
@@ -275,8 +275,8 @@ export function NotificationBell() {
                     "group flex items-start gap-3 px-4 py-3 border-b border-border/50 transition-colors",
                     n.orderId && "cursor-pointer",
                     !n.read
-                      ? "bg-primary/5 hover:bg-primary/10"
-                      : "hover:bg-muted/50"
+                      ? "bg-primary/5 active:bg-primary/10"
+                      : "active:bg-muted/50"
                   )}
                 >
                   {/* Icon */}
@@ -311,11 +311,11 @@ export function NotificationBell() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex flex-col gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex flex-col gap-0.5 flex-shrink-0 ">
                     {!n.read && (
                       <button
                         onClick={(e) => handleMarkRead(n.id, e)}
-                        className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                        className="p-1 rounded active:bg-muted text-muted-foreground active:text-foreground transition-colors"
                         title={t("notificationBell.markAsRead")}
                       >
                         <Check className="h-3.5 w-3.5" />
@@ -323,7 +323,7 @@ export function NotificationBell() {
                     )}
                     <button
                       onClick={(e) => handleDelete(n.id, e)}
-                      className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors"
+                      className="p-1 rounded active:bg-muted text-muted-foreground active:text-destructive transition-colors"
                       title={t("common.delete")}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -342,7 +342,7 @@ export function NotificationBell() {
               setOpen(false);
               router.push("/notifications");
             }}
-            className="w-full text-center text-xs font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer"
+            className="w-full text-center text-xs font-medium text-primary active:text-primary/80 transition-colors cursor-pointer"
           >
             {t("notificationBell.seeAll")}
           </button>

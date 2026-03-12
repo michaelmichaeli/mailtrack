@@ -123,7 +123,7 @@ export default function NotFound() {
               <CardContent className="pt-6 pb-6 text-center space-y-4">
                 <button
                   onClick={cycleMessage}
-                  className="text-base sm:text-lg font-medium text-foreground cursor-pointer hover:text-primary transition-colors"
+                  className="text-base sm:text-lg font-medium text-foreground cursor-pointer active:text-primary transition-colors"
                 >
                   {message}
                 </button>

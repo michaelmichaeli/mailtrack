@@ -121,7 +121,7 @@ export function TrackingTimeline({ events }: TrackingTimelineProps) {
 
           <button
             onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-1.5 ml-[calc(4rem+0.75rem+10px)] sm:ml-[calc(5rem+0.75rem+10px)] mt-1 px-3 py-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer rounded-full hover:bg-accent/50"
+            className="flex items-center gap-1.5 ml-[calc(4rem+0.75rem+10px)] sm:ml-[calc(5rem+0.75rem+10px)] mt-1 px-3 py-1 text-xs font-medium text-primary active:text-primary/80 transition-colors cursor-pointer rounded-full active:bg-accent/50"
           >
             <span className={cn("transition-transform duration-300", expanded && "rotate-180")}>
               <ChevronDown className="h-3.5 w-3.5" />

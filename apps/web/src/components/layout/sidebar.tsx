@@ -82,7 +82,7 @@ export function Sidebar() {
         </Link>
         <button
           onClick={() => setMobileOpen(false)}
-          className="ms-auto md:hidden p-1 rounded-lg hover:bg-accent"
+          className="ms-auto md:hidden p-1 rounded-lg active:bg-accent"
           aria-label={t("nav.closeMenu")}
         >
           <X className="h-5 w-5" />
@@ -103,7 +103,7 @@ export function Sidebar() {
                 "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 overflow-hidden",
                 isActive
                   ? "bg-gradient-to-r from-primary/15 to-violet-500/10 text-foreground shadow-sm border border-primary/20"
-                  : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                  : "text-muted-foreground active:bg-muted/80 active:text-foreground"
               )}
             >
               {isActive && (
@@ -124,7 +124,7 @@ export function Sidebar() {
           <select
             value={locale}
             onChange={(e) => setLocale(e.target.value)}
-            className="flex-1 bg-transparent text-sm font-medium text-muted-foreground hover:text-foreground cursor-pointer outline-none appearance-none"
+            className="flex-1 bg-transparent text-sm font-medium text-muted-foreground active:text-foreground cursor-pointer outline-none appearance-none"
           >
             {LOCALES.map((l) => (
               <option key={l.code} value={l.code}>{l.label}</option>
@@ -139,7 +139,7 @@ export function Sidebar() {
           <select
             value={mounted ? theme ?? "system" : "system"}
             onChange={(e) => setTheme(e.target.value)}
-            className="flex-1 bg-transparent text-sm font-medium text-muted-foreground hover:text-foreground cursor-pointer outline-none appearance-none"
+            className="flex-1 bg-transparent text-sm font-medium text-muted-foreground active:text-foreground cursor-pointer outline-none appearance-none"
           >
             <option value="light">{t("settings.light")}</option>
             <option value="dark">{t("settings.dark")}</option>
@@ -149,7 +149,7 @@ export function Sidebar() {
 
         <button
           onClick={handleSignOut}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground active:bg-destructive/10 active:text-destructive transition-all duration-200"
         >
           <LogOut className="h-[18px] w-[18px]" />
           {t("nav.signOut")}

@@ -42,7 +42,7 @@ export function ScrollToTop() {
       className={cn(
         "fixed bottom-6 right-6 z-40 flex h-10 w-10 items-center justify-center",
         "rounded-full bg-primary text-primary-foreground shadow-lg",
-        "hover:bg-primary/90 transition-all duration-200",
+        "active:bg-primary/90 transition-all duration-200",
         "animate-in fade-in zoom-in-75"
       )}
       aria-label={t("a11y.scrollToTop")}

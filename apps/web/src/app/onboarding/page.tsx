@@ -737,7 +737,7 @@ function OnboardingWizard() {
         {step !== "syncing" && (
           <button
             onClick={handleFinish}
-            className="absolute top-3 right-3 z-20 p-1.5 rounded-full hover:bg-muted text-muted-foreground transition-colors"
+            className="absolute top-3 right-3 z-20 p-1.5 rounded-full active:bg-muted text-muted-foreground transition-colors"
             aria-label={t("onboarding.closeWizard")}
           >
             <X className="h-4 w-4" />

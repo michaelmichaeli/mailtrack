@@ -187,7 +187,7 @@ export default function OrderDetailPage() {
           <Button
             variant="ghost"
             size="icon"
-            className="shrink-0 text-muted-foreground hover:text-destructive cursor-pointer"
+            className="shrink-0 text-muted-foreground active:text-destructive cursor-pointer"
             onClick={() => setConfirmDelete(true)}
           >
             <Trash2 className="h-4 w-4" />
@@ -526,7 +526,7 @@ export default function OrderDetailPage() {
                       <div>
                         <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Phone</p>
                         <p className="text-sm font-medium text-foreground mt-0.5">
-                          <a href={`tel:${pickup.phone}`} className="hover:underline">{pickup.phone}</a>
+                          <a href={`tel:${pickup.phone}`} className="underline">{pickup.phone}</a>
                           {pickup.phoneNotes && (
                             <span className="text-xs text-muted-foreground ms-1.5">({pickup.phoneNotes})</span>
                           )}
@@ -541,7 +541,7 @@ export default function OrderDetailPage() {
                       <div>
                         <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Email</p>
                         <p className="text-sm font-medium text-foreground mt-0.5">
-                          <a href={`mailto:${pickup.email}`} className="hover:underline">{pickup.email}</a>
+                          <a href={`mailto:${pickup.email}`} className="underline">{pickup.email}</a>
                         </p>
                       </div>
                     </div>
@@ -553,7 +553,7 @@ export default function OrderDetailPage() {
                       <div>
                         <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Track on Carrier Site</p>
                         <a href={pickup.url} target="_blank" rel="noopener noreferrer"
-                           className="text-sm font-medium mt-0.5 hover:underline" style={{ color: '#047857' }}>
+                           className="text-sm font-medium mt-0.5 underline" style={{ color: '#047857' }}>
                           {pickup.url.replace(/^https?:\/\//, '').split('/')[0]}
                         </a>
                       </div>
@@ -690,7 +690,7 @@ export default function OrderDetailPage() {
             <div className="space-y-2">
               {order.relatedOrders.map((ro: any) => (
                 <Link key={ro.id} href={`/orders/${ro.id}`}>
-                  <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors group">
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-border active:bg-muted/50 transition-colors group">
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-foreground">{ro.merchant}</p>
                       <p className="text-xs text-muted-foreground">
@@ -705,7 +705,7 @@ export default function OrderDetailPage() {
                           {Number(ro.totalAmount).toFixed(2)}
                         </span>
                       )}
-                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors rtl:rotate-180" />
+                      <ChevronRight className="h-4 w-4 text-muted-foreground text-foreground transition-colors rtl:rotate-180" />
                     </div>
                   </div>
                 </Link>

@@ -28,7 +28,7 @@ export function CopyButton({ value, className }: CopyButtonProps) {
     <button
       onClick={handleCopy}
       className={cn(
-        "inline-flex items-center justify-center rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors",
+        "inline-flex items-center justify-center rounded p-0.5 text-muted-foreground active:text-foreground active:bg-muted transition-colors",
         className
       )}
       title={t("common.copyToClipboard")}

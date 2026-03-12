@@ -181,7 +181,7 @@ export default function ProfilePage() {
                 <h2 className="text-xl font-semibold truncate">{user.name}</h2>
                 <button
                   onClick={() => setEditing(true)}
-                  className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                  className="p-1 rounded active:bg-muted text-muted-foreground active:text-foreground transition-colors"
                   title={t("profile.editName")}
                 >
                   <Pencil className="h-3.5 w-3.5" />

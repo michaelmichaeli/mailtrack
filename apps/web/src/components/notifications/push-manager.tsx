@@ -145,7 +145,7 @@ export function PushNotificationManager() {
         <div className="rounded-xl border border-border bg-card p-4 shadow-lg">
           <button
             onClick={handleDismissIOS}
-            className="absolute top-2 right-2 p-1 rounded-full hover:bg-muted text-muted-foreground"
+            className="absolute top-2 right-2 p-1 rounded-full active:bg-muted text-muted-foreground"
             aria-label={t("push.dismiss")}
           >
             <X className="h-3.5 w-3.5" />
@@ -167,7 +167,7 @@ export function PushNotificationManager() {
               </div>
               <button
                 onClick={handleDismissIOS}
-                className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors"
+                className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground active:bg-muted transition-colors"
               >
                 {t("push.notNow")}
               </button>
@@ -185,7 +185,7 @@ export function PushNotificationManager() {
       <div className="rounded-xl border border-border bg-card p-4 shadow-lg">
         <button
           onClick={handleDismiss}
-          className="absolute top-2 right-2 p-1 rounded-full hover:bg-muted text-muted-foreground"
+          className="absolute top-2 right-2 p-1 rounded-full active:bg-muted text-muted-foreground"
           aria-label={t("push.dismiss")}
         >
           <X className="h-3.5 w-3.5" />
@@ -203,13 +203,13 @@ export function PushNotificationManager() {
               <button
                 onClick={handleEnable}
                 disabled={subscribing}
-                className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground active:bg-primary/90 disabled:opacity-50 transition-colors"
               >
                 {subscribing ? t("push.enabling") : t("push.enable")}
               </button>
               <button
                 onClick={handleDismiss}
-                className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors"
+                className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground active:bg-muted transition-colors"
               >
                 {t("push.notNow")}
               </button>

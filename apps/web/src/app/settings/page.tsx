@@ -263,7 +263,7 @@ function SettingsContent() {
               <button
                 onClick={() => disconnectEmail.mutate(email.id)}
                 disabled={disconnectEmail.isPending}
-                className="p-1.5 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors shrink-0"
+                className="p-1.5 rounded-lg text-muted-foreground active:text-red-500 active:bg-red-50 dark:active:bg-red-950/50 transition-colors shrink-0"
                 title={t("settings.disconnectEmail")}
               >
                 <XCircle className="h-4 w-4" />
@@ -482,7 +482,7 @@ function SettingsContent() {
         <CardContent className="space-y-3">
           <Dialog open={deletePackagesOpen} onOpenChange={setDeletePackagesOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="w-full border-destructive/30 text-destructive hover:bg-destructive/10">
+              <Button variant="outline" className="w-full border-destructive/30 text-destructive active:bg-destructive/10">
                 <Trash2 className="h-4 w-4" />
                 {t("settings.removeAllPackages")}
               </Button>

@@ -97,7 +97,7 @@ function LoginForm() {
           <select
             value={locale}
             onChange={(e) => setLocale(e.target.value)}
-            className="bg-transparent text-xs font-medium text-muted-foreground hover:text-foreground cursor-pointer outline-none appearance-none pe-1"
+            className="bg-transparent text-xs font-medium text-muted-foreground active:text-foreground cursor-pointer outline-none appearance-none pe-1"
           >
             <option value="en">EN</option>
             <option value="he">עב</option>
@@ -108,7 +108,7 @@ function LoginForm() {
         {mounted && (
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="flex items-center justify-center h-7 w-7 rounded-full bg-card/80 backdrop-blur-sm border border-border/40 shadow-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center justify-center h-7 w-7 rounded-full bg-card/80 backdrop-blur-sm border border-border/40 shadow-sm text-muted-foreground active:text-foreground transition-colors"
           >
             {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
           </button>
