@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
-  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip,
+  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis,
   ResponsiveContainer, CartesianGrid, AreaChart, Area,
 } from "recharts";
 import { Package, Truck, CheckCircle, BarChart3, Clock, TrendingUp } from "lucide-react";
@@ -185,15 +185,6 @@ export default function AnalyticsPage() {
     { label: t("analytics.avgDeliveryTime"), value: avgDeliveryDays ? `${avgDeliveryDays} ${t("analytics.days")}` : "—", icon: Clock, bg: "bg-amber-500/10", fg: "text-amber-500" },
   ];
 
-  const customTooltipStyle = {
-    backgroundColor: "hsl(var(--card))",
-    border: "1px solid hsl(var(--border))",
-    borderRadius: "12px",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-    fontSize: "12px",
-    padding: "8px 12px",
-  };
-
   return (
     <PageTransition className="space-y-5">
       {/* Header */}
@@ -256,7 +247,6 @@ export default function AnalyticsPage() {
                       <Cell key={i} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={customTooltipStyle} />
                 </PieChart>
               </ResponsiveContainer>
               {/* Legend as pills */}
@@ -346,7 +336,6 @@ export default function AnalyticsPage() {
                     axisLine={false}
                     tickLine={false}
                   />
-                  <Tooltip contentStyle={customTooltipStyle} />
                   <Area
                     type="monotone"
                     dataKey="ordered"
