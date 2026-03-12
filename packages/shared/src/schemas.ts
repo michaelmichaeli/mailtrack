@@ -144,6 +144,7 @@ export const notificationPreferenceSchema = z.object({
 export const updateNotificationPreferenceSchema = z.object({
   pushEnabled: z.boolean().optional(),
   emailEnabled: z.boolean().optional(),
+  digestFrequency: z.enum(["daily", "weekly", "monthly", "yearly"]).optional(),
   quietHoursStart: z.string().nullable().optional(),
   quietHoursEnd: z.string().nullable().optional(),
 });

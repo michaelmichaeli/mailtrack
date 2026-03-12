@@ -268,42 +268,42 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-4">
-              <div className="rounded-xl border border-border/60 p-3 text-center hover:shadow-sm transition-shadow">
+              <div className="rounded-xl border border-border/60 p-3 text-center transition-colors">
                 <div className="mx-auto mb-2 h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Package className="h-4 w-4 text-primary" />
                 </div>
                 <p className="text-2xl font-bold">{stats.totalOrders}</p>
                 <p className="text-[11px] text-muted-foreground">{t("profile.orders")}</p>
               </div>
-              <div className="rounded-xl border border-border/60 p-3 text-center hover:shadow-sm transition-shadow">
+              <div className="rounded-xl border border-border/60 p-3 text-center transition-colors">
                 <div className="mx-auto mb-2 h-9 w-9 rounded-lg bg-blue-500/10 flex items-center justify-center">
                   <Truck className="h-4 w-4 text-blue-500" />
                 </div>
                 <p className="text-2xl font-bold">{stats.totalPackages}</p>
                 <p className="text-[11px] text-muted-foreground">{t("profile.packages")}</p>
               </div>
-              <div className="rounded-xl border border-border/60 p-3 text-center hover:shadow-sm transition-shadow">
+              <div className="rounded-xl border border-border/60 p-3 text-center transition-colors">
                 <div className="mx-auto mb-2 h-9 w-9 rounded-lg bg-green-500/10 flex items-center justify-center">
                   <CheckCircle2 className="h-4 w-4 text-green-500" />
                 </div>
                 <p className="text-2xl font-bold">{stats.deliveredPackages}</p>
                 <p className="text-[11px] text-muted-foreground">{t("profile.delivered")}</p>
               </div>
-              <div className="rounded-xl border border-border/60 p-3 text-center hover:shadow-sm transition-shadow">
+              <div className="rounded-xl border border-border/60 p-3 text-center transition-colors">
                 <div className="mx-auto mb-2 h-9 w-9 rounded-lg bg-orange-500/10 flex items-center justify-center">
                   <Store className="h-4 w-4 text-orange-500" />
                 </div>
                 <p className="text-2xl font-bold">{stats.uniqueStores}</p>
                 <p className="text-[11px] text-muted-foreground">{t("profile.stores")}</p>
               </div>
-              <div className="rounded-xl border border-border/60 p-3 text-center hover:shadow-sm transition-shadow">
+              <div className="rounded-xl border border-border/60 p-3 text-center transition-colors">
                 <div className="mx-auto mb-2 h-9 w-9 rounded-lg bg-violet-500/10 flex items-center justify-center">
                   <Truck className="h-4 w-4 text-violet-500" />
                 </div>
                 <p className="text-2xl font-bold">{stats.uniqueCarriers}</p>
                 <p className="text-[11px] text-muted-foreground">{t("profile.carriers")}</p>
               </div>
-              <div className="rounded-xl border border-border/60 p-3 text-center hover:shadow-sm transition-shadow">
+              <div className="rounded-xl border border-border/60 p-3 text-center transition-colors">
                 <div className="mx-auto mb-2 h-9 w-9 rounded-lg bg-yellow-500/10 flex items-center justify-center">
                   <Bell className="h-4 w-4 text-yellow-500" />
                 </div>

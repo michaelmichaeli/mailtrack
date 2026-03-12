@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { motion } from "framer-motion";
-import { MapPin, Package, Navigation } from "lucide-react";
+import Link from "next/link";
+import { MapPin, Package, Navigation, Filter, Locate, Layers, ExternalLink, Info } from "lucide-react";
 import { api } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { PageTransition, FadeIn } from "@/components/ui/motion";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { Card, CardContent } from "@/components/ui/card";
 
-// Lazy-load map to avoid SSR issues with Leaflet
 const MapContainer = dynamic(
   () => import("react-leaflet").then((m) => m.MapContainer),
   { ssr: false }
@@ -18,8 +18,8 @@ const TileLayer = dynamic(
   () => import("react-leaflet").then((m) => m.TileLayer),
   { ssr: false }
 );
-const Marker = dynamic(
-  () => import("react-leaflet").then((m) => m.Marker),
+const CircleMarker = dynamic(
+  () => import("react-leaflet").then((m) => m.CircleMarker),
   { ssr: false }
 );
 const Popup = dynamic(
@@ -27,7 +27,6 @@ const Popup = dynamic(
   { ssr: false }
 );
 
-// Known city coordinates for geocoding location strings
 const CITY_COORDS: Record<string, [number, number]> = {
   "tel aviv": [32.0853, 34.7818],
   "jerusalem": [31.7683, 35.2137],
@@ -87,17 +86,31 @@ const CITY_COORDS: Record<string, [number, number]> = {
 
 function geocodeLocation(location: string): [number, number] | null {
   const lower = location.toLowerCase().trim();
-  // Direct match
   if (CITY_COORDS[lower]) return CITY_COORDS[lower];
-  // Partial match
   for (const [city, coords] of Object.entries(CITY_COORDS)) {
     if (lower.includes(city) || city.includes(lower)) return coords;
   }
   return null;
 }
 
+const STATUS_COLORS: Record<string, string> = {
+  ORDERED: "#94A3B8",
+  PROCESSING: "#94A3B8",
+  SHIPPED: "#3B82F6",
+  IN_TRANSIT: "#6366F1",
+  OUT_FOR_DELIVERY: "#8B5CF6",
+  PICKED_UP: "#14B8A6",
+  DELIVERED: "#10B981",
+  EXCEPTION: "#F59E0B",
+  RETURNED: "#EF4444",
+};
+
+const ACTIVE_STATUSES = ["IN_TRANSIT", "OUT_FOR_DELIVERY", "SHIPPED", "PROCESSING", "ORDERED", "PICKED_UP", "EXCEPTION"] as const;
+const ALL_STATUSES = [...ACTIVE_STATUSES, "DELIVERED", "RETURNED"] as const;
+
 interface PackageLocation {
   id: string;
+  orderId: string;
   trackingNumber: string;
   carrier: string;
   status: string;
@@ -113,19 +126,20 @@ export default function MapPage() {
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set(ACTIVE_STATUSES));
+  const [showLegend, setShowLegend] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
 
   useEffect(() => {
-    // Get user location
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
-        () => setUserLocation([32.0853, 34.7818]) // Default to Tel Aviv
+        () => setUserLocation([32.0853, 34.7818])
       );
     } else {
       setUserLocation([32.0853, 34.7818]);
     }
 
-    // Fetch packages
     api.getDashboard("year")
       .then((data: any) => {
         const all = [
@@ -140,17 +154,15 @@ export default function MapPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
 
-    // Load leaflet CSS
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
     document.head.appendChild(link);
     setMapReady(true);
-
     return () => { document.head.removeChild(link); };
   }, []);
 
-  const locations = useMemo<PackageLocation[]>(() => {
+  const allLocations = useMemo<PackageLocation[]>(() => {
     const result: PackageLocation[] = [];
     const seen = new Set<string>();
 
@@ -158,7 +170,6 @@ export default function MapPage() {
       const pkg = order.package;
       if (!pkg) return;
 
-      // Get last known location from events or package
       const lastEvent = pkg.events?.sort((a: any, b: any) =>
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       )?.[0];
@@ -175,6 +186,7 @@ export default function MapPage() {
 
       result.push({
         id: pkg.id,
+        orderId: order.id,
         trackingNumber: pkg.trackingNumber,
         carrier: pkg.carrier,
         status: pkg.status,
@@ -187,6 +199,31 @@ export default function MapPage() {
 
     return result;
   }, [packages]);
+
+  const filteredLocations = useMemo(
+    () => allLocations.filter((loc) => activeFilters.has(loc.status)),
+    [allLocations, activeFilters]
+  );
+
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    allLocations.forEach((loc) => {
+      counts[loc.status] = (counts[loc.status] || 0) + 1;
+    });
+    return counts;
+  }, [allLocations]);
+
+  const toggleFilter = useCallback((status: string) => {
+    setActiveFilters((prev) => {
+      const next = new Set(prev);
+      if (next.has(status)) next.delete(status);
+      else next.add(status);
+      return next;
+    });
+  }, []);
+
+  const showAll = useCallback(() => setActiveFilters(new Set(ALL_STATUSES)), []);
+  const showActive = useCallback(() => setActiveFilters(new Set(ACTIVE_STATUSES)), []);
 
   const center = userLocation || [32.0853, 34.7818];
 
@@ -202,94 +239,221 @@ export default function MapPage() {
 
   return (
     <PageTransition className="flex flex-col h-full">
+      {/* Header */}
       <FadeIn>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between p-4 md:p-6 pb-2">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 md:p-6 pb-2">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("map.title")}</h1>
             <p className="text-sm text-muted-foreground/80 mt-0.5">{t("map.subtitle")}</p>
           </div>
-          <div className="hidden md:block">
-            <NotificationBell />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowLegend(!showLegend)}
+              className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground active:bg-muted/50 transition-colors"
+            >
+              <Info className="h-3.5 w-3.5" />
+              {t("map.legend")}
+            </button>
+            <div className="hidden md:block">
+              <NotificationBell />
+            </div>
           </div>
         </div>
       </FadeIn>
 
+      {/* Stats bar */}
       <FadeIn delay={0.05}>
-      <div className="flex-1 flex flex-col md:flex-row gap-4 px-4 md:px-6 pb-4">
-        {/* Map */}
-        <div className="rounded-xl border border-border overflow-hidden bg-card h-[50vh] md:h-auto md:flex-1 min-h-[400px]">
-          {mapReady && (
-            <MapContainer
-              center={center as [number, number]}
-              zoom={locations.length > 0 ? 4 : 10}
-              className="h-full w-full"
-              style={{ height: "100%", width: "100%" }}
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              {locations.map((loc) => (
-                <Marker key={loc.id} position={loc.coords}>
-                  <Popup>
-                    <div className="text-sm space-y-1">
-                      <p className="font-semibold">{loc.merchant || loc.carrier}</p>
-                      <p className="text-xs text-gray-500">{t("map.tracking")}: {loc.trackingNumber}</p>
-                      <p className="text-xs">{loc.location}</p>
-                      <p className="text-xs text-gray-400">
-                        {t("map.lastSeen")}: {new Date(loc.timestamp).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
-          )}
+        <div className="flex items-center gap-3 px-4 md:px-6 pb-2 overflow-x-auto">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
+            <Layers className="h-3.5 w-3.5" />
+            <span>{t("map.showing")} <strong className="text-foreground">{filteredLocations.length}</strong> / {allLocations.length}</span>
+          </div>
+          <div className="h-4 w-px bg-border shrink-0" />
+          <button onClick={showActive} className="text-xs font-medium text-primary shrink-0 active:opacity-70">{t("map.activeOnly")}</button>
+          <button onClick={showAll} className="text-xs font-medium text-muted-foreground shrink-0 active:opacity-70">{t("map.showAll")}</button>
         </div>
+      </FadeIn>
 
-        {/* Location list */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="w-full md:w-72 space-y-2 overflow-y-auto max-h-[300px] md:max-h-full"
-        >
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">
-            {t("map.packageLocations")} ({locations.length})
-          </p>
-
-          {locations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 to-violet-500/10 mb-4">
-                <MapPin className="h-5 w-5 text-primary/40" />
-              </div>
-              <p className="text-sm font-semibold text-foreground/70">{t("map.noLocations")}</p>
-            </div>
-          ) : (
-            locations.map((loc) => (
-              <div
-                key={loc.id}
-                className="rounded-lg border border-border bg-card p-3 hover:bg-muted/50 transition-colors cursor-pointer"
+      {/* Filter pills */}
+      <FadeIn delay={0.08}>
+        <div className="flex gap-1.5 px-4 md:px-6 pb-3 overflow-x-auto">
+          {ALL_STATUSES.map((status) => {
+            const count = statusCounts[status] || 0;
+            const active = activeFilters.has(status);
+            return (
+              <button
+                key={status}
+                onClick={() => toggleFilter(status)}
+                className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium transition-all shrink-0 border ${
+                  active
+                    ? "border-transparent text-white shadow-sm"
+                    : "border-border text-muted-foreground bg-background"
+                }`}
+                style={active ? { backgroundColor: STATUS_COLORS[status] } : undefined}
               >
-                <div className="flex items-start gap-2">
-                  <Package className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {loc.merchant || loc.carrier}
-                    </p>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                      <Navigation className="h-3 w-3" />
-                      {loc.location}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground/60 mt-1">
-                      {t(`status.${loc.status}` as any)} · {new Date(loc.timestamp).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
+                <span>{t(`status.${status}` as any)}</span>
+                {count > 0 && (
+                  <span className={`rounded-full px-1.5 py-0.5 text-[10px] leading-none ${
+                    active ? "bg-white/20" : "bg-muted"
+                  }`}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </FadeIn>
+
+      {/* Legend overlay */}
+      {showLegend && (
+        <div className="mx-4 md:mx-6 mb-3 rounded-lg border border-border bg-card p-3 text-xs space-y-1.5">
+          <p className="font-semibold text-foreground text-sm mb-2">{t("map.legendTitle")}</p>
+          <p className="text-muted-foreground">{t("map.legendDesc")}</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+            {ALL_STATUSES.map((status) => (
+              <div key={status} className="flex items-center gap-2">
+                <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: STATUS_COLORS[status] }} />
+                <span className="text-muted-foreground">{t(`status.${status}` as any)}</span>
               </div>
-            ))
-          )}
-        </motion.div>
-      </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Main content */}
+      <FadeIn delay={0.1}>
+        <div className="flex-1 flex flex-col md:flex-row gap-3 px-4 md:px-6 pb-4">
+          {/* Map */}
+          <div className="rounded-xl border border-border overflow-hidden bg-card h-[50vh] md:h-auto md:flex-1 min-h-[400px] relative">
+            {mapReady && filteredLocations.length > 0 ? (
+              <MapContainer
+                center={center as [number, number]}
+                zoom={filteredLocations.length > 0 ? 4 : 10}
+                className="h-full w-full"
+                style={{ height: "100%", width: "100%" }}
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                {filteredLocations.map((loc) => (
+                  <CircleMarker
+                    key={loc.id}
+                    center={loc.coords}
+                    radius={8}
+                    pathOptions={{
+                      color: STATUS_COLORS[loc.status] || "#6366F1",
+                      fillColor: STATUS_COLORS[loc.status] || "#6366F1",
+                      fillOpacity: 0.8,
+                      weight: 2,
+                    }}
+                    eventHandlers={{
+                      click: () => setSelectedLocation(loc.id),
+                    }}
+                  >
+                    <Popup>
+                      <div className="text-sm space-y-2 min-w-[180px]">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: STATUS_COLORS[loc.status] }} />
+                          <span className="font-semibold">{t(`status.${loc.status}` as any)}</span>
+                        </div>
+                        <p className="font-medium">{loc.merchant || loc.carrier}</p>
+                        <p className="text-xs text-gray-500">{loc.trackingNumber}</p>
+                        <p className="text-xs flex items-center gap-1">
+                          <Navigation className="h-3 w-3" />
+                          {loc.location}
+                        </p>
+                        <p className="text-[11px] text-gray-400">
+                          {t("map.lastSeen")}: {new Date(loc.timestamp).toLocaleDateString()}
+                        </p>
+                        <a
+                          href={`/orders/${loc.orderId}`}
+                          className="flex items-center gap-1.5 text-xs font-medium text-blue-600 mt-1"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          {t("map.viewPackage")}
+                        </a>
+                      </div>
+                    </Popup>
+                  </CircleMarker>
+                ))}
+              </MapContainer>
+            ) : mapReady ? (
+              <div className="flex flex-col items-center justify-center h-full text-center px-4">
+                <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 to-violet-500/10 mb-4">
+                  <MapPin className="h-7 w-7 text-primary/40" />
+                </div>
+                <p className="text-sm font-semibold text-foreground/70 mb-1">{t("map.noLocations")}</p>
+                <p className="text-xs text-muted-foreground/60 max-w-[280px]">{t("map.noLocationsHint")}</p>
+                {allLocations.length > 0 && filteredLocations.length === 0 && (
+                  <button onClick={showAll} className="mt-3 text-xs font-medium text-primary active:opacity-70">
+                    {t("map.showAll")}
+                  </button>
+                )}
+              </div>
+            ) : null}
+          </div>
+
+          {/* Sidebar list */}
+          <div className="w-full md:w-72 space-y-2 overflow-y-auto max-h-[300px] md:max-h-full">
+            <div className="flex items-center justify-between px-1">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {t("map.packageLocations")} ({filteredLocations.length})
+              </p>
+            </div>
+
+            {filteredLocations.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 to-violet-500/10 mb-4">
+                  <Package className="h-5 w-5 text-primary/40" />
+                </div>
+                <p className="text-sm font-semibold text-foreground/70">{t("map.noResults")}</p>
+                <p className="text-xs text-muted-foreground/60 mt-1">{t("map.adjustFilters")}</p>
+              </div>
+            ) : (
+              filteredLocations.map((loc) => (
+                <Link
+                  key={loc.id}
+                  href={`/orders/${loc.orderId}`}
+                  className={`block rounded-lg border p-3 active:bg-muted/30 transition-colors cursor-pointer ${
+                    selectedLocation === loc.id
+                      ? "border-primary/40 bg-primary/5"
+                      : "border-border bg-card"
+                  }`}
+                >
+                  <div className="flex items-start gap-2.5">
+                    <div
+                      className="h-3 w-3 rounded-full mt-1 shrink-0"
+                      style={{ backgroundColor: STATUS_COLORS[loc.status] || "#6366F1" }}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {loc.merchant || loc.carrier}
+                        </p>
+                        <ExternalLink className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+                      </div>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                        <Navigation className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{loc.location}</span>
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] font-medium" style={{ color: STATUS_COLORS[loc.status] }}>
+                          {t(`status.${loc.status}` as any)}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground/50">·</span>
+                        <span className="text-[10px] text-muted-foreground/60">
+                          {new Date(loc.timestamp).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+        </div>
       </FadeIn>
     </PageTransition>
   );

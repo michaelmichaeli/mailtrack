@@ -907,23 +907,42 @@ function NotificationsSection({ notifPrefs, updateNotifications }: { notifPrefs:
         </div>
 
         {notifPrefs?.emailEnabled && (
-          <div className="flex items-center justify-between rounded-md border border-dashed p-3">
-            <p className="text-xs text-muted-foreground">{t("settings.testDigestPrompt")}</p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                try {
-                  const res = await api.sendTestDigest();
-                  toast.success(res.message || t("toast.testDigestSent"));
-                } catch (err: any) {
-                  toast.error(err?.message || t("toast.failedTestDigest"));
-                }
-              }}
-            >
-              {t("settings.sendTest")}
-            </Button>
-          </div>
+          <>
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <div>
+                <p className="text-sm font-medium">{t("settings.digestFrequency")}</p>
+                <p className="text-xs text-muted-foreground">{t("settings.digestFrequencyDesc")}</p>
+              </div>
+              <select
+                value={notifPrefs?.digestFrequency ?? "weekly"}
+                onChange={(e) => updateNotifications.mutate({ digestFrequency: e.target.value })}
+                className="rounded-md border border-border bg-background px-3 py-1.5 text-sm"
+              >
+                <option value="daily">{t("settings.frequencyDaily")}</option>
+                <option value="weekly">{t("settings.frequencyWeekly")}</option>
+                <option value="monthly">{t("settings.frequencyMonthly")}</option>
+                <option value="yearly">{t("settings.frequencyYearly")}</option>
+              </select>
+            </div>
+
+            <div className="flex items-center justify-between rounded-md border border-dashed p-3">
+              <p className="text-xs text-muted-foreground">{t("settings.testDigestPrompt")}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  try {
+                    const res = await api.sendTestDigest();
+                    toast.success(res.message || t("toast.testDigestSent"));
+                  } catch (err: any) {
+                    toast.error(err?.message || t("toast.failedTestDigest"));
+                  }
+                }}
+              >
+                {t("settings.sendTest")}
+              </Button>
+            </div>
+          </>
         )}
 
         {isSubscribed && (

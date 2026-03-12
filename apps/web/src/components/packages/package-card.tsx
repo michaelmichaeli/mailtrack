@@ -78,7 +78,7 @@ export function PackageCard({ order }: OrderCardProps) {
 
   return (
     <Link href={`/orders/${order.id}`}>
-      <Card className="relative flex flex-col h-full p-4 pl-5 hover:shadow-lg hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group border-border/60 overflow-hidden">
+      <Card className="relative flex flex-col h-full p-4 pl-5 active:bg-muted/30 transition-all duration-300 cursor-pointer group border-border/60 overflow-hidden">
         {/* Status accent bar */}
         <div className={cn("absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl", statusColors[status] || "bg-muted")} />
         {/* Row 1: Merchant + badge */}

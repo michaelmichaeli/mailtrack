@@ -103,7 +103,7 @@ export function PackageKanban({ orders }: { orders: Order[] }) {
 
               return (
                 <Link key={order.id} href={`/orders/${order.id}`}>
-                  <Card className="p-3 hover:shadow-md hover:border-primary/30 transition-all cursor-pointer group bg-card">
+                  <Card className="p-3 active:bg-muted/30 transition-all cursor-pointer group bg-card">
                     <div className="flex items-start justify-between gap-2 mb-1.5">
                       <div className="flex items-center gap-2 min-w-0">
                         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent shrink-0">

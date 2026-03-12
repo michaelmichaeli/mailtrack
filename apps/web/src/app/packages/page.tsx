@@ -368,7 +368,7 @@ function PackagesContent() {
                         className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-200 cursor-pointer ${
                           isActive
                             ? "border-primary bg-primary/10 text-foreground shadow-sm scale-105"
-                            : "border-border/60 bg-card text-muted-foreground hover:border-primary/30 hover:bg-accent/50 hover:scale-105"
+                            : "border-border/60 bg-card text-muted-foreground active:bg-accent/50"
                         }`}
                       >
                         <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: p.dotColor }} />

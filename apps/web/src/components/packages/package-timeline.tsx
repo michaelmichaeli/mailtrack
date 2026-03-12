@@ -99,7 +99,7 @@ export function PackageTimeline({ orders }: { orders: Order[] }) {
 
                 return (
                   <Link key={order.id} href={`/orders/${order.id}`} className="block">
-                    <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:shadow-md hover:border-primary/20 transition-all group">
+                    <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-card active:bg-muted/30 transition-all group">
                       {/* Icon */}
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent shrink-0">
                         <Package className="h-5 w-5 text-accent-foreground" />

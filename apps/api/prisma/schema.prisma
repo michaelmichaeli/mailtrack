@@ -209,6 +209,7 @@ model NotificationPreference {
   userId          String  @unique
   pushEnabled     Boolean @default(true)
   emailEnabled    Boolean @default(false)
+  digestFrequency String  @default("weekly") // daily, weekly, monthly, yearly
   quietHoursStart String? // e.g. "22:00"
   quietHoursEnd   String? // e.g. "08:00"
   pushToken       String? // FCM/APNs token
