@@ -163,21 +163,21 @@ export function Sidebar() {
       {/* Mobile hamburger */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed top-4 z-40 md:hidden p-2 rounded-lg bg-card border border-border shadow-md ltr:left-4 rtl:right-4"
+        className="fixed top-4 z-[1100] md:hidden p-2 rounded-lg bg-card border border-border shadow-md ltr:left-4 rtl:right-4"
         aria-label={t("nav.openMenu")}
       >
         <Menu className="h-5 w-5" />
       </button>
 
       {/* Floating notification bell — mobile only */}
-      <div className="fixed top-4 z-40 md:hidden ltr:right-4 rtl:left-4">
+      <div className="fixed top-4 z-[1100] md:hidden ltr:right-4 rtl:left-4">
         <NotificationBell />
       </div>
 
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-[1100] bg-black/40 backdrop-blur-sm md:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -185,7 +185,7 @@ export function Sidebar() {
       {/* Mobile sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 z-50 flex h-[100dvh] w-64 flex-col border-border bg-card transition-transform duration-200 md:hidden",
+          "fixed inset-y-0 z-[1200] flex h-[100dvh] w-64 flex-col border-border bg-card transition-transform duration-200 md:hidden",
           "ltr:left-0 ltr:border-r rtl:right-0 rtl:border-l",
           mobileOpen ? "translate-x-0" : "ltr:-translate-x-full rtl:translate-x-full"
         )}
