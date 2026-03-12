@@ -6,6 +6,8 @@ import { motion } from "framer-motion";
 import { MapPin, Package, Navigation } from "lucide-react";
 import { api } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
+import { PageTransition, FadeIn } from "@/components/ui/motion";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 // Lazy-load map to avoid SSR issues with Leaflet
 const MapContainer = dynamic(
@@ -190,19 +192,29 @@ export default function MapPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
+      <PageTransition>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      </PageTransition>
     );
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-1rem)] md:h-screen">
-      <div className="p-4 md:p-6 pb-2">
-        <h1 className="text-2xl font-bold text-foreground">{t("map.title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("map.subtitle")}</p>
-      </div>
+    <PageTransition className="flex flex-col h-[calc(100vh-1rem)] md:h-screen">
+      <FadeIn>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between p-4 md:p-6 pb-2">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("map.title")}</h1>
+            <p className="text-sm text-muted-foreground/80 mt-0.5">{t("map.subtitle")}</p>
+          </div>
+          <div className="hidden md:block">
+            <NotificationBell />
+          </div>
+        </div>
+      </FadeIn>
 
+      <FadeIn delay={0.05}>
       <div className="flex-1 flex flex-col md:flex-row gap-4 px-4 md:px-6 pb-4">
         {/* Map */}
         <div className="flex-1 rounded-xl border border-border overflow-hidden bg-card min-h-[400px]">
@@ -247,8 +259,10 @@ export default function MapPage() {
 
           {locations.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
-              <MapPin className="h-10 w-10 text-muted-foreground/30 mb-2" />
-              <p className="text-sm text-muted-foreground">{t("map.noLocations")}</p>
+              <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 to-violet-500/10 mb-4">
+                <MapPin className="h-5 w-5 text-primary/40" />
+              </div>
+              <p className="text-sm font-semibold text-foreground/70">{t("map.noLocations")}</p>
             </div>
           ) : (
             locations.map((loc) => (
@@ -276,6 +290,7 @@ export default function MapPage() {
           )}
         </motion.div>
       </div>
-    </div>
+      </FadeIn>
+    </PageTransition>
   );
 }

@@ -100,6 +100,26 @@
 
 - None
 
+## Session 2026-03-12 — User's Task List (from previous session)
+
+These tasks were discussed in a previous session. Recording here for continuity:
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 1 | Login and onboarding translations for all texts | ✅ Done | All text uses `t()` calls, no hardcoded strings |
+| 2 | Push in iOS + Safari + iPhone Chrome + PWA | ⚠️ Partial | PWA push works, iOS Safari "Add to Home Screen" banner works. Native iOS Safari push is a browser limitation — not possible without PWA install |
+| 3 | Add SEO | ✅ Done | robots.ts, sitemap.ts, full OpenGraph/Twitter/JSON-LD in layout.tsx |
+| 4 | Add close button for onboarding wizard | ✅ Done | X button top-right, hidden during sync step |
+| 5 | Add walkthrough to app on first run with explanations, sounds, focus, humor | ✅ Done | 7-step driver.js tour with sounds, progress bar, animations |
+| 6 | Scroll to top on page navigation (sidebar clicks) | ✅ Done | use-scroll-restore.ts + ScrollToTop floating button |
+| 7 | Add new pages (analytics) | ✅ Done | Full analytics dashboard with stats, charts, timeline |
+| 8 | Add map view — show locations around current location | ✅ Done | react-leaflet map with geolocation, 40+ city geocoding, side panel |
+
+## Session 2026-03-12 — Convention Fixes
+
+- ✅ Applied all 9 convention fixes to Map page: PageTransition wrapper, FadeIn header with NotificationBell, tracking-tight, text-muted-foreground/80, gradient empty state, FadeIn delay on content section
+- ✅ Analytics page was already fully convention-compliant
+
 ## Known Issues
 
 1. **Dev login doesn't create connectedEmail**: Dev login creates/finds user but does NOT create `connectedEmail` records. Email sync requires Google OAuth to connect Gmail tokens.
