@@ -100,6 +100,20 @@
 
 - None
 
+## Session 2026-03-12 — New Tasks Completed
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 1 | Email digest frequency selector | ✅ Done | Added daily/weekly/monthly/yearly dropdown (default weekly) to settings, Prisma schema + shared Zod |
+| 2 | Remove hover effects for mobile | ✅ Done | Removed hover:scale, hover:shadow, hover:-translate, whileHover across all components. Replaced with active:bg-muted/30 tap feedback |
+| 3 | Map page complete redesign | ✅ Done | Status filter pills, colored CircleMarkers, clickable popups linking to orders, legend overlay, stats bar, active/show-all filters, proper empty states |
+
+## User Preferences (Recorded)
+
+- **Mobile-first**: App is becoming a mobile app. No hover effects that don't work on touchscreens. Use active: states for tap feedback instead.
+- **New pages MUST have layout.tsx**: Every authenticated route needs Sidebar + AuthGuard layout.
+- **Record everything**: All instructions must be saved to agent-memory.md for cross-session continuity.
+
 ## Session 2026-03-12 — User's Task List (from previous session)
 
 These tasks were discussed in a previous session. Recording here for continuity:
