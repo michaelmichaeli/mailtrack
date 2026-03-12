@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { MapPin, Package, Navigation, Filter, Locate, Layers, ExternalLink, Info } from "lucide-react";
+import { Package, Navigation, Filter, Locate, Layers, ExternalLink, Info } from "lucide-react";
 import { api } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { PageTransition, FadeIn } from "@/components/ui/motion";
@@ -326,7 +326,7 @@ export default function MapPage() {
         <div className="flex-1 flex flex-col md:flex-row gap-3 px-4 md:px-6 pb-4">
           {/* Map */}
           <div className="rounded-xl border border-border overflow-hidden bg-card h-[50vh] md:h-auto md:flex-1 min-h-[400px] relative">
-            {mapReady && filteredLocations.length > 0 ? (
+            {mapReady ? (
               <MapContainer
                 center={center as [number, number]}
                 zoom={filteredLocations.length > 0 ? 4 : 10}
@@ -378,20 +378,27 @@ export default function MapPage() {
                     </Popup>
                   </CircleMarker>
                 ))}
-              </MapContainer>
-            ) : mapReady ? (
-              <div className="flex flex-col items-center justify-center h-full text-center px-4">
-                <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 to-violet-500/10 mb-4">
-                  <MapPin className="h-7 w-7 text-primary/40" />
-                </div>
-                <p className="text-sm font-semibold text-foreground/70 mb-1">{t("map.noLocations")}</p>
-                <p className="text-xs text-muted-foreground/60 max-w-[280px]">{t("map.noLocationsHint")}</p>
-                {allLocations.length > 0 && filteredLocations.length === 0 && (
-                  <button onClick={showAll} className="mt-3 text-xs font-medium text-primary active:opacity-70">
-                    {t("map.showAll")}
-                  </button>
+                {/* Empty overlay when no markers */}
+                {filteredLocations.length === 0 && allLocations.length === 0 && (
+                  <div className="absolute inset-0 z-[1000] flex flex-col items-center justify-center pointer-events-none">
+                    <div className="bg-card/90 backdrop-blur-sm rounded-xl p-6 text-center shadow-lg pointer-events-auto">
+                      <p className="text-sm font-semibold text-foreground/70 mb-1">{t("map.noLocations")}</p>
+                      <p className="text-xs text-muted-foreground/60 max-w-[280px]">{t("map.noLocationsHint")}</p>
+                    </div>
+                  </div>
                 )}
-              </div>
+                {filteredLocations.length === 0 && allLocations.length > 0 && (
+                  <div className="absolute inset-0 z-[1000] flex flex-col items-center justify-center pointer-events-none">
+                    <div className="bg-card/90 backdrop-blur-sm rounded-xl p-6 text-center shadow-lg pointer-events-auto">
+                      <p className="text-sm font-semibold text-foreground/70 mb-1">{t("map.noResults")}</p>
+                      <p className="text-xs text-muted-foreground/60 mb-2">{t("map.adjustFilters")}</p>
+                      <button onClick={showAll} className="text-xs font-medium text-primary active:opacity-70">
+                        {t("map.showAll")}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </MapContainer>
             ) : null}
           </div>
 
