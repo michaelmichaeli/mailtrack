@@ -9,7 +9,7 @@ export default function MapLayout({ children }: { children: React.ReactNode }) {
     <AuthGuard>
       <div className="flex h-screen">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto overflow-x-hidden pt-14 md:pt-0">
+        <main className="flex-1 overflow-hidden">
           {children}
         </main>
       </div>

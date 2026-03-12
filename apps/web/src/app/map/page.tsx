@@ -50,6 +50,42 @@ const MapFlyTo = dynamic(
 );
 
 const CITY_COORDS: Record<string, [number, number]> = {
+  // Hebrew names
+  "תל אביב": [32.0853, 34.7818],
+  "תל אביב - יפו": [32.0853, 34.7818],
+  "יפו": [32.0506, 34.7592],
+  "ירושלים": [31.7683, 35.2137],
+  "חיפה": [32.7940, 34.9896],
+  "באר שבע": [31.2530, 34.7915],
+  "ראשון לציון": [31.9730, 34.7925],
+  "פתח תקווה": [32.0841, 34.8878],
+  "אשדוד": [31.8044, 34.6553],
+  "נתניה": [32.3215, 34.8532],
+  "חולון": [32.0158, 34.7797],
+  "בני ברק": [32.0834, 34.8344],
+  "רמת גן": [32.0700, 34.8240],
+  "רחובות": [31.8928, 34.8113],
+  "אשקלון": [31.6688, 34.5743],
+  "בת ים": [32.0171, 34.7502],
+  "הרצליה": [32.1629, 34.8446],
+  "כפר סבא": [32.1751, 34.9065],
+  "מודיעין": [31.8969, 35.0101],
+  "נצרת": [32.6996, 35.3035],
+  "לוד": [31.9514, 34.8953],
+  "רמלה": [31.9275, 34.8625],
+  "עכו": [32.9271, 35.0819],
+  "טבריה": [32.7922, 35.5312],
+  "אילת": [29.5577, 34.9519],
+  "קריית גת": [31.6061, 34.7640],
+  "קריית שמונה": [33.2072, 35.5706],
+  "עפולה": [32.6100, 35.2894],
+  "צפת": [32.9646, 35.4960],
+  "רעננה": [32.1837, 34.8707],
+  "גבעתיים": [32.0716, 34.8124],
+  "הוד השרון": [32.1500, 34.8880],
+  "יבנה": [31.8786, 34.7389],
+  "מחוז תל אביב": [32.0853, 34.7818],
+  // English names
   "tel aviv": [32.0853, 34.7818],
   "jerusalem": [31.7683, 35.2137],
   "haifa": [32.7940, 34.9896],
@@ -71,6 +107,7 @@ const CITY_COORDS: Record<string, [number, number]> = {
   "lod": [31.9514, 34.8953],
   "ramla": [31.9275, 34.8625],
   "israel": [31.5, 34.75],
+  // International
   "new york": [40.7128, -74.0060],
   "los angeles": [34.0522, -118.2437],
   "chicago": [41.8781, -87.6298],
@@ -90,6 +127,9 @@ const CITY_COORDS: Record<string, [number, number]> = {
   "miami": [25.7617, -80.1918],
   "san francisco": [37.7749, -122.4194],
   "amsterdam": [52.3676, 4.9041],
+  "yuen long": [22.4445, 114.0222],
+  "mayong": [22.7833, 113.8167],
+  // Countries
   "china": [35.8617, 104.1954],
   "usa": [39.8283, -98.5795],
   "united states": [39.8283, -98.5795],
@@ -107,10 +147,14 @@ const CITY_COORDS: Record<string, [number, number]> = {
 };
 
 function geocodeLocation(location: string): [number, number] | null {
-  const lower = location.toLowerCase().trim();
+  // Clean up: remove brackets, extra whitespace
+  const cleaned = location.replace(/[\[\]()]/g, "").trim();
+  const lower = cleaned.toLowerCase();
   if (CITY_COORDS[lower]) return CITY_COORDS[lower];
+  if (CITY_COORDS[cleaned]) return CITY_COORDS[cleaned];
   for (const [city, coords] of Object.entries(CITY_COORDS)) {
     if (lower.includes(city) || city.includes(lower)) return coords;
+    if (cleaned.includes(city) || city.includes(cleaned)) return coords;
   }
   return null;
 }
@@ -208,7 +252,10 @@ export default function MapPage() {
       if (seen.has(key)) return;
       seen.add(key);
 
-      const itemNames = order.items?.map((i: any) => i.name || i.title).filter(Boolean).join(", ");
+      const rawItems = typeof order.items === "string" ? (() => { try { return JSON.parse(order.items); } catch { return []; } })() : order.items;
+      const itemNames = Array.isArray(rawItems)
+        ? rawItems.map((i: any) => (typeof i === "string" ? i : i.name || i.title)).filter(Boolean).join(", ")
+        : "";
 
       result.push({
         id: pkg.id,
