@@ -1062,7 +1062,7 @@ function StoreImportSection() {
           <p className="text-xs text-muted-foreground">
             {t("settings.importCsvDesc")}
           </p>
-          <label className="flex items-center justify-center gap-2 rounded-md border-2 border-dashed border-border hover:border-primary/50 p-4 transition-colors cursor-pointer">
+          <label className="flex items-center justify-center gap-2 rounded-md border-2 border-dashed border-border active:border-primary/50 p-4 transition-colors cursor-pointer">
             <input
               type="file"
               accept=".csv,.tsv,.txt"

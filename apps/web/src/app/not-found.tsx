@@ -103,7 +103,7 @@ export default function NotFound() {
           <button
             key={box.id}
             onClick={() => catchBox(box.id)}
-            className="absolute text-3xl cursor-pointer hover:scale-150 transition-transform duration-150 select-none z-10"
+            className="absolute text-3xl cursor-pointer active:scale-150 transition-transform duration-150 select-none z-10"
             style={{ left: `${box.x}%`, top: `${box.y}%` }}
             aria-label={t("notFound.title")}
           >

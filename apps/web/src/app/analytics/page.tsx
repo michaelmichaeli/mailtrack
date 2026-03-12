@@ -250,6 +250,7 @@ export default function AnalyticsPage() {
                     paddingAngle={3}
                     dataKey="value"
                     strokeWidth={0}
+                    activeShape={undefined}
                   >
                     {statusData.map((entry, i) => (
                       <Cell key={i} fill={entry.color} />
@@ -353,6 +354,7 @@ export default function AnalyticsPage() {
                     stroke="#6366f1"
                     strokeWidth={2}
                     fill="url(#gradOrdered)"
+                    activeDot={false}
                   />
                   <Area
                     type="monotone"
@@ -361,6 +363,7 @@ export default function AnalyticsPage() {
                     stroke="#22c55e"
                     strokeWidth={2}
                     fill="url(#gradDelivered)"
+                    activeDot={false}
                   />
                 </AreaChart>
               </ResponsiveContainer>
