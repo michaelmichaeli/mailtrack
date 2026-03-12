@@ -162,6 +162,19 @@ These tasks were discussed in a previous session. Recording here for continuity:
 - Expects step-by-step approval — don't batch changes without review
 - Wants onboarding wizard to be extensible — new features should be added to wizard retrospectively
 
+## Competitive Analysis (2026-03-12)
+
+Compared MailTrack to 17TRACK, Parcel, AfterShip, Shop app, Packagetrackr.
+
+**MailTrack advantages**: 4 view modes (unique), analytics dashboard (unique for consumer), self-hostable, SMS webhook ingest, ad-free.
+
+**Gaps to address**:
+- [ ] Barcode/QR scanner for quick tracking number entry
+- [ ] Estimated delivery date — show more prominently
+- [ ] Package sharing — share tracking link with family/friends
+- [ ] Apple Watch / home screen widgets
+- [ ] Multi-device cloud sync
+
 ## Future Tasks
 
 - [x] Extract `syncPackageFromResult` into a shared service (DRY) — Done 2026-03-07
