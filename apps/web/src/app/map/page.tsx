@@ -586,7 +586,7 @@ export default function MapPage() {
                     loc={loc}
                     selected={selectedId === loc.id}
                     onSelect={handleSelectPackage}
-                    t={t}
+                    t={t as (key: string) => string}
                   />
                 ))
               )}
@@ -634,7 +634,7 @@ export default function MapPage() {
                   loc={loc}
                   selected={selectedId === loc.id}
                   onSelect={handleSelectPackage}
-                  t={t}
+                  t={t as (key: string) => string}
                 />
               ))
             )}
