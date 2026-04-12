@@ -64,84 +64,86 @@
 /* Light theme — indigo accent */
 :root {
   color-scheme: light;
-  --radius: 0.625rem;
+  --radius: 0.5rem;
   --background: #F8FAFC;
-  --foreground: #0F172A;
+  --foreground: #242424;
   --card: #FFFFFF;
-  --card-foreground: #0F172A;
+  --card-foreground: #242424;
   --popover: #FFFFFF;
-  --popover-foreground: #0F172A;
-  --primary: #6366F1;
-  --primary-foreground: #FFFFFF;
-  --secondary: #F1F5F9;
-  --secondary-foreground: #334155;
-  --muted: #F1F5F9;
-  --muted-foreground: #64748B;
-  --accent: #EEF2FF;
-  --accent-foreground: #4338CA;
+  --popover-foreground: #242424;
+  /* Obsidian-like (paper + highlight gold) */
+  --primary: #E6B450;
+  --primary-foreground: #141414;
+  --secondary: #F1F1E7;
+  --secondary-foreground: #242424;
+  --muted: #F1F1E7;
+  --muted-foreground: #6B6B6B;
+  --accent: #FFF3C4;
+  --accent-foreground: #3B2A00;
   --destructive: #EF4444;
-  --destructive-foreground: #FFFFFF;
-  --border: #E2E8F0;
-  --input: #E2E8F0;
-  --ring: #6366F1;
+  --destructive-foreground: #141414;
+  --border: #E1E1D3;
+  --input: #E1E1D3;
+  --ring: #E6B450;
   --success: #10B981;
-  --success-foreground: #FFFFFF;
+  --success-foreground: #141414;
   --warning: #F59E0B;
-  --warning-foreground: #FFFFFF;
-  --chart-1: #6366F1;
+  --warning-foreground: #141414;
+  --chart-1: #E6B450;
   --chart-2: #10B981;
   --chart-3: #F59E0B;
   --chart-4: #8B5CF6;
   --chart-5: #EF4444;
   --sidebar: #FFFFFF;
-  --sidebar-foreground: #0F172A;
-  --sidebar-primary: #6366F1;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F1F5F9;
-  --sidebar-accent-foreground: #0F172A;
-  --sidebar-border: #E2E8F0;
-  --sidebar-ring: #6366F1;
+  --sidebar-foreground: #242424;
+  --sidebar-primary: #E6B450;
+  --sidebar-primary-foreground: #141414;
+  --sidebar-accent: #F1F1E7;
+  --sidebar-accent-foreground: #242424;
+  --sidebar-border: #E1E1D3;
+  --sidebar-ring: #E6B450;
 }
 
 /* Dark theme */
 .dark {
   color-scheme: dark;
-  --background: #0B0F1A;
-  --foreground: #F1F5F9;
-  --card: #111827;
-  --card-foreground: #F1F5F9;
-  --popover: #111827;
-  --popover-foreground: #F1F5F9;
-  --primary: #818CF8;
-  --primary-foreground: #0F172A;
-  --secondary: #1E293B;
-  --secondary-foreground: #E2E8F0;
-  --muted: #1E293B;
-  --muted-foreground: #94A3B8;
-  --accent: #1E1B4B;
-  --accent-foreground: #C7D2FE;
-  --destructive: #F87171;
-  --destructive-foreground: #0F172A;
-  --border: #1E293B;
-  --input: #1E293B;
-  --ring: #818CF8;
-  --success: #34D399;
-  --success-foreground: #0F172A;
-  --warning: #FBBF24;
-  --warning-foreground: #0F172A;
-  --chart-1: #818CF8;
-  --chart-2: #34D399;
-  --chart-3: #FBBF24;
-  --chart-4: #A78BFA;
-  --chart-5: #F87171;
-  --sidebar: #111827;
-  --sidebar-foreground: #F1F5F9;
-  --sidebar-primary: #818CF8;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #1E293B;
-  --sidebar-accent-foreground: #F1F5F9;
-  --sidebar-border: #1E293B;
-  --sidebar-ring: #818CF8;
+  /* Obsidian-like dark (charcoal surfaces + gold highlight) */
+  --background: #1E1E1E;
+  --foreground: #E6E6E6;
+  --card: #242424;
+  --card-foreground: #E6E6E6;
+  --popover: #242424;
+  --popover-foreground: #E6E6E6;
+  --primary: #E6B450;
+  --primary-foreground: #141414;
+  --secondary: #2A2A2A;
+  --secondary-foreground: #E6E6E6;
+  --muted: #2A2A2A;
+  --muted-foreground: #A1A1A1;
+  --accent: #333333;
+  --accent-foreground: #E6E6E6;
+  --destructive: #E06C75;
+  --destructive-foreground: #141414;
+  --border: #323232;
+  --input: #323232;
+  --ring: #E6B450;
+  --success: #48D597;
+  --success-foreground: #141414;
+  --warning: #E6B450;
+  --warning-foreground: #141414;
+  --chart-1: #E6B450;
+  --chart-2: #48D597;
+  --chart-3: #F59E0B;
+  --chart-4: #4CC9F0;
+  --chart-5: #E06C75;
+  --sidebar: #1B1B1B;
+  --sidebar-foreground: #E6E6E6;
+  --sidebar-primary: #E6B450;
+  --sidebar-primary-foreground: #141414;
+  --sidebar-accent: #242424;
+  --sidebar-accent-foreground: #E6E6E6;
+  --sidebar-border: #2A2A2A;
+  --sidebar-ring: #E6B450;
 }
 
 @layer base {
@@ -210,14 +212,14 @@
 
 /* Soft gradient text utility */
 .text-gradient {
-  background: linear-gradient(135deg, var(--primary), #8B5CF6);
+  background: linear-gradient(135deg, var(--primary), #4CC9F0);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .dark .text-gradient {
-  background: linear-gradient(135deg, var(--primary), #A78BFA);
+  background: linear-gradient(135deg, var(--primary), #48D597);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

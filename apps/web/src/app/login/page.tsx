@@ -83,12 +83,12 @@ function LoginForm() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-50 via-background to-violet-50 dark:from-indigo-950/30 dark:via-background dark:to-violet-950/30 p-4 relative overflow-hidden">
+    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-primary/10 via-background to-background p-4 relative overflow-hidden">
       {/* Decorative background orbs */}
-      <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] rounded-full bg-primary/[0.04] blur-3xl animate-float will-change-transform" style={{ animationDuration: '8s' }} />
-      <div className="absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] rounded-full bg-violet-500/[0.04] blur-3xl animate-float will-change-transform" style={{ animationDuration: '10s', animationDelay: '3s' }} />
-      <div className="absolute top-[30%] right-[15%] w-[250px] h-[250px] rounded-full bg-indigo-400/[0.03] blur-2xl animate-float will-change-transform" style={{ animationDuration: '12s' }} />
-      <div className="absolute bottom-[30%] left-[10%] w-[200px] h-[200px] rounded-full bg-violet-400/[0.03] blur-2xl animate-float will-change-transform" style={{ animationDuration: '14s', animationDelay: '2s' }} />
+      <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] rounded-full bg-primary/4 blur-3xl animate-float will-change-transform" style={{ animationDuration: '8s' }} />
+      <div className="absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] rounded-full bg-primary/4 blur-3xl animate-float will-change-transform" style={{ animationDuration: '10s', animationDelay: '3s' }} />
+      <div className="absolute top-[30%] right-[15%] w-[250px] h-[250px] rounded-full bg-primary/3 blur-2xl animate-float will-change-transform" style={{ animationDuration: '12s' }} />
+      <div className="absolute bottom-[30%] left-[10%] w-[200px] h-[200px] rounded-full bg-primary/3 blur-2xl animate-float will-change-transform" style={{ animationDuration: '14s', animationDelay: '2s' }} />
 
       {/* Theme & language controls */}
       <div className="absolute top-4 z-20 flex items-center gap-2 ltr:right-4 rtl:left-4">
@@ -117,7 +117,7 @@ function LoginForm() {
 
       <Card className="w-full max-w-md shadow-2xl border-border/30 backdrop-blur-sm relative z-10 overflow-hidden">
         {/* Top gradient strip */}
-        <div className="h-1 w-full bg-gradient-to-r from-primary via-violet-500 to-primary" />
+        <div className="h-1 w-full bg-linear-to-r from-primary via-primary/70 to-primary" />
         <CardHeader className="text-center pb-2">
           <div className="flex justify-center mb-4">
             <div className="relative">

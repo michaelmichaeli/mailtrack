@@ -96,9 +96,17 @@
 - **Fix**: Extracted comprehensive version to `apps/api/src/services/package-sync.service.ts`, both routes now import from it
 - **Files**: `apps/api/src/services/package-sync.service.ts` (new), `apps/api/src/routes/packages.routes.ts`, `apps/api/src/routes/ingest.routes.ts`
 
+## Session 2026-03-19 — Obsidian-Like Design System Refresh
+
+- Updated global theme tokens in `apps/web/src/app/globals.css` for an Obsidian-like dark palette (charcoal + gold highlight).
+- Updated visible entry views to remove hardcoded indigo/violet/gray styling:
+  - `apps/web/src/app/login/page.tsx`
+  - `apps/web/src/app/map/page.tsx` (popup text/borders and related class shorthands)
+- **Status**: Foundation done; remaining UI components still need the Obsidian look.
+
 ## Tasks In Progress
 
-- None
+- Obsidian-like design system pass across remaining UI components (colors, spacing, gradients) — in progress
 
 ## Session 2026-03-12 — New Tasks Completed
 

@@ -5,6 +5,21 @@
 
 ---
 
+## 2026-03-19 — Obsidian-Like Design System Refresh
+
+### Changes
+- Updated global theme tokens in `apps/web/src/app/globals.css` to use an Obsidian-like dark palette (charcoal surfaces + gold highlight).
+- Updated visible entry views to remove hardcoded indigo/violet/gray styling:
+  - `apps/web/src/app/login/page.tsx`
+  - `apps/web/src/app/map/page.tsx` (popup text/borders + small layout class shorthands)
+
+### Files Changed
+- `apps/web/src/app/globals.css`
+- `apps/web/src/app/login/page.tsx`
+- `apps/web/src/app/map/page.tsx`
+
+---
+
 ## 2026-03-07 — Next.js 16 Upgrade (Turbopack, React 19)
 
 ### Problem

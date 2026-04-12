@@ -387,26 +387,26 @@ export default function MapPage() {
                       <span className="font-bold text-base">{loc.merchant || loc.carrier}</span>
                     </div>
                     {loc.items && (
-                      <p className="text-xs text-gray-500 line-clamp-1">{loc.items}</p>
+                      <p className="text-xs text-muted-foreground/70 line-clamp-1">{loc.items}</p>
                     )}
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground/70">
                       <MapPin className="h-3 w-3 shrink-0" />
                       <span>{loc.location}</span>
                     </div>
-                    <div className="flex items-center justify-between pt-1.5 border-t border-gray-100">
+                    <div className="flex items-center justify-between pt-1.5 border-t border-border/40">
                       <span
                         className="text-xs font-semibold px-2 py-0.5 rounded-full text-white"
                         style={{ backgroundColor: STATUS_COLORS[loc.status] }}
                       >
                         {t(`status.${loc.status}` as any)}
                       </span>
-                      <span className="text-[11px] text-gray-400">
+                      <span className="text-[11px] text-muted-foreground/70">
                         {new Date(loc.timestamp).toLocaleDateString()}
                       </span>
                     </div>
                     <a
                       href={`/orders/${loc.orderId}`}
-                      className="flex items-center justify-center gap-1.5 w-full mt-2 py-1.5 rounded-lg bg-primary text-white text-xs font-medium"
+                      className="flex items-center justify-center gap-1.5 w-full mt-2 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium"
                     >
                       <ExternalLink className="h-3 w-3" />
                       {t("map.viewPackage")}
@@ -420,7 +420,7 @@ export default function MapPage() {
       )}
 
       {/* ===== FLOATING HEADER (top-left) ===== */}
-      <div className="absolute top-3 left-3 right-3 z-[1000] pointer-events-none">
+      <div className="absolute top-3 left-3 right-3 z-1000 pointer-events-none">
         <div className="flex items-start justify-between gap-2">
           <div className={`${glassStyle} rounded-xl px-4 py-2.5 pointer-events-auto`}>
             <h1 className="text-base font-bold tracking-tight text-foreground">{t("map.title")}</h1>
@@ -440,7 +440,7 @@ export default function MapPage() {
       </div>
 
       {/* ===== FLOATING FILTER CHIPS (below header) ===== */}
-      <div className="absolute top-[4.5rem] left-3 right-3 z-[1000] pointer-events-none">
+      <div className="absolute top-18 left-3 right-3 z-1000 pointer-events-none">
         <div className="flex gap-1.5 overflow-x-auto pb-1 pointer-events-auto no-scrollbar">
           {ALL_STATUSES.map((status) => {
             const count = statusCounts[status] || 0;
@@ -472,7 +472,7 @@ export default function MapPage() {
       </div>
 
       {/* ===== FLOATING ACTION BUTTONS (right side) ===== */}
-      <div className="absolute right-3 md:right-[22rem] bottom-[5.5rem] md:bottom-6 z-[1000] flex flex-col gap-2 pointer-events-auto">
+      <div className="absolute right-3 md:right-88 bottom-22 md:bottom-6 z-1000 flex flex-col gap-2 pointer-events-auto">
         {/* My Location */}
         <button
           onClick={handleLocateMe}
@@ -503,7 +503,7 @@ export default function MapPage() {
 
       {/* ===== LEGEND PANEL (floating) ===== */}
       {showLegend && (
-        <div className={`absolute left-3 bottom-[5.5rem] md:bottom-6 z-[1000] ${glassStyle} rounded-xl p-3 w-52 pointer-events-auto`}>
+        <div className={`absolute left-3 bottom-22 md:bottom-6 z-1000 ${glassStyle} rounded-xl p-3 w-52 pointer-events-auto`}>
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-bold text-foreground">{t("map.legendTitle")}</p>
             <button onClick={() => setShowLegend(false)} className="p-0.5 rounded active:bg-muted">
@@ -537,9 +537,9 @@ export default function MapPage() {
 
       {/* ===== BOTTOM SHEET / SIDE PANEL ===== */}
       {/* Mobile: bottom drawer */}
-      <div className="md:hidden absolute bottom-0 left-0 right-0 z-[1000] pointer-events-auto">
+      <div className="md:hidden absolute bottom-0 left-0 right-0 z-1000 pointer-events-auto">
         <div className={`${glassStyle} rounded-t-2xl border-b-0 transition-all duration-300 ${
-          panelOpen ? "max-h-[60vh]" : "max-h-[4.5rem]"
+          panelOpen ? "max-h-[60vh]" : "max-h-18"
         }`}>
           {/* Drag handle */}
           <button
@@ -596,7 +596,7 @@ export default function MapPage() {
       </div>
 
       {/* Desktop: side panel */}
-      <div className="hidden md:block absolute top-28 right-3 bottom-6 z-[1000] w-80 pointer-events-auto">
+      <div className="hidden md:block absolute top-28 right-3 bottom-6 z-1000 w-80 pointer-events-auto">
         <div className={`${glassStyle} rounded-xl h-full flex flex-col`}>
           <div className="px-4 pt-3 pb-2 flex items-center justify-between border-b border-border/40">
             <div className="flex items-center gap-2">
@@ -611,7 +611,7 @@ export default function MapPage() {
           <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {filteredLocations.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center px-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 to-violet-500/10 mb-3">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br from-primary/10 to-violet-500/10 mb-3">
                   <Package className="h-6 w-6 text-primary/30" />
                 </div>
                 {allLocations.length > 0 ? (
