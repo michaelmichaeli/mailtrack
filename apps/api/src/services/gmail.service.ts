@@ -1,4 +1,4 @@
-import { google } from "googleapis";
+import { google, type Auth } from "googleapis";
 import type { FastifyInstance } from "fastify";
 import { decrypt } from "../lib/encryption.js";
 
@@ -33,7 +33,7 @@ export function getGmailAuthUrl(userToken: string, returnTo?: string): string {
 /**
  * Exchange Gmail auth code for tokens.
  */
-export async function exchangeGmailCode(code: string) {
+export async function exchangeGmailCode(code: string): Promise<Auth.Credentials> {
   const oauth2Client = getOAuth2Client();
   const { tokens } = await oauth2Client.getToken(code);
   return tokens;
