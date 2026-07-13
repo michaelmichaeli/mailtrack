@@ -82,3 +82,30 @@ export const JWT_CONFIG = {
   refreshTokenExpiry: "30d",
   issuer: "mailtrack",
 } as const;
+
+// Merchant string → ShopPlatform mapping. Single source of truth for both
+// API ingest and web/mobile parsers.
+const SHOP_PLATFORM_KEYWORDS: ReadonlyArray<readonly [string, string]> = [
+  ["AMAZON", "AMAZON"],
+  ["ALIEXPRESS", "ALIEXPRESS"],
+  ["EBAY", "EBAY"],
+  ["IHERB", "IHERB"],
+  ["SHEIN", "SHEIN"],
+  ["TEMU", "TEMU"],
+  ["ETSY", "ETSY"],
+  ["WALMART", "WALMART"],
+  ["SHOPIFY", "SHOPIFY"],
+  ["ZARA", "ZARA"],
+  ["ASOS", "ASOS"],
+  ["NEXT", "NEXT"],
+  ["HM", "HM"],
+];
+
+export function detectShopPlatform(store?: string | null): string {
+  if (!store) return "UNKNOWN";
+  const s = store.toUpperCase();
+  for (const [needle, platform] of SHOP_PLATFORM_KEYWORDS) {
+    if (s.includes(needle)) return platform;
+  }
+  return "UNKNOWN";
+}

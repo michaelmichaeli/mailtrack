@@ -195,8 +195,10 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     });
   }
 
-  // POST /api/auth/login — Social login (Google/Apple)
-  app.post("/login", async (request, reply) => {
+  // POST /api/auth/login — Social login (Google/Apple). Rate-limited.
+  app.post("/login", {
+    config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
+  }, async (request, reply) => {
     const body = loginSchema.parse(request.body);
 
     let email: string;
@@ -443,8 +445,10 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     return options;
   });
 
-  // POST /api/auth/passkey/login — Verify passkey and login (unauthenticated)
-  app.post("/passkey/login", async (request, reply) => {
+  // POST /api/auth/passkey/login — Verify passkey and login (unauthenticated). Rate-limited.
+  app.post("/passkey/login", {
+    config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
+  }, async (request, reply) => {
     const body = request.body as any;
 
     const passkey = await app.prisma.passkey.findUnique({
@@ -538,8 +542,10 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     return { success: true };
   });
 
-  // POST /api/auth/refresh — Refresh access token
-  app.post("/refresh", async (request, reply) => {
+  // POST /api/auth/refresh — Refresh access token. Rate-limited.
+  app.post("/refresh", {
+    config: { rateLimit: { max: 30, timeWindow: "1 minute" } },
+  }, async (request, reply) => {
     const refreshToken =
       (request.cookies as any)?.refreshToken ??
       (request.body as any)?.refreshToken;

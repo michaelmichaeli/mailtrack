@@ -1,7 +1,71 @@
 import type { FastifyPluginAsync } from "fastify";
-import { searchParamsSchema } from "@mailtrack/shared";
-import { trackPackage } from "../services/tracking.service.js";
+import {
+  searchParamsSchema,
+  scanTextBodySchema,
+  addPackageBodySchema,
+} from "@mailtrack/shared";
+import { trackPackage, clearRateLimits } from "../services/tracking.service.js";
 import { syncPackageFromResult } from "../services/package-sync.service.js";
+import { extractTrackingNumbers, detectCarrier } from "../lib/carrier-detect.js";
+import { isIsraelPostPackage, trackIsraelPostBatch } from "../services/israelpost.service.js";
+import { enrichPickupLocation } from "../services/places.service.js";
+import * as track17 from "../services/tracking17.service.js";
+
+// ─── Sync job state (Redis-backed) ────────────────────────────────────────
+//
+// Replaces the previous in-memory Map so that:
+//   1. Status survives a restart.
+//   2. Multiple API instances see the same job state behind a load balancer.
+//   3. Multiple sync-all calls from the same user don't race the cleanup
+//      timer or produce stale state.
+
+type SyncJobState = {
+  status: "running" | "done" | "error";
+  synced: number;
+  errors: number;
+  total: number;
+  message?: string;
+  updatedAt: number;
+};
+
+const SYNC_JOB_TTL_SECONDS = 5 * 60; // matches the previous "clean up after 5 minutes"
+const syncJobKey = (userId: string) => `mailtrack:sync-job:${userId}`;
+
+async function readSyncJob(redis: any, userId: string): Promise<SyncJobState | null> {
+  try {
+    const raw = await redis.get(syncJobKey(userId));
+    return raw ? (JSON.parse(raw) as SyncJobState) : null;
+  } catch {
+    return null;
+  }
+}
+async function writeSyncJob(redis: any, userId: string, state: SyncJobState): Promise<void> {
+  try {
+    await redis.set(
+      syncJobKey(userId),
+      JSON.stringify({ ...state, updatedAt: Date.now() }),
+      "EX",
+      SYNC_JOB_TTL_SECONDS
+    );
+  } catch {
+    // Redis unavailable — sync still runs, status reads will return idle.
+  }
+}
+async function deleteSyncJob(redis: any, userId: string): Promise<void> {
+  try { await redis.del(syncJobKey(userId)); } catch {}
+}
+
+// Known-bad location patterns (extracted from descriptions, not real places)
+const BAD_LOCATION_PATTERNS = /\b(customs|warehouse|designated location|transit|sorting center|departed|arrived|received|collected|carrier|canada|vancouver|toronto|montreal|china|shenzhen|guangzhou|shanghai|beijing|shatian|dongguan|yiwu|hangzhou|united states|new york|los angeles|chicago|germany|berlin|munich|france|paris|uk|london|netherlands|amsterdam|russia|moscow)\b/i;
+
+// For Israeli packages: only accept locations with Hebrew chars or known Israeli city names
+const ISRAELI_LOCATION_VALID = /[֐-׿]|israel|tel\s*aviv|jerusalem|haifa|beer\s*sheva|ashdod|ashkelon|netanya|herzliya|ramat\s*gan|petah\s*tikva|rishon|holon|bat\s*yam|rehovot|kfar\s*saba|modi.in|eilat|tiberias|nazareth|acre|akko|nahariya|kiryat|raanana|givatayim|bnei\s*brak|lod|ramla|arad|dimona|yavne|or\s*yehuda|rosh\s*ha.ain/i;
+
+const STATUS_DEDUP_WINDOW_MS = 6 * 60 * 60 * 1000;
+const SCAN_TEXT_PATTERNS = [
+  /(?:tracking|shipment|parcel|package|delivery)\s*(?:#|number|no\.?|:)?\s*[:.]?\s*([A-Z0-9]{8,30})/gi,
+  /(?:track(?:ing)?|מעקב|משלוח)\s*[:.]?\s*([A-Z0-9]{8,30})/gi,
+];
 
 export const packageRoutes: FastifyPluginAsync = async (app) => {
   // GET /api/packages — List orders with their packages (search/filter)
@@ -111,7 +175,7 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
     preHandler: [app.authenticate],
   }, async (request) => {
     const userId = request.user.userId;
-    const job = syncJobs.get(userId);
+    const job = await readSyncJob(app.redis, userId);
     if (!job) return { status: "idle", synced: 0, errors: 0, total: 0 };
     return job;
   });
@@ -192,13 +256,10 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
     }
 
     // Always clean up bad locations on existing events
-    await cleanupBadLocations(app.prisma, id);
+    await cleanupBadLocations(app.prisma, id, app.log);
 
     return { success: true, updated: !!result };
   });
-
-  // Sync progress tracking (in-memory, per-user)
-  const syncJobs = new Map<string, { status: "running" | "done" | "error"; synced: number; errors: number; total: number; message?: string }>();
 
   // POST /api/packages/sync-all — Start background sync, return immediately
   app.post("/sync-all", {
@@ -207,12 +268,11 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
     const userId = request.user.userId;
 
     // If already running for this user, return current status
-    const existing = syncJobs.get(userId);
+    const existing = await readSyncJob(app.redis, userId);
     if (existing?.status === "running") {
-      return { success: true, ...existing, status: "running" };
+      return { success: true, ...existing };
     }
 
-    const { clearRateLimits } = await import("../services/tracking.service.js");
     clearRateLimits();
 
     const packages = await app.prisma.package.findMany({
@@ -221,30 +281,43 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
     });
 
     // Initialize progress
-    syncJobs.set(userId, { status: "running", synced: 0, errors: 0, total: packages.length });
+    await writeSyncJob(app.redis, userId, {
+      status: "running",
+      synced: 0,
+      errors: 0,
+      total: packages.length,
+      updatedAt: Date.now(),
+    });
 
-    // Run sync in background (don't await)
+    // Run sync in background (don't await). Local counters batched to Redis
+    // periodically so a crash doesn't lose progress visibility.
     (async () => {
-      const job = syncJobs.get(userId)!;
-      let use17track = true;
-      let track17Batch: any, convert17TrackResult: any, closeBrowser: any;
+      let synced = 0;
+      let errors = 0;
+      let lastFlush = 0;
+      const flushProgress = async (force = false) => {
+        const now = Date.now();
+        if (force || now - lastFlush > 1000) {
+          await writeSyncJob(app.redis, userId, {
+            status: "running",
+            synced,
+            errors,
+            total: packages.length,
+            updatedAt: now,
+          });
+          lastFlush = now;
+        }
+      };
 
-      try {
-        const mod = await import("../services/tracking17.service.js");
-        track17Batch = mod.track17Batch;
-        convert17TrackResult = mod.convert17TrackResult;
-        closeBrowser = mod.closeBrowser;
-      } catch {
-        use17track = false;
-        console.log("[sync-all] 17track unavailable, using direct APIs only");
-      }
+      let use17track = true;
 
       // Split packages: Israel Post vs others
-      const { isIsraelPostPackage, trackIsraelPostBatch } = await import("../services/israelpost.service.js");
       const israelPostPkgs = packages.filter((p) => isIsraelPostPackage(p.trackingNumber, p.carrier));
       const otherPkgs = packages.filter((p) => !isIsraelPostPackage(p.trackingNumber, p.carrier));
 
-      console.log(`[sync-all] ${israelPostPkgs.length} Israel Post + ${otherPkgs.length} other packages`);
+      app.log.info(
+        `[sync-all] ${israelPostPkgs.length} Israel Post + ${otherPkgs.length} other packages for user ${userId}`
+      );
 
       // Run Israel Post and 17track in parallel
       const israelPostPromise = (async () => {
@@ -258,34 +331,35 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
               const result = results.get(pkg.trackingNumber);
               if (result) {
                 await syncPackageFromResult(app.prisma, pkg.id, result);
-                job.synced++;
-                console.log(`[sync-all] ✓ ${pkg.trackingNumber} (israelpost): ${result.events.length} events`);
+                synced++;
               } else {
                 // Fallback: try 17track with location stripping
                 const fallback = await trackPackage(pkg.trackingNumber, pkg.carrier as any, true);
                 if (fallback) {
                   await syncPackageFromResult(app.prisma, pkg.id, fallback);
-                  job.synced++;
+                  synced++;
                 }
               }
+              await flushProgress();
             } catch (e: any) {
-              job.errors++;
-              console.error(`[sync-all] Error syncing ${pkg.trackingNumber}:`, e?.message);
+              errors++;
+              app.log.error(`[sync-all] Error syncing ${pkg.trackingNumber}: ${e?.message}`);
             }
           }
         } catch (e: any) {
-          console.error("[sync-all] Israel Post batch error:", e?.message);
+          app.log.error(`[sync-all] Israel Post batch error: ${e?.message}`);
           // Fallback: try each individually via trackPackage
           for (const pkg of israelPostPkgs) {
             try {
               const fallback = await trackPackage(pkg.trackingNumber, pkg.carrier as any, true);
               if (fallback) {
                 await syncPackageFromResult(app.prisma, pkg.id, fallback);
-                job.synced++;
+                synced++;
               }
-            } catch (e2: any) {
-              job.errors++;
+            } catch {
+              errors++;
             }
+            await flushProgress();
           }
         }
       })();
@@ -296,14 +370,16 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
         for (let i = 0; i < otherPkgs.length; i += batchSize) {
           const batch = otherPkgs.slice(i, i + batchSize);
 
-          let results17 = new Map();
+          let results17 = new Map<string, any>();
           if (use17track) {
             try {
               const trackingNumbers = batch.map((p) => p.trackingNumber);
-              console.log(`[sync-all] 17track batch ${Math.floor(i / batchSize) + 1}: ${trackingNumbers.join(", ")}`);
-              results17 = await track17Batch(trackingNumbers);
+              app.log.debug(
+                `[sync-all] 17track batch ${Math.floor(i / batchSize) + 1}: ${trackingNumbers.join(", ")}`
+              );
+              results17 = await track17.track17Batch(trackingNumbers);
             } catch (e: any) {
-              console.log(`[sync-all] 17track batch failed, falling back to Cainiao: ${e?.message}`);
+              app.log.warn(`[sync-all] 17track batch failed, falling back: ${e?.message}`);
               use17track = false;
             }
           }
@@ -312,22 +388,22 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
             try {
               const shipment = results17.get(pkg.trackingNumber);
               if (shipment?.shipment) {
-                const result = convert17TrackResult(shipment, pkg.carrier as any);
+                const result = track17.convert17TrackResult(shipment, pkg.carrier as any);
                 await syncPackageFromResult(app.prisma, pkg.id, result);
-                job.synced++;
-                console.log(`[sync-all] ✓ ${pkg.trackingNumber}: ${result.events.length} events`);
+                synced++;
               } else {
                 const fallback = await trackPackage(pkg.trackingNumber, pkg.carrier as any, true);
                 if (fallback) {
                   await syncPackageFromResult(app.prisma, pkg.id, fallback);
-                  job.synced++;
+                  synced++;
                 }
               }
             } catch (e: any) {
-              job.errors++;
-              console.error(`[sync-all] Error syncing ${pkg.trackingNumber}:`, e?.message);
+              errors++;
+              app.log.error(`[sync-all] Error syncing ${pkg.trackingNumber}: ${e?.message}`);
             }
           }
+          await flushProgress();
 
           if (i + batchSize < otherPkgs.length) {
             await new Promise((r) => setTimeout(r, 500));
@@ -336,44 +412,76 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
       })();
 
       // Wait for both pools to finish
-      await Promise.allSettled([israelPostPromise, otherPromise]);
+      const settled = await Promise.allSettled([israelPostPromise, otherPromise]);
+      const failures = settled
+        .filter((r): r is PromiseRejectedResult => r.status === "rejected")
+        .map((r) => (r.reason instanceof Error ? r.reason.message : String(r.reason)));
 
-      if (closeBrowser) { try { await closeBrowser(); } catch {} }
+      try { await track17.closeBrowser(); } catch {}
 
       // Clean up bad locations across all packages
       for (const pkg of packages) {
-        try { await cleanupBadLocations(app.prisma, pkg.id); } catch {}
+        try { await cleanupBadLocations(app.prisma, pkg.id, app.log); } catch {}
       }
 
       // Enrich pickup locations
       try {
-        const { enrichPickupLocation } = await import("../services/places.service.js");
         const pkgsWithPickup = await app.prisma.package.findMany({
           where: { order: { userId }, pickupLocation: { not: null } },
           select: { id: true, pickupLocation: true, trackingNumber: true },
         });
         for (const p of pkgsWithPickup) {
-          const pickup = typeof p.pickupLocation === "string" ? JSON.parse(p.pickupLocation) : p.pickupLocation;
+          let pickup: any = p.pickupLocation;
+          if (typeof pickup === "string") {
+            try { pickup = JSON.parse(pickup); } catch (err) {
+              app.log.warn(`[sync-all] bad pickupLocation JSON on ${p.trackingNumber}: ${(err as Error).message}`);
+              continue;
+            }
+          }
           if (pickup && !pickup.hours && (pickup.name || pickup.address)) {
             const enriched = await enrichPickupLocation(pickup);
             if (enriched?.hours) {
-              await app.prisma.package.update({ where: { id: p.id }, data: { pickupLocation: JSON.stringify(enriched) } });
-              console.log(`[sync-all] Enriched pickup for ${p.trackingNumber}: ${enriched.name}`);
+              await app.prisma.package.update({
+                where: { id: p.id },
+                data: { pickupLocation: JSON.stringify(enriched) },
+              });
+              app.log.info(`[sync-all] Enriched pickup for ${p.trackingNumber}: ${enriched.name}`);
             }
           }
         }
       } catch (e: any) {
-        console.error("[sync-all] Pickup enrichment error:", e?.message);
+        app.log.error(`[sync-all] Pickup enrichment error: ${e?.message}`);
       }
 
-      job.status = "done";
-      console.log(`[sync-all] Complete: ${job.synced} synced, ${job.errors} errors, ${job.total} total`);
-      // Clean up after 5 minutes
-      setTimeout(() => syncJobs.delete(userId), 5 * 60 * 1000);
-    })().catch((e) => {
-      const job = syncJobs.get(userId);
-      if (job) { job.status = "error"; job.message = e?.message; }
-      console.error("[sync-all] Fatal error:", e);
+      // Final write — surface partial-failure messages so users polling sync-status see them.
+      const finalState: SyncJobState = failures.length
+        ? {
+            status: "error",
+            synced,
+            errors: errors + failures.length,
+            total: packages.length,
+            message: failures.join("; "),
+            updatedAt: Date.now(),
+          }
+        : { status: "done", synced, errors, total: packages.length, updatedAt: Date.now() };
+
+      await writeSyncJob(app.redis, userId, finalState);
+      app.log.info(
+        `[sync-all] Complete for ${userId}: ${synced} synced, ${finalState.errors} errors, ${packages.length} total`
+      );
+
+      // Drop the job from Redis after the TTL elapses naturally — no setTimeout needed.
+      setTimeout(() => { void deleteSyncJob(app.redis, userId); }, SYNC_JOB_TTL_SECONDS * 1000).unref();
+    })().catch(async (e) => {
+      app.log.error(e, "[sync-all] Fatal error");
+      await writeSyncJob(app.redis, userId, {
+        status: "error",
+        synced: 0,
+        errors: 0,
+        total: packages.length,
+        message: e?.message ?? "fatal",
+        updatedAt: Date.now(),
+      });
     });
 
     return { success: true, status: "running", synced: 0, errors: 0, total: packages.length };
@@ -384,23 +492,18 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
     preHandler: [app.authenticate],
   }, async (request, reply) => {
     const userId = request.user.userId;
-    const { text } = request.body as { text: string };
 
-    if (!text?.trim()) {
-      return reply.status(400).send({ error: "Text is required" });
+    const parsed = scanTextBodySchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: "Text is required", details: parsed.error.flatten() });
     }
+    const { text } = parsed.data;
 
-    const { extractTrackingNumbers, detectCarrier } = await import("../lib/carrier-detect.js");
     const found = extractTrackingNumbers(text);
 
     // Also try broader patterns for common SMS formats
-    const smsPatterns = [
-      /(?:tracking|shipment|parcel|package|delivery)\s*(?:#|number|no\.?|:)?\s*[:.]?\s*([A-Z0-9]{8,30})/gi,
-      /(?:track(?:ing)?|מעקב|משלוח)\s*[:.]?\s*([A-Z0-9]{8,30})/gi,
-    ];
-
     const seen = new Set(found.map((f) => f.trackingNumber));
-    for (const pattern of smsPatterns) {
+    for (const pattern of SCAN_TEXT_PATTERNS) {
       let match;
       while ((match = pattern.exec(text)) !== null) {
         const tn = match[1].toUpperCase();
@@ -413,19 +516,29 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
       }
     }
 
-    // Check which are already tracked
-    const results = [];
-    for (const item of found) {
-      const existing = await app.prisma.package.findFirst({
-        where: { trackingNumber: item.trackingNumber, order: { userId } },
-      });
-      results.push({
-        trackingNumber: item.trackingNumber,
-        carrier: item.carrier,
-        alreadyTracked: !!existing,
-        packageId: existing?.id ?? null,
-      });
+    if (found.length === 0) {
+      return { found: [], total: 0 };
     }
+
+    // BATCHED existence check — was N+1 (one findFirst per tracking number).
+    const trackingNumbers = found.map((f) => f.trackingNumber);
+    const existing = await app.prisma.package.findMany({
+      where: {
+        trackingNumber: { in: trackingNumbers },
+        order: { userId },
+      },
+      select: { id: true, trackingNumber: true },
+    });
+    const existingByTn = new Map<string, string>(
+      existing.map((p: any) => [p.trackingNumber, p.id])
+    );
+
+    const results = found.map((item) => ({
+      trackingNumber: item.trackingNumber,
+      carrier: item.carrier,
+      alreadyTracked: existingByTn.has(item.trackingNumber),
+      packageId: existingByTn.get(item.trackingNumber) ?? null,
+    }));
 
     return { found: results, total: results.length };
   });
@@ -435,16 +548,12 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
     preHandler: [app.authenticate],
   }, async (request, reply) => {
     const userId = request.user.userId;
-    const { trackingNumber, carrier, description } = request.body as {
-      trackingNumber: string;
-      carrier?: string;
-      description?: string;
-    };
 
-    if (!trackingNumber?.trim()) {
-      return reply.status(400).send({ error: "Tracking number is required" });
+    const parsed = addPackageBodySchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: "Invalid body", details: parsed.error.flatten() });
     }
-
+    const { trackingNumber, carrier, description } = parsed.data;
     const tn = trackingNumber.trim().toUpperCase();
 
     // Check if already tracked
@@ -456,7 +565,6 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
     }
 
     // Auto-detect carrier if not provided
-    const { detectCarrier } = await import("../lib/carrier-detect.js");
     const detectedCarrier = carrier || detectCarrier(tn);
 
     // Create an order + package for the manual entry
@@ -488,21 +596,15 @@ export const packageRoutes: FastifyPluginAsync = async (app) => {
         await syncPackageFromResult(app.prisma, pkg.id, result);
       }
     } catch (e) {
-      console.error(`[add] Error fetching tracking for ${tn}:`, e);
+      app.log.error(`[add] Error fetching tracking for ${tn}: ${(e as Error).message}`);
     }
 
     return { success: true, orderId: order.id, packageId: pkg.id };
   });
 };
 
-// Known-bad location patterns (extracted from descriptions, not real places)
-const BAD_LOCATION_PATTERNS = /\b(customs|warehouse|designated location|transit|sorting center|departed|arrived|received|collected|carrier|canada|vancouver|toronto|montreal|china|shenzhen|guangzhou|shanghai|beijing|shatian|dongguan|yiwu|hangzhou|united states|new york|los angeles|chicago|germany|berlin|munich|france|paris|uk|london|netherlands|amsterdam|russia|moscow)\b/i;
-
-// For Israeli packages: only accept locations with Hebrew chars or known Israeli city names
-const ISRAELI_LOCATION_VALID = /[\u0590-\u05FF]|israel|tel\s*aviv|jerusalem|haifa|beer\s*sheva|ashdod|ashkelon|netanya|herzliya|ramat\s*gan|petah\s*tikva|rishon|holon|bat\s*yam|rehovot|kfar\s*saba|modi.in|eilat|tiberias|nazareth|acre|akko|nahariya|kiryat|raanana|givatayim|bnei\s*brak|lod|ramla|arad|dimona|yavne|or\s*yehuda|rosh\s*ha.ain/i;
-
 /** Clean up events with bad locations that were incorrectly extracted from descriptions */
-async function cleanupBadLocations(prisma: any, packageId: string) {
+async function cleanupBadLocations(prisma: any, packageId: string, log: { warn: (msg: string) => void }) {
   const pkg = await prisma.package.findUnique({ where: { id: packageId }, select: { carrier: true } });
   const isIsraeliPackage = pkg?.carrier === "ISRAEL_POST";
 
@@ -540,8 +642,14 @@ async function cleanupBadLocations(prisma: any, packageId: string) {
   // but no real pickup data from the carrier API)
   const pkgForPickup = await prisma.package.findUnique({ where: { id: packageId }, select: { pickupLocation: true } });
   if (pkgForPickup?.pickupLocation) {
-    let pl = pkgForPickup.pickupLocation;
-    if (typeof pl === "string") try { pl = JSON.parse(pl); } catch { pl = null; }
+    let pl: any = pkgForPickup.pickupLocation;
+    if (typeof pl === "string") {
+      try { pl = JSON.parse(pl); }
+      catch (err) {
+        log.warn(`[cleanup] bad pickupLocation JSON on ${packageId}: ${(err as Error).message}`);
+        pl = null;
+      }
+    }
     if (pl && typeof pl === "object" && !pl.carrierOnly) {
       // If it has lat/lng from Google Places but no pickupCode, it was fabricated
       const hasCoords = pl.lat || pl.lng;
@@ -579,50 +687,53 @@ async function cleanupBadLocations(prisma: any, packageId: string) {
   await deduplicateEvents(prisma, packageId);
 }
 
-/** Remove duplicate events — keep the one with richer data (location or longer description) */
+/**
+ * Remove duplicate events — keep the one with richer data (location or longer description).
+ *
+ * Was O(n²) with `Array.includes` for the "already deleted" check; now uses a
+ * Set for O(1) lookups, making this comfortably linear in practice.
+ */
 async function deduplicateEvents(prisma: any, packageId: string) {
   const events = await prisma.trackingEvent.findMany({
     where: { packageId },
     orderBy: { timestamp: "asc" },
   });
 
-  const toDelete: string[] = [];
-  const STATUS_WINDOW = 6 * 60 * 60 * 1000;
+  const toDelete = new Set<string>();
 
   for (let i = 0; i < events.length; i++) {
-    if (toDelete.includes(events[i].id)) continue;
+    if (toDelete.has(events[i].id)) continue;
     for (let j = i + 1; j < events.length; j++) {
-      if (toDelete.includes(events[j].id)) continue;
+      if (toDelete.has(events[j].id)) continue;
       if (events[i].status !== events[j].status) continue;
-      const timeDiff = Math.abs(new Date(events[i].timestamp).getTime() - new Date(events[j].timestamp).getTime());
-      if (timeDiff > STATUS_WINDOW) continue;
+      const timeDiff = Math.abs(
+        new Date(events[i].timestamp).getTime() - new Date(events[j].timestamp).getTime()
+      );
+      if (timeDiff > STATUS_DEDUP_WINDOW_MS) continue;
 
-      // Same status within time window — keep the one with better data
+      // Same status within time window — keep the one with better data.
       const iHasLoc = !!events[i].location;
       const jHasLoc = !!events[j].location;
       const iDescLen = events[i].description?.length ?? 0;
       const jDescLen = events[j].description?.length ?? 0;
 
       if (jHasLoc && !iHasLoc) {
-        toDelete.push(events[i].id);
+        toDelete.add(events[i].id);
         break; // i is deleted, move on
       } else if (iHasLoc && !jHasLoc) {
-        toDelete.push(events[j].id);
+        toDelete.add(events[j].id);
       } else if (jDescLen > iDescLen) {
-        toDelete.push(events[i].id);
+        toDelete.add(events[i].id);
         break;
       } else {
-        toDelete.push(events[j].id);
+        toDelete.add(events[j].id);
       }
     }
   }
 
-  if (toDelete.length > 0) {
+  if (toDelete.size > 0) {
     await prisma.trackingEvent.deleteMany({
-      where: { id: { in: toDelete } },
+      where: { id: { in: [...toDelete] } },
     });
-    console.log(`[cleanup] Removed ${toDelete.length} duplicate events for package ${packageId}`);
   }
 }
-
-

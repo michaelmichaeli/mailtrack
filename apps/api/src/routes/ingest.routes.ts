@@ -1,8 +1,19 @@
 import type { FastifyPluginAsync } from "fastify";
 import { randomBytes } from "crypto";
+import {
+  detectShopPlatform,
+  ingestSmsBodySchema,
+  ingestCsvBodySchema,
+} from "@mailtrack/shared";
 import { trackPackage } from "../services/tracking.service.js";
 import { syncPackageFromResult } from "../services/package-sync.service.js";
 import { notifyStatusChange } from "../services/notification.service.js";
+import { extractTrackingNumbers, detectCarrier } from "../lib/carrier-detect.js";
+
+// SMS pattern shared between SMS ingest and scan-text (Hebrew + English).
+const SMS_TRACKING_PATTERNS = [
+  /(?:tracking|shipment|parcel|package|delivery|מעקב|משלוח|המשלוח)\s*(?:#|number|no\.?|:)?\s*[:.]?\s*([A-Z0-9]{8,30})/gi,
+];
 
 /** Parse pickup location info from delivery SMS (Cheetah, Israel Post, etc.) */
 function parseSmsPickupInfo(text: string): {
@@ -54,6 +65,18 @@ function parseSmsPickupInfo(text: string): {
   return Object.keys(info).length > 0 ? info : null;
 }
 
+function safeParsePickup(raw: unknown, log: { warn: (msg: string) => void }): Record<string, any> {
+  if (!raw) return {};
+  if (typeof raw === "object") return raw as Record<string, any>;
+  if (typeof raw !== "string") return {};
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    log.warn(`[ingest] Failed to parse pickup location JSON: ${(err as Error).message}`);
+    return {};
+  }
+}
+
 /** Core SMS processing logic shared by GET and POST handlers */
 async function handleSmsIngest(app: any, key: string, text: string, source?: string) {
   const user = await app.prisma.user.findFirst({ where: { ingestKey: key } });
@@ -65,15 +88,11 @@ async function handleSmsIngest(app: any, key: string, text: string, source?: str
     return { status: 400, body: { error: "Missing SMS text" } };
   }
 
-  const { extractTrackingNumbers, detectCarrier } = await import("../lib/carrier-detect.js");
   const found = extractTrackingNumbers(text);
 
   // Also try broader SMS patterns (Hebrew delivery SMS)
-  const smsPatterns = [
-    /(?:tracking|shipment|parcel|package|delivery|מעקב|משלוח|המשלוח)\s*(?:#|number|no\.?|:)?\s*[:.]?\s*([A-Z0-9]{8,30})/gi,
-  ];
   const seen = new Set(found.map((f) => f.trackingNumber));
-  for (const pattern of smsPatterns) {
+  for (const pattern of SMS_TRACKING_PATTERNS) {
     let match;
     while ((match = pattern.exec(text)) !== null) {
       const tn = match[1].toUpperCase();
@@ -91,21 +110,30 @@ async function handleSmsIngest(app: any, key: string, text: string, source?: str
   // Parse pickup location info from SMS
   const pickupInfo = parseSmsPickupInfo(text);
 
+  // Batched lookup: one query for all tracking numbers we just extracted.
+  const trackingNumbers = found.map((f) => f.trackingNumber);
+  const existingPackages = await app.prisma.package.findMany({
+    where: {
+      trackingNumber: { in: trackingNumbers },
+      order: { userId: user.id },
+    },
+    include: { order: { select: { id: true } } },
+  });
+  const existingByTn = new Map<string, any>(
+    existingPackages.map((p: any) => [p.trackingNumber, p])
+  );
+
   let added = 0;
   let updated = 0;
   const results: Array<{ trackingNumber: string; carrier: string; status: string }> = [];
 
   for (const item of found) {
-    const existing = await app.prisma.package.findFirst({
-      where: { trackingNumber: item.trackingNumber, order: { userId: user.id } },
-      include: { order: { select: { id: true } } },
-    });
+    const existing = existingByTn.get(item.trackingNumber);
 
     if (existing) {
       // Update existing package with pickup info from SMS
       if (pickupInfo) {
-        let prev: Record<string, any> = {};
-        try { if (existing.pickupLocation) prev = JSON.parse(existing.pickupLocation as string); } catch {}
+        const prev = safeParsePickup(existing.pickupLocation, app.log);
         const pickup: Record<string, any> = {
           ...prev,
           ...(pickupInfo.storeName ? { name: pickupInfo.storeName } : {}),
@@ -217,24 +245,34 @@ export const ingestRoutes: FastifyPluginAsync = async (app) => {
   /**
    * POST /api/ingest/sms — accepts JSON body { text, source? }
    * GET  /api/ingest/sms  — accepts ?text= query param (for iOS Shortcuts)
-   * Auth: API key via ?key= query param or X-Ingest-Key header
+   *
+   * Auth: ingest API key.
+   *   PREFERRED: X-Ingest-Key header (does not leak in access logs / Referer).
+   *   ALSO ACCEPTED: ?key= query param — required by iOS Shortcuts and similar
+   *     callers that can't easily set headers. Tradeoff: keys may surface in
+   *     reverse-proxy access logs. Rotate aggressively if you use this form.
+   *
+   * Per-key rate limiting is applied: 60 req/min per ingest key.
    */
   const smsHandler = async (request: any, reply: any) => {
     const key =
-      (request.query as any)?.key ??
-      (request.headers as any)["x-ingest-key"];
+      (request.headers as any)["x-ingest-key"] ??
+      (request.query as any)?.key;
 
     if (!key) {
-      return reply.status(401).send({ error: "Missing ingest key. Pass ?key= or X-Ingest-Key header." });
+      return reply.status(401).send({ error: "Missing ingest key. Pass X-Ingest-Key header (preferred) or ?key=." });
     }
 
     // Accept text from: body.text (POST JSON), query.text (GET), or raw body string (POST plain text)
     let text: string | undefined;
     let source: string | undefined;
-    if (request.body && typeof request.body === 'object') {
-      text = (request.body as any).text;
-      source = (request.body as any).source;
-    } else if (typeof request.body === 'string') {
+    if (request.body && typeof request.body === "object") {
+      const parsed = ingestSmsBodySchema.partial().safeParse(request.body);
+      if (parsed.success) {
+        text = parsed.data.text;
+        source = parsed.data.source;
+      }
+    } else if (typeof request.body === "string") {
       text = request.body;
     }
     if (!text) {
@@ -243,15 +281,26 @@ export const ingestRoutes: FastifyPluginAsync = async (app) => {
 
     // Log for debugging (especially Apple Shortcuts)
     request.server.log.info(
-      `[ingest/sms] method=${request.method} content-type=${request.headers['content-type'] ?? 'none'} body-type=${typeof request.body} text-len=${text?.length ?? 0} has-text=${!!text}`
+      `[ingest/sms] method=${request.method} content-type=${request.headers["content-type"] ?? "none"} body-type=${typeof request.body} text-len=${text?.length ?? 0} has-text=${!!text}`
     );
 
-    const result = await handleSmsIngest(app, key, text ?? '', source);
+    const result = await handleSmsIngest(app, key, text ?? "", source);
     return reply.status(result.status).send(result.body);
   };
 
-  app.post("/sms", smsHandler);
-  app.get("/sms", smsHandler);
+  // Per-key rate limit: keyed by ingest key (header or query) so a leaked key
+  // can't be brute-forced or abused without limit.
+  const smsRateLimitConfig = {
+    rateLimit: {
+      max: 60,
+      timeWindow: "1 minute",
+      keyGenerator: (req: any) =>
+        req.headers["x-ingest-key"] ?? req.query?.key ?? req.ip,
+    },
+  };
+
+  app.post("/sms", { config: smsRateLimitConfig }, smsHandler);
+  app.get("/sms", { config: smsRateLimitConfig }, smsHandler);
 
   /**
    * POST /api/ingest/csv
@@ -261,44 +310,63 @@ export const ingestRoutes: FastifyPluginAsync = async (app) => {
    */
   app.post("/csv", {
     preHandler: [app.authenticate],
-  }, async (request) => {
+  }, async (request, reply) => {
     const userId = request.user.userId;
-    const { rows } = request.body as {
-      rows: Array<{
-        orderId?: string;
-        trackingNumber?: string;
-        store?: string;
-        items?: string;
-        date?: string;
-      }>;
-    };
 
-    if (!rows?.length) {
+    const parsed = ingestCsvBodySchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: "Invalid body", details: parsed.error.flatten() });
+    }
+    const { rows } = parsed.data;
+
+    if (!rows.length) {
       return { success: true, imported: 0, message: "No rows to import" };
     }
 
-    const { detectCarrier } = await import("../lib/carrier-detect.js");
+    // Normalize tracking numbers up front; drop rows without one.
+    const candidates = rows
+      .map((row) => ({
+        ...row,
+        trackingNumber: row.trackingNumber?.trim().toUpperCase(),
+      }))
+      .filter((row): row is typeof row & { trackingNumber: string } => !!row.trackingNumber);
+
     let imported = 0;
-    let skipped = 0;
+    let skipped = rows.length - candidates.length;
 
-    for (const row of rows) {
-      const tn = row.trackingNumber?.trim().toUpperCase();
-      if (!tn) { skipped++; continue; }
+    if (candidates.length === 0) {
+      return { success: true, imported, skipped, total: rows.length };
+    }
 
-      // Skip duplicates
-      const existing = await app.prisma.package.findFirst({
-        where: { trackingNumber: tn, order: { userId } },
-      });
-      if (existing) { skipped++; continue; }
+    // Batched existence check: one query for all candidates.
+    const existing = await app.prisma.package.findMany({
+      where: {
+        trackingNumber: { in: candidates.map((r) => r.trackingNumber) },
+        order: { userId },
+      },
+      select: { trackingNumber: true },
+    });
+    const existingTns = new Set(existing.map((p: any) => p.trackingNumber));
+
+    // Validate dates eagerly so we don't store "Invalid Date".
+    const toValidDate = (s?: string): Date | null => {
+      if (!s) return null;
+      const d = new Date(s);
+      return Number.isNaN(d.getTime()) ? null : d;
+    };
+
+    for (const row of candidates) {
+      const tn = row.trackingNumber;
+      if (existingTns.has(tn)) { skipped++; continue; }
 
       const carrier = detectCarrier(tn);
       const order: any = await app.prisma.order.create({
         data: {
           userId,
-          shopPlatform: detectShopPlatform(row.store),
+          shopPlatform: detectShopPlatform(row.store) as any,
           merchant: row.store ?? "CSV Import",
           externalOrderId: row.orderId ?? `csv-${tn}`,
-          orderDate: row.date ? new Date(row.date) : null,
+          orderDate: toValidDate(row.date),
           status: "PROCESSING",
           items: row.items ? JSON.stringify([row.items]) : null,
           packages: {
@@ -320,7 +388,7 @@ export const ingestRoutes: FastifyPluginAsync = async (app) => {
           await syncPackageFromResult(app.prisma, order.packages[0].id, result);
         }
       } catch (e) {
-        // Non-fatal
+        app.log.error(`[ingest/csv] tracking fetch failed for ${tn}: ${(e as Error).message}`);
       }
 
       imported++;
@@ -329,7 +397,7 @@ export const ingestRoutes: FastifyPluginAsync = async (app) => {
       try {
         await notifyStatusChange(app.prisma, userId, tn, "NEW", "PROCESSING", order.packages[0].id);
       } catch (e) {
-        // Non-fatal
+        app.log.error(`[ingest/csv] notify failed for ${tn}: ${(e as Error).message}`);
       }
     }
 
@@ -375,19 +443,3 @@ export const ingestRoutes: FastifyPluginAsync = async (app) => {
     return { key: user.ingestKey };
   });
 };
-
-function detectShopPlatform(store?: string): any {
-  if (!store) return "UNKNOWN";
-  const s = store.toUpperCase();
-  if (s.includes("AMAZON")) return "AMAZON";
-  if (s.includes("ALIEXPRESS")) return "ALIEXPRESS";
-  if (s.includes("EBAY")) return "EBAY";
-  if (s.includes("IHERB")) return "IHERB";
-  if (s.includes("SHEIN")) return "SHEIN";
-  if (s.includes("TEMU")) return "TEMU";
-  if (s.includes("ETSY")) return "ETSY";
-  if (s.includes("WALMART")) return "WALMART";
-  return "UNKNOWN";
-}
-
-

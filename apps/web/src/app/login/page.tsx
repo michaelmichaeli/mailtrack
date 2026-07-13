@@ -117,7 +117,7 @@ function LoginForm() {
 
       <Card className="w-full max-w-md shadow-2xl border-border/30 backdrop-blur-sm relative z-10 overflow-hidden">
         {/* Top gradient strip */}
-        <div className="h-1 w-full bg-linear-to-r from-primary via-primary/70 to-primary" />
+        <div className="h-1 w-full bg-linear-to-r from-primary via-indigo-400 to-sky-400" />
         <CardHeader className="text-center pb-2">
           <div className="flex justify-center mb-4">
             <div className="relative">

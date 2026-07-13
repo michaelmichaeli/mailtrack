@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import cookie from "@fastify/cookie";
+import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
 import { registerRoutes } from "./routes/index.js";
 import { prismaPlugin } from "./plugins/prisma.js";
@@ -45,15 +46,33 @@ export async function buildApp() {
     allowedHeaders: ["Content-Type", "Authorization"],
   });
 
-  // Cookies (for refresh tokens)
-  await app.register(cookie, {
-    secret: process.env.JWT_SECRET ?? "dev-cookie-secret",
+  // Cookies (for refresh tokens). Reuse JWT_SECRET — already validated by jwt plugin.
+  // In dev with no env, fall back to a clearly-marked placeholder.
+  const cookieSecret = process.env.JWT_SECRET ??
+    (process.env.NODE_ENV === "production"
+      ? (() => { throw new Error("JWT_SECRET required for cookie signing in production"); })()
+      : "dev-cookie-secret-do-not-use-in-prod");
+  await app.register(cookie, { secret: cookieSecret });
+
+  // Security headers (CSP, frameguard, HSTS, etc.)
+  await app.register(helmet, {
+    // The web app sets its own CSP; don't double-up here. Keep core defenses.
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
   });
 
-  // Rate limiting
+  // Global rate limiting. Per-route configs (see e.g. ingest.routes.ts and
+  // auth) override this with tighter or per-key limits.
   await app.register(rateLimit, {
+    global: true,
     max: 100,
     timeWindow: "1 minute",
+    // Skip the health check from rate-limit accounting.
+    skipOnError: true,
+    keyGenerator: (req) =>
+      (req.headers["x-ingest-key"] as string) ||
+      (req.headers.authorization as string) ||
+      req.ip,
   });
 
   // Plugins

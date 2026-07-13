@@ -195,3 +195,42 @@ export const apiErrorSchema = z.object({
   error: z.string(),
   message: z.string(),
 });
+
+// ─── Ingestion Schemas ───
+
+/** Tracking number sanity bounds: alphanumeric, 6-40 chars, no whitespace. */
+const trackingNumberField = z
+  .string()
+  .trim()
+  .min(6)
+  .max(40)
+  .regex(/^[A-Za-z0-9\-]+$/, "Invalid tracking number");
+
+export const ingestSmsBodySchema = z.object({
+  text: z.string().min(1).max(10_000),
+  source: z.string().max(200).optional(),
+});
+
+export const ingestCsvBodySchema = z.object({
+  rows: z
+    .array(
+      z.object({
+        orderId: z.string().max(200).optional(),
+        trackingNumber: trackingNumberField.optional(),
+        store: z.string().max(200).optional(),
+        items: z.string().max(2000).optional(),
+        date: z.string().max(50).optional(),
+      })
+    )
+    .max(5000), // upper bound to prevent giant uploads
+});
+
+export const scanTextBodySchema = z.object({
+  text: z.string().min(1).max(50_000),
+});
+
+export const addPackageBodySchema = z.object({
+  trackingNumber: trackingNumberField,
+  carrier: z.string().max(50).optional(),
+  description: z.string().max(500).optional(),
+});

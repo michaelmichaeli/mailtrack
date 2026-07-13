@@ -9,9 +9,32 @@ declare module "@fastify/jwt" {
   }
 }
 
+/**
+ * Resolve the JWT secret. Fails fast in production if missing or set to a
+ * known dev placeholder — a misconfigured prod must never boot with a
+ * publicly-known signing key.
+ */
+function resolveJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  const isProd = process.env.NODE_ENV === "production";
+  const isPlaceholder =
+    !secret ||
+    secret === "dev-jwt-secret" ||
+    secret === "change-me" ||
+    secret.length < 32;
+
+  if (isProd && isPlaceholder) {
+    throw new Error(
+      "JWT_SECRET must be set to a strong (>=32 char) value in production. " +
+        "Generate one with: openssl rand -hex 64"
+    );
+  }
+  return secret ?? "dev-jwt-secret-do-not-use-in-prod-xxxxxxxxxxxx";
+}
+
 const jwtPluginImpl: FastifyPluginAsync = async (fastify) => {
   await fastify.register(jwt, {
-    secret: process.env.JWT_SECRET ?? "dev-jwt-secret",
+    secret: resolveJwtSecret(),
     sign: {
       expiresIn: "15m",
       iss: "mailtrack",
